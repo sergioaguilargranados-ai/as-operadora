@@ -72,53 +72,51 @@ const MOCK_RESTAURANTS = [
 export async function GET(request: Request) {
     const { searchParams } = new URL(request.url)
     const query = searchParams.get('query')
-    // Buscar en variables de entorno estándar (Server) o públicas (Client/Server)
-    const apiKey = process.env.GOOGLE_PLACES_API_KEY || process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY
 
-    // Si no hay API Key o es una búsqueda de prueba específica, devolvemos Mocks
-    if (!apiKey || query?.toLowerCase().includes('demo') || query?.toLowerCase().includes('mock')) {
-        console.log("⚠️ Usando MOCK DATA para Restaurantes (Sin API Key o modo demo)")
+    // API KEY del servidor (segura)
+    const apiKey = process.env.GOOGLE_PLACES_API_KEY
 
-        // Simular delay de red
-        await new Promise(resolve => setTimeout(resolve, 1000));
-
-        // Filtrado básico del mock por texto
-        let results = MOCK_RESTAURANTS;
-        if (query && !query.includes('demo')) {
-            const lowerQuery = query.toLowerCase();
-            results = results.filter(r =>
-                r.name.toLowerCase().includes(lowerQuery) ||
-                r.cuisine.some(c => c.toLowerCase().includes(lowerQuery)) ||
-                r.vicinity.toLowerCase().includes(lowerQuery)
-            );
-        }
-
+    // Si no hay API Key, advertimos pero intentamos fallback a mock solo si es explícito el modo test
+    if (!apiKey) {
+        console.error("❌ FALTA API KEY: GOOGLE_PLACES_API_KEY no está definida en .env.local")
         return NextResponse.json({
-            results: results,
-            status: "OK",
-            source: "MOCK"
-        })
+            error: "Configuración de servidor incompleta (Falta API Key)",
+            source: "ERROR"
+        }, { status: 500 })
     }
 
     try {
-        // 1. Text Search (Búsqueda por texto: "Restaurantes en [Ciudad/Zona] [Tipo]")
-        // https://maps.googleapis.com/maps/api/place/textsearch/json
-        const searchText = `restaurantes en ${query}`
-        const response = await fetch(
-            `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(searchText)}&key=${apiKey}&language=es`
-        )
+        // 1. Text Search (Búsqueda por texto)
+        const searchText = query ? `restaurantes en ${query}` : 'restaurantes populares'
+        const url = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(searchText)}&key=${apiKey}&language=es`
+
+        const response = await fetch(url)
         const data = await response.json()
 
-        if (data.status !== 'OK') {
+        if (data.status !== 'OK' && data.status !== 'ZERO_RESULTS') {
             console.error('Google Places API Error:', data)
-            throw new Error(data.error_message || 'Error fetching places')
+            throw new Error(data.error_message || `API Error: ${data.status}`)
         }
 
-        // En un escenario real, aquí podríamos enriquecer los resultados llamando a Place Details si hiciera falta,
-        // pero Text Search ya devuelve lo básico necesario.
+        // Mapear resultados al formato de nuestra app
+        // Nota: TextSearch devuelve geometry, name, photos, price_level, rating, user_ratings_total
+        const results = data.results.map((place: any) => ({
+            place_id: place.place_id,
+            name: place.name,
+            photos: place.photos,
+            rating: place.rating,
+            user_ratings_total: place.user_ratings_total,
+            price_level: place.price_level,
+            vicinity: place.formatted_address, // TextSearch devuelve formatted_address
+            geometry: place.geometry,
+            opening_hours: place.opening_hours,
+            types: place.types,
+            // Enriquecimiento manual simple para cuisine si no viene explícito
+            cuisine: place.types
+        }))
 
         return NextResponse.json({
-            results: data.results,
+            results: results,
             status: "OK",
             source: "GOOGLE"
         })

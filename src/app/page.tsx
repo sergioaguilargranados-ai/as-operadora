@@ -282,6 +282,24 @@ export default function Home() {
   const [restaurantDate, setRestaurantDate] = useState("")
   const [restaurantDiners, setRestaurantDiners] = useState(2)
 
+  // Handler para búsqueda de paquetes
+  const handleSearchPackages = async () => {
+    if (!packageDestination) {
+      alert('Por favor ingresa un destino para buscar paquetes')
+      return
+    }
+
+    const params = new URLSearchParams()
+    params.set('destination', packageDestination)
+    if (packageOrigin) params.set('origin', packageOrigin)
+    if (packageCheckIn) params.set('checkIn', packageCheckIn)
+    if (packageCheckOut) params.set('checkOut', packageCheckOut)
+    params.set('guests', packageGuests.toString())
+    params.set('rooms', packageRooms.toString())
+
+    router.push(`/resultados/paquetes?${params.toString()}`)
+  }
+
   // Estados para contenido dinámico
   const [promotions, setPromotions] = useState<Promotion[]>([])
   const [featuredHero, setFeaturedHero] = useState<FeaturedHero | null>(null)
@@ -1761,20 +1779,7 @@ export default function Home() {
                       <div className="flex items-end">
                         <Button
                           className="w-full h-12 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white font-semibold"
-                          onClick={() => {
-                            if (!packageDestination || !packageCheckIn || !packageCheckOut) {
-                              alert('Por favor completa origen, destino y fechas')
-                              return
-                            }
-                            const params = new URLSearchParams({
-                              origin: packageOrigin,
-                              destination: packageDestination,
-                              checkIn: packageCheckIn,
-                              checkOut: packageCheckOut,
-                              guests: packageGuests.toString()
-                            })
-                            router.push(`/resultados/paquetes?${params.toString()}`)
-                          }}
+                          onClick={handleSearchPackages}
                         >
                           <Search className="w-5 h-5 mr-2" />
                           Buscar

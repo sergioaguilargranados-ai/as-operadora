@@ -22,6 +22,7 @@ interface RestaurantMapProps {
     center?: { lat: number; lng: number }
     zoom?: number
     onMarkerClick?: (restaurant: Restaurant) => void
+    apiKey?: string
 }
 
 declare global {
@@ -34,8 +35,10 @@ export function RestaurantMap({
     restaurants,
     center = { lat: 19.4326, lng: -99.1332 }, // CDMX default
     zoom = 13,
-    onMarkerClick
+    onMarkerClick,
+    apiKey
 }: RestaurantMapProps) {
+    const props = { restaurants, center, zoom, onMarkerClick, apiKey }
     const mapRef = useRef<HTMLDivElement>(null)
     const [map, setMap] = useState<any>(null)
     const markersRef = useRef<any[]>([])
@@ -49,7 +52,7 @@ export function RestaurantMap({
             return
         }
 
-        const apiKey = process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY || ''
+        const apiKey = props.apiKey || process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY || ''
 
         // Intentar buscar la key de las variables de entorno inyectadas
         // Nota: Como es client-side, necesitamos que la variable empiece con NEXT_PUBLIC_

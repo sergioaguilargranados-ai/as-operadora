@@ -147,7 +147,7 @@ NODE_ENV=development
 ### Flujo Automático
 
 ```
-AntiGravity (desarrollo local)
+AntiGravity (desarrollo)
     ↓
     Push a GitHub
     ↓

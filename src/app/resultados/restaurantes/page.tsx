@@ -275,6 +275,7 @@ function RestaurantResultsContent() {
                     <aside className="hidden lg:block lg:col-span-4 sticky top-24 h-[calc(100vh-120px)]">
                         <RestaurantMap
                             restaurants={filteredResults}
+                            apiKey={process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY || ''}
                             onMarkerClick={(r) => {
                                 // Opcional: Scroll to card or highlight
                                 console.log("Marker clicked:", r.name)

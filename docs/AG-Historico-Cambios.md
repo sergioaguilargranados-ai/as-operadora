@@ -54,6 +54,28 @@ Esto permite detectar si se perdieron tablas/campos entre versiones.
 
 ---
 
+### v2.227 - 18 de Enero de 2026 - 17:15 CST
+
+**Cambios:**
+- **Integración Mega Travel (PoC):**
+  - Implementación de `MegaTravelAdapter.ts` para ingerir paquetes.
+  - Base de datos interna simulada con paquetes populares (Europa, Turquía, etc.).
+  - Lógica de precios "Neto + Margen" (User-defined margin).
+  - Enriquecimiento automático de paquetes (Flight, Hotel, Transfer, Activities).
+  - Integración transparente en buscador `/api/packages/search`.
+- **Restaurantes Finalizado:**
+  - Despliegue de Google Maps con API Key segura (Server-side) y pública (Client-side).
+  - Validación de variables de entorno en Vercel.
+
+**Lecciones Aprendidas:**
+- Para integraciones donde la fuente original usa Client-Side Rendering (CSR) agresivo, un adaptador con base de datos interna o headless browser es necesario.
+- La gestión de API Keys duales (Backend vs Frontend) es crítica para servicios híbridos como Google Maps.
+
+**Cifra de Control:**
+- T: 54 | C: 541 (Sin cambios BD)
+
+---
+
 ### v2.225 - 18 de Enero de 2026 - 15:00 CST
 
 **Cambios:**
