@@ -1,7 +1,7 @@
 # 📋 AG-Histórico de Cambios - AS Operadora
 
 **Última actualización:** 17 de Enero de 2026 - 02:05 CST  
-**Versión actual:** v2.223  
+**Versión actual:** v2.225  
 **Actualizado por:** AntiGravity AI Assistant  
 **Propósito:** Registro cronológico de todos los cambios del proyecto
 
@@ -34,6 +34,52 @@ Esto permite detectar si se perdieron tablas/campos entre versiones.
 ---
 
 ## 📅 HISTORIAL DE CAMBIOS
+
+### v2.225 - 18 de Enero de 2026 - 15:00 CST
+
+**Cambios:**
+- **UI/UX Filtros Completa:**
+  - Reordenamiento de menú principal (E-Sim primera fila).
+  - Nuevos filtros en Hoteles (E-Sim, Seguro, Traslados).
+  - Nuevo componente `CounterSelector` para huéspedes/pasajeros.
+  - Lógica ida/vuelta y selectores mejorados.
+- **Módulo Restaurantes (Nuevo):**
+  - Página de resultados (`/resultados/restaurantes`).
+  - Filtros avanzados (Cocina, Precio, Rating).
+  - Mapa interactivo (Mock visual).
+  - Flujo de reserva simplificado (Sin pago).
+  - API Route Proxy con Mock Data fallback.
+- **Documentación Técnica:**
+  - Guía de Google Maps API (`docs/GUIA_GOOGLE_MAPS_API.md`).
+
+**Lecciones Aprendidas:**
+- El uso de Proxies (API Routes) para APIs externas como Google Places es esencial para proteger Keys y manejar fallbacks (Mock Data) de forma transparente.
+
+**Cifra de Control:**
+- Tablas: 54 | Campos: 541 (Sin cambios estructurales en BD)
+
+---
+
+### v2.224 - 18 de Enero de 2026 - 01:10 CST
+
+**Cambios:**
+- **Fix despliegue Vercel (404 Not Found):**
+  - Eliminado `server.js` (conflicto con serverless)
+  - Actualizado script `start` a `next start`
+  - Reactivado middleware (funcionando correctamente)
+- **Fix Build Vercel (Mobile):**
+  - Excluido directorio `operadora-mobile/` en `.vercelignore`
+  - Excluido directorio `operadora-mobile/` en `tsconfig.json`
+- **Configuración:** Creado `vercel.json` para forzar framework
+
+**Lecciones Aprendidas:**
+- Vercel requiere entorno 100% serverless; nunca usar `server.js` custom con Next.js en Vercel.
+- La app móvil (React Native/Expo) debe excluirse explícitamente del build web si conviven en el monorepo.
+
+**Cifra de Control:**
+- No registrada
+
+---
 
 ### v2.223 - 17 de Enero de 2026 - 02:05 CST
 

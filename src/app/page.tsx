@@ -9,10 +9,11 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Search, MapPin, Plane, Package, Compass, ChevronRight, Percent, Tag, Loader2, Bell, HelpCircle, Hotel, Car, Activity, Home as HomeIcon, FileText, Calendar, MessageCircle, Shield, Users, Star, Smartphone, Bus, Sparkles } from "lucide-react"
+import { Search, MapPin, Plane, Package, Compass, ChevronRight, Percent, Tag, Loader2, Bell, HelpCircle, Hotel, Car, Activity, Home as HomeIcon, FileText, Calendar, MessageCircle, Shield, Users, Star, Smartphone, Bus, Sparkles, Utensils } from "lucide-react"
 import { DateRangePicker } from "@/components/DateRangePicker"
 import { GuestSelector } from "@/components/GuestSelector"
 import { AirlineSelector } from "@/components/AirlineSelector"
+import { CounterSelector } from "@/components/CounterSelector"
 import { Logo } from "@/components/Logo"
 import { useAuth } from "@/contexts/AuthContext"
 import { User as UserIcon, LogOut } from "lucide-react"
@@ -209,6 +210,7 @@ export default function Home() {
   // Estados para búsqueda de vuelos
   const [origin, setOrigin] = useState("")
   const [flightDestination, setFlightDestination] = useState("")
+  const [flightType, setFlightType] = useState<'roundtrip' | 'oneway'>('roundtrip')
   const [departureDate, setDepartureDate] = useState("")
   const [returnDate, setReturnDate] = useState("")
   const [adults, setAdults] = useState(1)
@@ -244,8 +246,11 @@ export default function Home() {
   // Estados para búsqueda de transfers
   const [transferOrigin, setTransferOrigin] = useState("")
   const [transferDestination, setTransferDestination] = useState("")
+  const [transferType, setTransferType] = useState('airport-hotel')
   const [transferDate, setTransferDate] = useState("")
   const [transferTime, setTransferTime] = useState("10:00")
+  const [transferReturnDate, setTransferReturnDate] = useState("")
+  const [transferReturnTime, setTransferReturnTime] = useState("14:00")
   const [transferPassengers, setTransferPassengers] = useState(2)
 
   // Estados para búsqueda de actividades
@@ -271,6 +276,11 @@ export default function Home() {
   const [packageCheckOut, setPackageCheckOut] = useState("")
   const [packageGuests, setPackageGuests] = useState(2)
   const [packageRooms, setPackageRooms] = useState(1)
+
+  // Estados para búsqueda de restaurantes
+  const [restaurantCity, setRestaurantCity] = useState("")
+  const [restaurantDate, setRestaurantDate] = useState("")
+  const [restaurantDiners, setRestaurantDiners] = useState(2)
 
   // Estados para contenido dinámico
   const [promotions, setPromotions] = useState<Promotion[]>([])
@@ -428,12 +438,35 @@ export default function Home() {
     const params = new URLSearchParams({
       from: transferOrigin,
       to: transferDestination,
+      type: transferType,
       date: transferDate,
       time: transferTime,
       passengers: transferPassengers.toString()
     })
 
+    if (transferType === 'roundtrip') {
+      if (!transferReturnDate) {
+        alert('Por favor selecciona fecha de regreso')
+        return
+      }
+      params.set('returnDate', transferReturnDate)
+      params.set('returnTime', transferReturnTime)
+    }
+
     router.push(`/resultados/transfers?${params.toString()}`)
+  }
+
+  const handleSearchRestaurants = async () => {
+    if (!restaurantCity) {
+      alert('Por favor ingresa una ciudad')
+      return
+    }
+    const params = new URLSearchParams({
+      city: restaurantCity,
+      date: restaurantDate,
+      diners: restaurantDiners.toString()
+    })
+    router.push(`/resultados/restaurantes?${params.toString()}`)
   }
 
   const handleSearchActivities = async () => {
@@ -702,8 +735,14 @@ export default function Home() {
                       value="insurance"
                       className="rounded-lg border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-white/80 px-3 md:px-4 py-2 flex items-center gap-1.5 text-sm"
                     >
-                      <Shield className="w-4 h-4" />
                       <span>Seguros</span>
+                    </TabsTrigger>
+                    <TabsTrigger
+                      value="esim"
+                      className="rounded-lg border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-white/80 px-3 md:px-4 py-2 flex items-center gap-1.5 text-sm"
+                    >
+                      <Smartphone className="w-4 h-4" />
+                      <span>E-Sim</span>
                     </TabsTrigger>
                   </TabsList>
 
@@ -758,12 +797,13 @@ export default function Home() {
                       <Users className="w-4 h-4" />
                       <span>Conekta</span>
                     </TabsTrigger>
+
                     <TabsTrigger
-                      value="esim"
+                      value="restaurants"
                       className="rounded-lg border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-white/80 px-3 md:px-4 py-2 flex items-center gap-1.5 text-sm"
                     >
-                      <Smartphone className="w-4 h-4" />
-                      <span>E-Sim</span>
+                      <Utensils className="w-4 h-4" />
+                      <span>Restaurantes</span>
                     </TabsTrigger>
                   </TabsList>
                 </div>
@@ -862,8 +902,23 @@ export default function Home() {
                         <span className="text-sm font-medium">Agregar un vuelo</span>
                       </label>
                       <label className="flex items-center gap-2 cursor-pointer text-gray-900">
-                        <input type="checkbox" className="w-4 h-4 accent-primary" />
                         <span className="text-sm font-medium">Agregar un auto</span>
+                      </label>
+                      <label className="flex items-center gap-2 cursor-pointer text-gray-900">
+                        <input type="checkbox" className="w-4 h-4 accent-primary" />
+                        <span className="text-sm font-medium">E-Sim</span>
+                      </label>
+                      <label className="flex items-center gap-2 cursor-pointer text-gray-900">
+                        <input type="checkbox" className="w-4 h-4 accent-primary" />
+                        <span className="text-sm font-medium">Seguro</span>
+                      </label>
+                      <label className="flex items-center gap-2 cursor-pointer text-gray-900">
+                        <input type="checkbox" className="w-4 h-4 accent-primary" />
+                        <span className="text-sm font-medium">Traslados</span>
+                      </label>
+                      <label className="flex items-center gap-2 cursor-pointer text-gray-900">
+                        <input type="checkbox" className="w-4 h-4 accent-primary" />
+                        <span className="text-sm font-medium">Actividades</span>
                       </label>
                     </div>
                   </div>
@@ -871,6 +926,30 @@ export default function Home() {
 
                 <TabsContent value="flights" className="mt-6">
                   <div className="space-y-4">
+                    {/* Tipo de viaje */}
+                    <div className="flex gap-6 mb-2">
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="flightType"
+                          checked={flightType === 'roundtrip'}
+                          onChange={() => setFlightType('roundtrip')}
+                          className="w-4 h-4 accent-primary"
+                        />
+                        <span className="text-sm font-medium text-gray-900">Ida y vuelta</span>
+                      </label>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="flightType"
+                          checked={flightType === 'oneway'}
+                          onChange={() => setFlightType('oneway')}
+                          className="w-4 h-4 accent-primary"
+                        />
+                        <span className="text-sm font-medium text-gray-900">Solo ida</span>
+                      </label>
+                    </div>
+
                     <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
                       {/* Origen */}
                       <div className="md:col-span-1">
@@ -1012,13 +1091,15 @@ export default function Home() {
                             value={departureDate}
                             onChange={(e) => setDepartureDate(e.target.value)}
                           />
-                          <Input
-                            type="date"
-                            className="h-12 bg-white"
-                            placeholder="Retorno"
-                            value={returnDate}
-                            onChange={(e) => setReturnDate(e.target.value)}
-                          />
+                          {flightType === 'roundtrip' && (
+                            <Input
+                              type="date"
+                              className="h-12 bg-white"
+                              placeholder="Retorno"
+                              value={returnDate}
+                              onChange={(e) => setReturnDate(e.target.value)}
+                            />
+                          )}
                         </div>
                       </div>
 
@@ -1054,40 +1135,34 @@ export default function Home() {
                       {/* Pasajeros */}
                       <div className="md:col-span-2 grid grid-cols-3 gap-3">
                         <div>
-                          <label className="block text-xs font-medium mb-1 text-gray-700">Adultos (12+)</label>
-                          <select
+                          <CounterSelector
+                            label="Adultos (12+)"
                             value={adults}
-                            onChange={(e) => setAdults(parseInt(e.target.value))}
-                            className="w-full h-10 px-2 border rounded bg-white text-sm"
-                          >
-                            {[1,2,3,4,5,6,7,8,9].map(n => (
-                              <option key={n} value={n}>{n}</option>
-                            ))}
-                          </select>
+                            onChange={setAdults}
+                            min={1}
+                            max={9}
+                            showQuickButtons={false}
+                          />
                         </div>
                         <div>
-                          <label className="block text-xs font-medium mb-1 text-gray-700">Niños (2-11)</label>
-                          <select
+                          <CounterSelector
+                            label="Niños (2-11)"
                             value={children}
-                            onChange={(e) => handleChildrenChange(parseInt(e.target.value))}
-                            className="w-full h-10 px-2 border rounded bg-white text-sm"
-                          >
-                            {[0,1,2,3,4,5,6].map(n => (
-                              <option key={n} value={n}>{n}</option>
-                            ))}
-                          </select>
+                            onChange={handleChildrenChange}
+                            min={0}
+                            max={6}
+                            showQuickButtons={false}
+                          />
                         </div>
                         <div>
-                          <label className="block text-xs font-medium mb-1 text-gray-700">Bebés (0-2)</label>
-                          <select
+                          <CounterSelector
+                            label="Bebés (0-2)"
                             value={infants}
-                            onChange={(e) => setInfants(parseInt(e.target.value))}
-                            className="w-full h-10 px-2 border rounded bg-white text-sm"
-                          >
-                            {[0,1,2,3].map(n => (
-                              <option key={n} value={n}>{n}</option>
-                            ))}
-                          </select>
+                            onChange={setInfants}
+                            min={0}
+                            max={3}
+                            showQuickButtons={false}
+                          />
                         </div>
                       </div>
 
@@ -1154,15 +1229,15 @@ export default function Home() {
                     {/* Tipo de traslado */}
                     <div className="flex flex-wrap gap-4 mb-4">
                       <label className="flex items-center gap-2 cursor-pointer">
-                        <input type="radio" name="transferType" value="airport-hotel" defaultChecked className="w-4 h-4 accent-primary" />
+                        <input type="radio" name="transferType" value="airport-hotel" checked={transferType === 'airport-hotel'} onChange={() => setTransferType('airport-hotel')} className="w-4 h-4 accent-primary" />
                         <span className="text-sm font-medium text-gray-900">Aeropuerto → Hotel</span>
                       </label>
                       <label className="flex items-center gap-2 cursor-pointer">
-                        <input type="radio" name="transferType" value="hotel-airport" className="w-4 h-4 accent-primary" />
+                        <input type="radio" name="transferType" value="hotel-airport" checked={transferType === 'hotel-airport'} onChange={() => setTransferType('hotel-airport')} className="w-4 h-4 accent-primary" />
                         <span className="text-sm font-medium text-gray-900">Hotel → Aeropuerto</span>
                       </label>
                       <label className="flex items-center gap-2 cursor-pointer">
-                        <input type="radio" name="transferType" value="roundtrip" className="w-4 h-4 accent-primary" />
+                        <input type="radio" name="transferType" value="roundtrip" checked={transferType === 'roundtrip'} onChange={() => setTransferType('roundtrip')} className="w-4 h-4 accent-primary" />
                         <span className="text-sm font-medium text-gray-900">Redondo</span>
                       </label>
                     </div>
@@ -1274,6 +1349,24 @@ export default function Home() {
                             className="h-12 bg-white"
                           />
                         </div>
+                        {transferType === 'roundtrip' && (
+                          <div className="grid grid-cols-2 gap-2 mt-2">
+                            <Input
+                              type="date"
+                              placeholder="F. Regreso"
+                              value={transferReturnDate}
+                              onChange={(e) => setTransferReturnDate(e.target.value)}
+                              min={transferDate || new Date().toISOString().split('T')[0]}
+                              className="h-12 bg-white"
+                            />
+                            <Input
+                              type="time"
+                              value={transferReturnTime}
+                              onChange={(e) => setTransferReturnTime(e.target.value)}
+                              className="h-12 bg-white"
+                            />
+                          </div>
+                        )}
                       </div>
 
                       {/* Botón Buscar */}
@@ -1306,14 +1399,14 @@ export default function Home() {
 
                     <div className="flex items-center gap-2 text-sm text-gray-900">
                       <label className="font-medium">Pasajeros:</label>
-                      <input
-                        type="number"
-                        min="1"
-                        max="8"
-                        value={transferPassengers}
-                        onChange={(e) => setTransferPassengers(parseInt(e.target.value))}
-                        className="w-16 px-2 py-1 border rounded bg-white"
-                      />
+                      <div className="w-32">
+                        <CounterSelector
+                          value={transferPassengers}
+                          onChange={setTransferPassengers}
+                          min={1}
+                          max={20}
+                        />
+                      </div>
                     </div>
                   </div>
                 </TabsContent>
@@ -1415,7 +1508,7 @@ export default function Home() {
                           value={carPickupTime}
                           onChange={(e) => setCarPickupTime(e.target.value)}
                         >
-                          {Array.from({length: 48}, (_, i) => {
+                          {Array.from({ length: 48 }, (_, i) => {
                             const hour = Math.floor(i / 2)
                             const min = i % 2 === 0 ? '00' : '30'
                             const time = `${hour.toString().padStart(2, '0')}:${min}`
@@ -1430,7 +1523,7 @@ export default function Home() {
                           value={carDropoffTime}
                           onChange={(e) => setCarDropoffTime(e.target.value)}
                         >
-                          {Array.from({length: 48}, (_, i) => {
+                          {Array.from({ length: 48 }, (_, i) => {
                             const hour = Math.floor(i / 2)
                             const min = i % 2 === 0 ? '00' : '30'
                             const time = `${hour.toString().padStart(2, '0')}:${min}`
@@ -1528,9 +1621,37 @@ export default function Home() {
                         <span className="text-sm font-medium">Actividad</span>
                       </label>
                       <label className="flex items-center gap-2 p-3 border rounded-lg cursor-pointer hover:bg-blue-50 transition-colors">
-                        <input type="checkbox" className="w-4 h-4 accent-primary" />
-                        <Shield className="w-4 h-4 text-blue-600" />
                         <span className="text-sm font-medium">Seguro</span>
+                      </label>
+                      <label className="flex items-center gap-2 p-3 border rounded-lg cursor-pointer hover:bg-blue-50 transition-colors">
+                        <input type="checkbox" className="w-4 h-4 accent-primary" />
+                        <Compass className="w-4 h-4 text-blue-600" />
+                        <span className="text-sm font-medium">Crucero</span>
+                      </label>
+                      <label className="flex items-center gap-2 p-3 border rounded-lg cursor-pointer hover:bg-blue-50 transition-colors">
+                        <input type="checkbox" className="w-4 h-4 accent-primary" />
+                        <Users className="w-4 h-4 text-blue-600" />
+                        <span className="text-sm font-medium">Grupal</span>
+                      </label>
+                      <label className="flex items-center gap-2 p-3 border rounded-lg cursor-pointer hover:bg-blue-50 transition-colors">
+                        <input type="checkbox" className="w-4 h-4 accent-primary" />
+                        <Sparkles className="w-4 h-4 text-blue-600" />
+                        <span className="text-sm font-medium">Disney</span>
+                      </label>
+                      <label className="flex items-center gap-2 p-3 border rounded-lg cursor-pointer hover:bg-blue-50 transition-colors">
+                        <input type="checkbox" className="w-4 h-4 accent-primary" />
+                        <Star className="w-4 h-4 text-blue-600" />
+                        <span className="text-sm font-medium">Universal</span>
+                      </label>
+                      <label className="flex items-center gap-2 p-3 border rounded-lg cursor-pointer hover:bg-blue-50 transition-colors">
+                        <input type="checkbox" className="w-4 h-4 accent-primary" />
+                        <Activity className="w-4 h-4 text-blue-600" />
+                        <span className="text-sm font-medium">Xcaret</span>
+                      </label>
+                      <label className="flex items-center gap-2 p-3 border rounded-lg cursor-pointer hover:bg-blue-50 transition-colors">
+                        <input type="checkbox" className="w-4 h-4 accent-primary" />
+                        <Smartphone className="w-4 h-4 text-blue-600" />
+                        <span className="text-sm font-medium">E-Sim</span>
                       </label>
                     </div>
                     {/* Opciones especiales */}
@@ -1870,18 +1991,15 @@ export default function Home() {
                       </div>
                       <div>
                         <label className="block text-sm font-medium mb-2 text-gray-900">Huéspedes</label>
-                        <select
-                          value={guests}
-                          onChange={(e) => setGuests(parseInt(e.target.value))}
-                          className="w-full h-12 px-3 border rounded-lg bg-white text-sm"
-                        >
-                          <option value="1">1 huésped</option>
-                          <option value="2">2 huéspedes</option>
-                          <option value="3">3 huéspedes</option>
-                          <option value="4">4 huéspedes</option>
-                          <option value="5">5 huéspedes</option>
-                          <option value="6">6+ huéspedes</option>
-                        </select>
+                        <div className="bg-white rounded-lg">
+                          <CounterSelector
+                            value={guests}
+                            onChange={setGuests}
+                            min={1}
+                            max={20}
+                            showQuickButtons={true}
+                          />
+                        </div>
                       </div>
                     </div>
                     {/* Botón Buscar a la derecha */}
@@ -1975,6 +2093,56 @@ export default function Home() {
                     <h3 className="text-xl font-bold mb-2">Conekta</h3>
                     <p className="text-gray-600 mb-4">Expos, capacitaciones y eventos corporativos</p>
                     <p className="text-sm text-gray-500">Próximamente...</p>
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="restaurants" className="mt-6">
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+                      <div className="md:col-span-2">
+                        <label className="block text-sm font-medium mb-2 text-gray-900">¿A dónde?</label>
+                        <div className="relative">
+                          <Utensils className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground z-10" />
+                          <Input
+                            placeholder="Ciudad, restaurante o tipo de comida"
+                            className="pl-10 h-12 bg-white"
+                            value={restaurantCity}
+                            onChange={(e) => setRestaurantCity(e.target.value)}
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-2 text-gray-900">Fecha</label>
+                        <Input
+                          type="date"
+                          className="h-12 bg-white"
+                          value={restaurantDate}
+                          onChange={(e) => setRestaurantDate(e.target.value)}
+                          min={new Date().toISOString().split('T')[0]}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-2 text-gray-900">Comensales</label>
+                        <div className="bg-white rounded-lg">
+                          <CounterSelector
+                            value={restaurantDiners}
+                            onChange={setRestaurantDiners}
+                            min={1}
+                            max={20}
+                            showQuickButtons={true}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex justify-end pt-2">
+                      <Button
+                        className="h-12 px-8 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white font-semibold"
+                        onClick={handleSearchRestaurants}
+                      >
+                        <Search className="w-5 h-5 mr-2" />
+                        Buscar mesas
+                      </Button>
+                    </div>
                   </div>
                 </TabsContent>
 
@@ -2089,298 +2257,298 @@ export default function Home() {
           </div>
         </div>
 
-      {/* Resto del contenido */}
-      <div className="container mx-auto px-4 py-8 max-w-6xl">
+        {/* Resto del contenido */}
+        <div className="container mx-auto px-4 py-8 max-w-6xl">
 
-        {/* Ofertas Especiales y Descuentos */}
-        <div className="mb-12">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-3xl font-bold">Ofertas especiales para ti</h2>
-            <Button variant="link" className="text-[#0066FF] font-semibold">
-              Ver todas las ofertas
-              <ChevronRight className="w-5 h-5 ml-1" />
-            </Button>
+          {/* Ofertas Especiales y Descuentos */}
+          <div className="mb-12">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-3xl font-bold">Ofertas especiales para ti</h2>
+              <Button variant="link" className="text-[#0066FF] font-semibold">
+                Ver todas las ofertas
+                <ChevronRight className="w-5 h-5 ml-1" />
+              </Button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {promotions.map((promo) => (
+                <motion.div
+                  key={promo.id}
+                  whileHover={{ y: -8, transition: { duration: 0.2 } }}
+                >
+                  <Card
+                    className="overflow-hidden group cursor-pointer border-none shadow-soft hover:shadow-hard transition-all duration-300 rounded-3xl"
+                    onClick={() => router.push(`/oferta/${promo.id}`)}
+                  >
+                    <div className="relative h-48 overflow-hidden">
+                      <motion.img
+                        whileHover={{ scale: 1.1 }}
+                        transition={{ duration: 0.3 }}
+                        src={promo.image_url}
+                        alt={promo.title}
+                        className="w-full h-full object-cover"
+                      />
+                      {promo.discount_percentage && (
+                        <div className="absolute top-3 right-3 bg-red-500 text-white px-3 py-1 rounded-full text-sm font-bold flex items-center gap-1">
+                          <Percent className="w-4 h-4" />
+                          {promo.discount_percentage}% OFF
+                        </div>
+                      )}
+                    </div>
+                    <div className="p-4">
+                      {promo.badge_text && (
+                        <div className="flex items-center gap-2 mb-2">
+                          <Tag className="w-4 h-4 text-[#0066FF]" />
+                          <span className="text-sm font-semibold text-[#0066FF]">{promo.badge_text}</span>
+                        </div>
+                      )}
+                      <h3 className="font-semibold text-lg mb-1">{promo.title}</h3>
+                      <p className="text-sm text-muted-foreground mb-2">
+                        {promo.description}
+                      </p>
+                      {promo.valid_until && (
+                        <p className="text-xs text-muted-foreground">
+                          Válido hasta {new Date(promo.valid_until).toLocaleDateString()}
+                        </p>
+                      )}
+                    </div>
+                  </Card>
+                </motion.div>
+              ))}
+            </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {promotions.map((promo) => (
-              <motion.div
-                key={promo.id}
-                whileHover={{ y: -8, transition: { duration: 0.2 } }}
-              >
+
+
+          {/* Descubre vuelos a destinos favoritos */}
+          <div className="mb-12">
+            <h2 className="text-3xl font-bold mb-6">Descubre vuelos a destinos favoritos</h2>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {flightDestinations.map((dest) => (
                 <Card
-                  className="overflow-hidden group cursor-pointer border-none shadow-soft hover:shadow-hard transition-all duration-300 rounded-3xl"
-                  onClick={() => router.push(`/oferta/${promo.id}`)}
+                  key={dest.id}
+                  className="overflow-hidden group cursor-pointer border-none shadow-md hover:shadow-xl transition-all rounded-3xl"
+                  onClick={() => {
+                    // Guardar parámetros de búsqueda y redirigir a resultados unificados
+                    const searchData = {
+                      success: true,
+                      data: [],
+                      searchParams: {
+                        type: 'flight',
+                        origin: 'MEX',
+                        destination: dest.airport_code || dest.city.substring(0, 3).toUpperCase(),
+                        destinationCity: dest.city,
+                        departureDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+                        returnDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+                        adults: 1,
+                        children: 0
+                      }
+                    }
+                    localStorage.setItem('searchResults', JSON.stringify(searchData))
+                    router.push(`/vuelos/${encodeURIComponent(dest.city)}`)
+                  }}
                 >
-                  <div className="relative h-48 overflow-hidden">
-                    <motion.img
-                      whileHover={{ scale: 1.1 }}
-                      transition={{ duration: 0.3 }}
-                      src={promo.image_url}
-                      alt={promo.title}
-                      className="w-full h-full object-cover"
+                  <div className="relative h-32 overflow-hidden">
+                    <img
+                      src={dest.image_url}
+                      alt={dest.city}
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                     />
-                    {promo.discount_percentage && (
-                      <div className="absolute top-3 right-3 bg-red-500 text-white px-3 py-1 rounded-full text-sm font-bold flex items-center gap-1">
-                        <Percent className="w-4 h-4" />
-                        {promo.discount_percentage}% OFF
-                      </div>
-                    )}
                   </div>
-                  <div className="p-4">
-                    {promo.badge_text && (
-                      <div className="flex items-center gap-2 mb-2">
-                        <Tag className="w-4 h-4 text-[#0066FF]" />
-                        <span className="text-sm font-semibold text-[#0066FF]">{promo.badge_text}</span>
-                      </div>
-                    )}
-                    <h3 className="font-semibold text-lg mb-1">{promo.title}</h3>
-                    <p className="text-sm text-muted-foreground mb-2">
-                      {promo.description}
+                  <div className="p-3">
+                    <h3 className="font-semibold mb-1">{dest.city}</h3>
+                    <p className="text-sm text-[#0066FF] font-semibold">
+                      ${Number(dest.price_from).toLocaleString()} {dest.currency}
                     </p>
-                    {promo.valid_until && (
-                      <p className="text-xs text-muted-foreground">
-                        Válido hasta {new Date(promo.valid_until).toLocaleDateString()}
-                      </p>
-                    )}
+                    <p className="text-xs text-muted-foreground">por persona, ida y vuelta</p>
                   </div>
                 </Card>
-              </motion.div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
 
-
-
-        {/* Descubre vuelos a destinos favoritos */}
-        <div className="mb-12">
-          <h2 className="text-3xl font-bold mb-6">Descubre vuelos a destinos favoritos</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {flightDestinations.map((dest) => (
-              <Card
-                key={dest.id}
-                className="overflow-hidden group cursor-pointer border-none shadow-md hover:shadow-xl transition-all rounded-3xl"
-                onClick={() => {
-                  // Guardar parámetros de búsqueda y redirigir a resultados unificados
-                  const searchData = {
-                    success: true,
-                    data: [],
-                    searchParams: {
-                      type: 'flight',
-                      origin: 'MEX',
-                      destination: dest.airport_code || dest.city.substring(0, 3).toUpperCase(),
-                      destinationCity: dest.city,
-                      departureDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-                      returnDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-                      adults: 1,
-                      children: 0
-                    }
-                  }
-                  localStorage.setItem('searchResults', JSON.stringify(searchData))
-                  router.push(`/vuelos/${encodeURIComponent(dest.city)}`)
-                }}
-              >
-                <div className="relative h-32 overflow-hidden">
-                  <img
-                    src={dest.image_url}
-                    alt={dest.city}
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                  />
-                </div>
-                <div className="p-3">
-                  <h3 className="font-semibold mb-1">{dest.city}</h3>
-                  <p className="text-sm text-[#0066FF] font-semibold">
-                    ${Number(dest.price_from).toLocaleString()} {dest.currency}
-                  </p>
-                  <p className="text-xs text-muted-foreground">por persona, ida y vuelta</p>
-                </div>
-              </Card>
-            ))}
-          </div>
-        </div>
-
-        {/* Descubre tu nuevo hospedaje favorito */}
-        <div className="mb-12">
-          <h2 className="text-3xl font-bold mb-6">Descubre tu nuevo hospedaje favorito</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {accommodationFavorites.map((item) => (
-              <Card
-                key={item.id}
-                className="overflow-hidden group cursor-pointer border-none shadow-md hover:shadow-xl transition-all rounded-3xl"
-                onClick={() => router.push(`/hospedaje/${item.id}`)}
-              >
-                <div className="relative h-48 overflow-hidden">
-                  <img
-                    src={item.image_url}
-                    alt={item.title || item.name}
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                  />
-                </div>
-                <div className="p-4">
-                  <h3 className="font-semibold text-lg mb-1">{item.title || item.name}</h3>
-                  <p className="text-xs text-muted-foreground mb-2">{item.location}</p>
-                  <p className="text-muted-foreground text-sm">
-                    Desde ${Number(item.price_from || item.price_per_night || 0).toLocaleString()} {item.currency || 'MXN'}
-                  </p>
-                </div>
-              </Card>
-            ))}
-          </div>
-        </div>
-
-        {/* Ofertas de última hora para el fin de semana */}
-        <div className="mb-12">
-          <h2 className="text-3xl font-bold mb-6">Ofertas de última hora para el fin de semana</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {weekendDeals.map((deal) => (
-              <Card
-                key={deal.id}
-                className="overflow-hidden group cursor-pointer border-none shadow-md hover:shadow-xl transition-all rounded-3xl"
-                onClick={() => router.push(`/hospedaje/${deal.id}`)}
-              >
-                <div className="relative h-36 overflow-hidden">
-                  <img
-                    src={deal.image_url}
-                    alt={deal.title}
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                  />
-                  {deal.discount_percentage && (
-                    <div className="absolute top-2 left-2 bg-red-500 text-white px-2 py-1 rounded text-xs font-bold">
-                      -{deal.discount_percentage}%
-                    </div>
-                  )}
-                </div>
-                <div className="p-3">
-                  <p className="text-xs text-[#0066FF] font-semibold mb-1">{deal.dates_label}</p>
-                  <h3 className="font-semibold text-sm mb-1">{deal.title}</h3>
-                  <p className="text-xs text-muted-foreground mb-2">{deal.location}</p>
-                  <p className="text-sm font-bold text-[#0066FF]">
-                    ${Number(deal.price_per_night).toLocaleString()} {deal.currency}
-                  </p>
-                  <p className="text-xs text-muted-foreground">por noche</p>
-                </div>
-              </Card>
-            ))}
-          </div>
-        </div>
-
-        {/* Descubre paquetes vacacionales */}
-        <div className="mb-12">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-3xl font-bold">Descubre paquetes vacacionales a los destinos más buscados</h2>
-            <Button variant="link" className="text-[#0066FF] font-semibold" onClick={() => router.push('/paquetes')}>
-              Ver todos los paquetes
-              <ChevronRight className="w-5 h-5 ml-1" />
-            </Button>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {vacationPackages.map((pkg) => (
-              <Card
-                key={pkg.id}
-                className="overflow-hidden group cursor-pointer border-none shadow-md hover:shadow-xl transition-all rounded-3xl"
-                onClick={() => router.push(`/paquete/${pkg.id}`)}
-              >
-                <div className="relative h-52 overflow-hidden">
-                  <img
-                    src={pkg.image_url}
-                    alt={pkg.destination}
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                  />
-                  {pkg.nights && (
-                    <div className="absolute top-3 left-3 bg-white/90 px-3 py-1 rounded-full">
-                      <p className="text-xs font-semibold">{pkg.nights} noches</p>
-                    </div>
-                  )}
-                </div>
-                <div className="p-5">
-                  <h3 className="font-bold text-xl mb-2">{pkg.destination}</h3>
-                  <p className="text-sm font-semibold text-muted-foreground mb-2">
-                    {pkg.includes || pkg.package_name}
-                  </p>
-                  <p className="text-sm text-muted-foreground mb-3">{pkg.description}</p>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-xs text-muted-foreground">Desde</p>
-                      <p className="text-xl font-bold text-[#0066FF]">
-                        ${Number(pkg.price).toLocaleString()} {pkg.currency}
-                      </p>
-                    </div>
-                    <Button size="sm" className="bg-[#0066FF] hover:bg-[#0052CC] text-white">
-                      Ver paquete
-                    </Button>
+          {/* Descubre tu nuevo hospedaje favorito */}
+          <div className="mb-12">
+            <h2 className="text-3xl font-bold mb-6">Descubre tu nuevo hospedaje favorito</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {accommodationFavorites.map((item) => (
+                <Card
+                  key={item.id}
+                  className="overflow-hidden group cursor-pointer border-none shadow-md hover:shadow-xl transition-all rounded-3xl"
+                  onClick={() => router.push(`/hospedaje/${item.id}`)}
+                >
+                  <div className="relative h-48 overflow-hidden">
+                    <img
+                      src={item.image_url}
+                      alt={item.title || item.name}
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                    />
                   </div>
-                </div>
-              </Card>
-            ))}
-          </div>
-        </div>
-
-        {/* Echa un vistazo a estos hospedajes únicos */}
-        <div className="mb-12">
-          <h2 className="text-3xl font-bold mb-6">Echa un vistazo a estos hospedajes únicos</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {uniqueStays.map((unique) => (
-              <Card
-                key={unique.id}
-                className="overflow-hidden group cursor-pointer border-none shadow-md hover:shadow-xl transition-shadow rounded-3xl"
-                onClick={() => router.push(`/hospedaje/${unique.id}`)}
-              >
-                <div className="relative h-44 overflow-hidden">
-                  <img
-                    src={unique.image_url}
-                    alt={unique.property_name}
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                  />
-                </div>
-                <div className="p-4">
-                  {unique.rating && (
-                    <div className="flex items-center gap-1 mb-2">
-                      <span className="text-yellow-500">★</span>
-                      <span className="font-semibold text-sm">{Number(unique.rating).toFixed(1)}</span>
-                      <span className="text-xs text-muted-foreground">
-                        ({unique.total_reviews || 0})
-                      </span>
-                    </div>
-                  )}
-                  <h3 className="font-semibold text-base mb-1">{unique.property_name}</h3>
-                  <p className="text-xs text-muted-foreground mb-2">{unique.location}</p>
-                  <p className="text-sm font-semibold text-[#0066FF]">
-                    ${Number(unique.price_per_night).toLocaleString()} {unique.currency}
-                  </p>
-                  <p className="text-xs text-muted-foreground">por noche</p>
-                </div>
-              </Card>
-            ))}
-          </div>
-        </div>
-
-        {/* Explora el mundo con AS Operadora */}
-        <div className="mb-12">
-          <h2 className="text-3xl font-bold mb-6">Explora el mundo con AS Operadora</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-            {exploreDestinations.map((dest) => (
-              <Card
-                key={dest.id}
-                className="overflow-hidden group cursor-pointer border-none shadow-md hover:shadow-xl transition-all rounded-3xl"
-                onClick={() => router.push(`/resultados/activities?city=${encodeURIComponent(dest.destination || dest.destination_name || '')}&radius=20`)}
-              >
-                <div className="relative h-24 overflow-hidden">
-                  <img
-                    src={dest.image_url}
-                    alt={dest.destination || dest.destination_name}
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                  <div className="absolute bottom-2 left-2 text-white">
-                    <h3 className="font-bold text-sm">{dest.destination || dest.destination_name}</h3>
-                    <p className="text-xs">{(dest.hotels_count || dest.total_hotels || 250).toLocaleString()} hoteles</p>
+                  <div className="p-4">
+                    <h3 className="font-semibold text-lg mb-1">{item.title || item.name}</h3>
+                    <p className="text-xs text-muted-foreground mb-2">{item.location}</p>
+                    <p className="text-muted-foreground text-sm">
+                      Desde ${Number(item.price_from || item.price_per_night || 0).toLocaleString()} {item.currency || 'MXN'}
+                    </p>
                   </div>
-                </div>
-              </Card>
-            ))}
+                </Card>
+              ))}
+            </div>
+          </div>
+
+          {/* Ofertas de última hora para el fin de semana */}
+          <div className="mb-12">
+            <h2 className="text-3xl font-bold mb-6">Ofertas de última hora para el fin de semana</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {weekendDeals.map((deal) => (
+                <Card
+                  key={deal.id}
+                  className="overflow-hidden group cursor-pointer border-none shadow-md hover:shadow-xl transition-all rounded-3xl"
+                  onClick={() => router.push(`/hospedaje/${deal.id}`)}
+                >
+                  <div className="relative h-36 overflow-hidden">
+                    <img
+                      src={deal.image_url}
+                      alt={deal.title}
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                    />
+                    {deal.discount_percentage && (
+                      <div className="absolute top-2 left-2 bg-red-500 text-white px-2 py-1 rounded text-xs font-bold">
+                        -{deal.discount_percentage}%
+                      </div>
+                    )}
+                  </div>
+                  <div className="p-3">
+                    <p className="text-xs text-[#0066FF] font-semibold mb-1">{deal.dates_label}</p>
+                    <h3 className="font-semibold text-sm mb-1">{deal.title}</h3>
+                    <p className="text-xs text-muted-foreground mb-2">{deal.location}</p>
+                    <p className="text-sm font-bold text-[#0066FF]">
+                      ${Number(deal.price_per_night).toLocaleString()} {deal.currency}
+                    </p>
+                    <p className="text-xs text-muted-foreground">por noche</p>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          </div>
+
+          {/* Descubre paquetes vacacionales */}
+          <div className="mb-12">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-3xl font-bold">Descubre paquetes vacacionales a los destinos más buscados</h2>
+              <Button variant="link" className="text-[#0066FF] font-semibold" onClick={() => router.push('/paquetes')}>
+                Ver todos los paquetes
+                <ChevronRight className="w-5 h-5 ml-1" />
+              </Button>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {vacationPackages.map((pkg) => (
+                <Card
+                  key={pkg.id}
+                  className="overflow-hidden group cursor-pointer border-none shadow-md hover:shadow-xl transition-all rounded-3xl"
+                  onClick={() => router.push(`/paquete/${pkg.id}`)}
+                >
+                  <div className="relative h-52 overflow-hidden">
+                    <img
+                      src={pkg.image_url}
+                      alt={pkg.destination}
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                    />
+                    {pkg.nights && (
+                      <div className="absolute top-3 left-3 bg-white/90 px-3 py-1 rounded-full">
+                        <p className="text-xs font-semibold">{pkg.nights} noches</p>
+                      </div>
+                    )}
+                  </div>
+                  <div className="p-5">
+                    <h3 className="font-bold text-xl mb-2">{pkg.destination}</h3>
+                    <p className="text-sm font-semibold text-muted-foreground mb-2">
+                      {pkg.includes || pkg.package_name}
+                    </p>
+                    <p className="text-sm text-muted-foreground mb-3">{pkg.description}</p>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-xs text-muted-foreground">Desde</p>
+                        <p className="text-xl font-bold text-[#0066FF]">
+                          ${Number(pkg.price).toLocaleString()} {pkg.currency}
+                        </p>
+                      </div>
+                      <Button size="sm" className="bg-[#0066FF] hover:bg-[#0052CC] text-white">
+                        Ver paquete
+                      </Button>
+                    </div>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          </div>
+
+          {/* Echa un vistazo a estos hospedajes únicos */}
+          <div className="mb-12">
+            <h2 className="text-3xl font-bold mb-6">Echa un vistazo a estos hospedajes únicos</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {uniqueStays.map((unique) => (
+                <Card
+                  key={unique.id}
+                  className="overflow-hidden group cursor-pointer border-none shadow-md hover:shadow-xl transition-shadow rounded-3xl"
+                  onClick={() => router.push(`/hospedaje/${unique.id}`)}
+                >
+                  <div className="relative h-44 overflow-hidden">
+                    <img
+                      src={unique.image_url}
+                      alt={unique.property_name}
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                    />
+                  </div>
+                  <div className="p-4">
+                    {unique.rating && (
+                      <div className="flex items-center gap-1 mb-2">
+                        <span className="text-yellow-500">★</span>
+                        <span className="font-semibold text-sm">{Number(unique.rating).toFixed(1)}</span>
+                        <span className="text-xs text-muted-foreground">
+                          ({unique.total_reviews || 0})
+                        </span>
+                      </div>
+                    )}
+                    <h3 className="font-semibold text-base mb-1">{unique.property_name}</h3>
+                    <p className="text-xs text-muted-foreground mb-2">{unique.location}</p>
+                    <p className="text-sm font-semibold text-[#0066FF]">
+                      ${Number(unique.price_per_night).toLocaleString()} {unique.currency}
+                    </p>
+                    <p className="text-xs text-muted-foreground">por noche</p>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          </div>
+
+          {/* Explora el mundo con AS Operadora */}
+          <div className="mb-12">
+            <h2 className="text-3xl font-bold mb-6">Explora el mundo con AS Operadora</h2>
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+              {exploreDestinations.map((dest) => (
+                <Card
+                  key={dest.id}
+                  className="overflow-hidden group cursor-pointer border-none shadow-md hover:shadow-xl transition-all rounded-3xl"
+                  onClick={() => router.push(`/resultados/activities?city=${encodeURIComponent(dest.destination || dest.destination_name || '')}&radius=20`)}
+                >
+                  <div className="relative h-24 overflow-hidden">
+                    <img
+                      src={dest.image_url}
+                      alt={dest.destination || dest.destination_name}
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                    <div className="absolute bottom-2 left-2 text-white">
+                      <h3 className="font-bold text-sm">{dest.destination || dest.destination_name}</h3>
+                      <p className="text-xs">{(dest.hotels_count || dest.total_hotels || 250).toLocaleString()} hoteles</p>
+                    </div>
+                  </div>
+                </Card>
+              ))}
+            </div>
           </div>
         </div>
-      </div>
       </main>
 
       {/* Footer */}
@@ -2433,7 +2601,7 @@ export default function Home() {
                 </p>
                 <p className="font-mono mt-1">
                   👥 Usuarios: <span className="font-bold">{dbInfo.totalUsers}</span> |
-                  🕒 Último: {dbInfo.lastUser?.email || 'N/A'}
+                  📦 Versión: <span className="font-bold">v2.225</span>
                 </p>
               </div>
             )}

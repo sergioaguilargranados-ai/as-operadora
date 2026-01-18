@@ -1,7 +1,7 @@
 # 🎯 AG-Contexto-Proyecto - AS Operadora
 
-**Última actualización:** 17 de Enero de 2026 - 02:00 CST  
-**Versión actual:** v2.223  
+**Última actualización:** 18 de Enero de 2026 - 01:10 CST  
+**Versión actual:** v2.225  
 **Actualizado por:** AntiGravity AI Assistant  
 **Propósito:** Documento maestro del proyecto para trabajo con agentes AntiGravity
 
@@ -37,7 +37,8 @@ Sistema completo de gestión de viajes corporativos con búsqueda, reservas, apr
 - **Gráficas:** Recharts
 
 ### Backend
-- **Runtime:** Next.js API Routes
+- **Runtime:** Next.js API Routes (Serverless)
+- **Servidor:** Estándar Next.js (NO `server.js` personalizado)
 - **Base de Datos:** PostgreSQL (Neon Cloud)
 - **Package Manager:** npm (NO bun en Vercel)
 - **Autenticación:** JWT + bcrypt
@@ -350,7 +351,7 @@ Estado: ✅ Listo / ❌ Error / ⏳ En proceso
 ## 📊 ESTADO ACTUAL DEL PROYECTO
 
 ### Versión Actual
-**v2.223** (17 Ene 2026, 02:00 CST)
+**v2.225** (18 Ene 2026, 15:00 CST)
 
 ### Progreso General
 **98%** completo
@@ -519,7 +520,20 @@ node -e "require('dotenv').config({path:'.env.local'}); console.log(process.env.
 1. Verificar que push a GitHub fue exitoso
 2. Ir a Vercel Dashboard → Deployments
 3. Revisar logs de build
-4. Verificar que Root Directory = `operadora-dev`
+4. Verificar que Root Directory = `operadora-dev` (o `./` si el repo está en raíz)
+
+### Error: "404 NOT FOUND" en Vercel (tras build exitoso)
+
+**Causa:** Conflicto entre servidor custom (`server.js`) y entorno Serverless.
+**Solución:**
+- Eliminar/Renombrar `server.js`
+- Usar script `start`: `"next start"` en `package.json`
+- Asegurar `vercel.json` con framework "nextjs"
+
+### Error: "Build Error: Cannot find module expo-router"
+
+**Causa:** Vercel intenta compilar la app móvil.
+**Solución:** Excluir `operadora-mobile` en `.vercelignore` y `tsconfig.json`.
 
 ---
 
