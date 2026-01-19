@@ -106,7 +106,7 @@ export function CounterSelector({
                         onChange={handleInputChange}
                         onBlur={handleBlur}
                         onFocus={(e) => e.target.select()}
-                        className="text-center h-10 font-bold"
+                        className="text-center h-10 font-bold text-gray-900 bg-white"
                     />
                 </div>
 
