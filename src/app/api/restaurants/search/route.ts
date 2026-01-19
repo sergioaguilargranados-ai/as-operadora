@@ -80,13 +80,14 @@ export async function GET(request: Request) {
     console.log(`[API Restaurants] Search Query: ${query}`)
     console.log(`[API Restaurants] API Key configured: ${!!apiKey}`)
 
-    // Si no hay API Key, advertimos pero intentamos fallback a mock solo si es explícito el modo test
+    // Si no hay API Key, usamos Mock Data en lugar de error
     if (!apiKey) {
-        console.error("❌ FALTA API KEY: GOOGLE_PLACES_API_KEY no está definida en .env.local")
+        console.warn("⚠️ API KEY faltante. Usando MOCK_DATA.")
         return NextResponse.json({
-            error: "Configuración de servidor incompleta (Falta API Key)",
-            source: "ERROR"
-        }, { status: 500 })
+            results: MOCK_RESTAURANTS,
+            status: "OK",
+            source: "MOCK (No Key)"
+        })
     }
 
     try {
@@ -106,7 +107,6 @@ export async function GET(request: Request) {
         }
 
         // Mapear resultados al formato de nuestra app
-        // Nota: TextSearch devuelve geometry, name, photos, price_level, rating, user_ratings_total
         const results = (data.results || []).map((place: any) => ({
             place_id: place.place_id,
             name: place.name,
@@ -114,11 +114,10 @@ export async function GET(request: Request) {
             rating: place.rating,
             user_ratings_total: place.user_ratings_total,
             price_level: place.price_level,
-            vicinity: place.formatted_address, // TextSearch devuelve formatted_address
+            vicinity: place.formatted_address,
             geometry: place.geometry,
             opening_hours: place.opening_hours,
             types: place.types,
-            // Enriquecimiento manual simple para cuisine si no viene explícito
             cuisine: place.types
         }))
 
@@ -132,9 +131,12 @@ export async function GET(request: Request) {
 
     } catch (error) {
         console.error('Error en API de Restaurantes:', error)
-        return NextResponse.json(
-            { error: 'Error al buscar restaurantes', details: error instanceof Error ? error.message : String(error) },
-            { status: 500 }
-        )
+        // Fallback a Mock Data en caso de error de API o Red
+        console.warn("⚠️ Error en Fetch Google Places. Usando MOCK_DATA fallback.")
+        return NextResponse.json({
+            results: MOCK_RESTAURANTS,
+            status: "OK",
+            source: "MOCK (Fallback)"
+        })
     }
 }

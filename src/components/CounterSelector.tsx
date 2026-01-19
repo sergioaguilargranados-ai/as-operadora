@@ -27,7 +27,12 @@ export function CounterSelector({
     const [localValue, setLocalValue] = useState(value.toString())
 
     useEffect(() => {
-        setLocalValue(value.toString())
+        // Only update local state if the prop value is different from parsed local value
+        // This prevents overwriting partial inputs (like "") if the parent re-renders for other reasons
+        const parsedLocal = parseInt(localValue)
+        if (parsedLocal !== value) {
+            setLocalValue(value.toString())
+        }
     }, [value])
 
     const handleIncrement = () => {
@@ -44,19 +49,17 @@ export function CounterSelector({
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const newVal = e.target.value
-        // Allow empty string for typing
-        if (newVal === "") {
-            setLocalValue("")
-            return
-        }
+        setLocalValue(newVal)
+
+        if (newVal === "") return
 
         // Only allow numbers
         if (!/^\d*$/.test(newVal)) return
 
-        setLocalValue(newVal)
         const numVal = parseInt(newVal)
 
         if (!isNaN(numVal)) {
+            // We allow intermediate values, but only trigger change if valid
             if (numVal >= min && numVal <= max) {
                 onChange(numVal)
             }
@@ -102,6 +105,7 @@ export function CounterSelector({
                         value={localValue}
                         onChange={handleInputChange}
                         onBlur={handleBlur}
+                        onFocus={(e) => e.target.select()}
                         className="text-center h-10 font-bold"
                     />
                 </div>
@@ -127,8 +131,8 @@ export function CounterSelector({
                                 type="button"
                                 onClick={() => onChange(opt)}
                                 className={`text-xs py-1 px-2 rounded-sm transition-colors flex-1 min-w-[24px] ${value === opt
-                                        ? "bg-white text-primary font-bold shadow-sm"
-                                        : "text-gray-500 hover:text-gray-900 hover:bg-gray-200"
+                                    ? "bg-white text-primary font-bold shadow-sm"
+                                    : "text-gray-500 hover:text-gray-900 hover:bg-gray-200"
                                     }`}
                             >
                                 {opt}
