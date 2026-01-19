@@ -35,6 +35,26 @@ Esto permite detectar si se perdieron tablas/campos entre versiones.
 
 ## 📅 HISTORIAL DE CAMBIOS
 
+### v2.229 - 18 de Enero de 2026 - 18:25 CST
+
+**Cambios:**
+- **UI Restaurantes:**
+  - Se agregó autocompletado en el campo "Ciudad o Zona" (similar a hoteles).
+  - Opciones predefinidas: CDMX, Cancún, Guadalajara, Monterrey, etc.
+- **UI Traslados:**
+  - Se habilitó la etiqueta dinámica "Fecha de regreso" cuando se selecciona viaje redondo.
+  - Se corrigió la validación de fecha de regreso.
+- **UI AS Home:**
+  - Selector de huéspedes simplificado (sin botones rápidos 1,2,5...), solo +/- hasta 20 personas.
+- **API Restaurantes:**
+  - Agregado soporte fallback para `NEXT_PUBLIC_GOOGLE_PLACES_API_KEY` en `route.ts`.
+  - Logging mejorado para depurar errores 500 en Vercel (Key presence, query, URL).
+
+**Cifra de Control:**
+- T: 54 | C: 541
+
+---
+
 ### v2.228 - 18 de Enero de 2026 - 17:45 CST
 
 **Cambios:**
