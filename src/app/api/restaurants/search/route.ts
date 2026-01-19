@@ -91,32 +91,60 @@ export async function GET(request: Request) {
     }
 
     try {
-        // 1. Text Search (Búsqueda por texto)
+        // 1. Text Search (Google Places API New - v1)
         const searchText = query ? `restaurantes en ${query}` : 'restaurantes populares'
-        const url = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(searchText)}&key=${apiKey}&language=es`
+        const url = 'https://places.googleapis.com/v1/places:searchText'
 
-        // Log URL (sin key)
-        console.log(`[API Restaurants] Fetching from Google: ${url.replace(apiKey, 'HIDDEN_KEY')}`)
-
-        const response = await fetch(url)
-        const data = await response.json()
-
-        if (data.status !== 'OK' && data.status !== 'ZERO_RESULTS') {
-            console.error('Google Places API Error:', data)
-            throw new Error(data.error_message || `API Error: ${data.status}`)
+        const requestBody = {
+            textQuery: searchText,
+            languageCode: 'es',
+            maxResultCount: 20
         }
 
-        // Mapear resultados al formato de nuestra app
-        const results = (data.results || []).map((place: any) => ({
-            place_id: place.place_id,
-            name: place.name,
-            photos: place.photos,
+        const fieldMask = [
+            'places.id',
+            'places.displayName',
+            'places.formattedAddress',
+            'places.priceLevel',
+            'places.rating',
+            'places.userRatingCount',
+            'places.location',
+            'places.photos',
+            'places.types',
+            'places.regularOpeningHours'
+        ].join(',')
+
+        // Log URL (sin key)
+        console.log(`[API Restaurants] Fetching from Google (New API): ${url}`)
+
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Goog-Api-Key': apiKey,
+                'X-Goog-FieldMask': fieldMask
+            },
+            body: JSON.stringify(requestBody)
+        })
+
+        const data = await response.json()
+
+        if (!response.ok) {
+            console.error('Google Places API Error:', data)
+            throw new Error(data.error ? data.error.message : `API Error: ${response.status}`)
+        }
+
+        // Mapear resultados (Formato v1 a Formato App)
+        const results = (data.places || []).map((place: any) => ({
+            place_id: place.id,
+            name: place.displayName?.text || 'Restaurante',
+            photos: (place.photos || []).map((p: any) => ({ photo_reference: p.name })), // En v1 'name' es el recurso de la foto
             rating: place.rating,
-            user_ratings_total: place.user_ratings_total,
-            price_level: place.price_level,
-            vicinity: place.formatted_address,
-            geometry: place.geometry,
-            opening_hours: place.opening_hours,
+            user_ratings_total: place.userRatingCount,
+            price_level: place.priceLevel ? (place.priceLevel === 'PRICE_LEVEL_EXPENSIVE' ? 4 : place.priceLevel === 'PRICE_LEVEL_CHEAP' ? 1 : 2) : 2,
+            vicinity: place.formattedAddress,
+            geometry: { location: { lat: place.location?.latitude, lng: place.location?.longitude } },
+            opening_hours: { open_now: place.regularOpeningHours?.openNow },
             types: place.types,
             cuisine: place.types
         }))
@@ -126,7 +154,7 @@ export async function GET(request: Request) {
         return NextResponse.json({
             results: results,
             status: "OK",
-            source: "GOOGLE"
+            source: "GOOGLE_V1"
         })
 
     } catch (error) {
