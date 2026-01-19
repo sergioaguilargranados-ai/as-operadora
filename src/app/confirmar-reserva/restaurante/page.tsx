@@ -159,7 +159,7 @@ export default function RestaurantBookingPage() {
                                 </div>
 
                                 <div className="pt-4">
-                                    <Button type="submit" size="lg" className="w-full bg-blue-600 hover:bg-blue-700" disabled={loading}>
+                                    <Button type="submit" size="lg" className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold" disabled={loading}>
                                         {loading ? "Procesando..." : "Confirmar Reserva"}
                                     </Button>
                                     <p className="text-xs text-center text-gray-500 mt-3">
