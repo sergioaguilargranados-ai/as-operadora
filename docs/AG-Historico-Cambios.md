@@ -1,7 +1,7 @@
 # 📋 AG-Histórico de Cambios - AS Operadora
 
-**Última actualización:** 17 de Enero de 2026 - 02:05 CST  
-**Versión actual:** v2.226  
+**Última actualización:** 21 de Enero de 2026 - 11:15 CST  
+**Versión actual:** v2.231  
 **Actualizado por:** AntiGravity AI Assistant  
 **Propósito:** Registro cronológico de todos los cambios del proyecto
 
@@ -34,6 +34,39 @@ Esto permite detectar si se perdieron tablas/campos entre versiones.
 ---
 
 ## 📅 HISTORIAL DE CAMBIOS
+
+### v2.231 - 21 de Enero de 2026 - 11:15 CST
+
+**Cambios:**
+- **Fix Calendario (DateRangePicker):**
+  - Corregida desalineación de encabezados de días de la semana.
+  - Agregado `w-full` a `head_row` para que ocupe el 100% del ancho.
+  - Agregado `flex-1` a `head_cell` para distribución uniforme de columnas.
+  - Los encabezados ahora se alinean perfectamente con los días del calendario.
+- **Logging Mejorado para Hoteles:**
+  - Agregados logs detallados en `SearchService.searchHotels()` para diagnóstico.
+  - Se muestra: parámetros de entrada, código de ciudad, parámetros a Amadeus, cantidad de resultados.
+  - Logs de error mejorados con stack trace completo.
+  - Lista de ciudades disponibles en caso de error de código de ciudad.
+- **Confirmación API Amadeus Hoteles:**
+  - API de Amadeus **SÍ está conectada** correctamente.
+  - Credenciales configuradas en `.env.local`: `AMADEUS_API_KEY` y `AMADEUS_API_SECRET`.
+  - Flujo: `SearchService` → `AmadeusHotelAdapter` → API de Amadeus.
+  - Si no devuelve resultados, puede ser por: código de ciudad incorrecto, sin disponibilidad en fechas, o error de autenticación.
+
+**Archivos modificados:**
+- `src/components/ui/calendar.tsx` - Fix alineación encabezados
+- `src/services/SearchService.ts` - Logging mejorado
+- `docs/AG-Historico-Cambios.md` - Esta entrada
+
+**Lecciones Aprendidas:**
+- Los componentes de calendario con `flex` requieren `w-full` en filas y `flex-1` en celdas para alineación correcta.
+- El logging detallado es esencial para diagnosticar problemas con APIs externas.
+
+**Cifra de Control:**
+- T: 57 | C: 545 (Sin cambios en BD)
+
+---
 
 ### v2.230 - 19 de Enero de 2026 - 00:25 CST
 

@@ -30,8 +30,8 @@ function Calendar({
         nav_button_previous: "absolute left-1",
         nav_button_next: "absolute right-1",
         table: "w-full border-collapse",
-        head_row: "flex",
-        head_cell: "text-muted-foreground rounded-md w-9 font-normal text-[0.8rem] text-center",
+        head_row: "flex w-full",
+        head_cell: "text-muted-foreground rounded-md w-9 font-normal text-[0.8rem] text-center flex-1",
         row: "flex w-full mt-1",
         cell: cn(
           "relative h-9 w-9 text-center text-sm p-0",

@@ -170,13 +170,22 @@ class SearchService {
     currency?: string
   }): Promise<SearchResult[]> {
     try {
-      console.log('🏨 Searching hotels with Amadeus (primary)...')
+      console.log('🏨 ========== HOTEL SEARCH START ==========')
+      console.log('🏨 Input params:', JSON.stringify(params, null, 2))
 
       // Obtener cityCode si no se proporciona
       const cityCode = params.cityCode || await this.getCityCode(params.city)
 
+      console.log(`🏨 City: "${params.city}" → Code: "${cityCode}"`)
+
       if (!cityCode) {
-        console.error('❌ Could not determine city code')
+        console.error('❌ Could not determine city code for:', params.city)
+        console.error('❌ Available cities:', Object.keys({
+          'cancun': 'CUN', 'cancún': 'CUN', 'ciudad de mexico': 'MEX',
+          'cdmx': 'MEX', 'mexico city': 'MEX', 'guadalajara': 'GDL',
+          'monterrey': 'MTY', 'cabo': 'SJD', 'los cabos': 'SJD',
+          'puerto vallarta': 'PVR', 'vallarta': 'PVR'
+        }))
         return []
       }
 
@@ -190,9 +199,15 @@ class SearchService {
         currency: params.currency || 'MXN'
       }
 
+      console.log('🏨 Calling AmadeusHotelAdapter with:', JSON.stringify(amadeusParams, null, 2))
+
       const amadeusResults = await this.amadeusHotels.search(amadeusParams)
 
       console.log(`✅ Amadeus returned ${amadeusResults.length} hotels`)
+
+      if (amadeusResults.length > 0) {
+        console.log('🏨 Sample result:', JSON.stringify(amadeusResults[0], null, 2))
+      }
 
       // Si hay menos de 10 resultados, complementar con Booking.com (futuro)
       if (amadeusResults.length < 10) {
@@ -200,11 +215,17 @@ class SearchService {
         // TODO: Implementar BookingAdapter y merge aquí
       }
 
+      console.log('🏨 ========== HOTEL SEARCH END ==========')
+
       // Ordenar por precio
       return amadeusResults.sort((a, b) => a.price - b.price)
 
     } catch (error) {
+      console.error('❌ ========== HOTEL SEARCH ERROR ==========')
       console.error('❌ Error searching hotels:', error)
+      console.error('❌ Error details:', error instanceof Error ? error.message : 'Unknown error')
+      console.error('❌ Stack:', error instanceof Error ? error.stack : 'No stack')
+      console.error('❌ ==========================================')
       return []
     }
   }
