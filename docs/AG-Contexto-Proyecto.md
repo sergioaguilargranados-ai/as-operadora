@@ -73,12 +73,29 @@ Sistema completo de gestión de viajes corporativos con búsqueda, reservas, apr
 - Cuando `as-operadora` esté estable → migrar usuarios
 - Eventualmente: uno será DEV, otro PRODUCCIÓN
 
+**⚠️ IMPORTANTE - Configuración de Git Remote:**
+
+El directorio local `operadora-dev/` debe tener `origin` apuntando a `operadora-dev` en GitHub:
+
+```bash
+# Verificar configuración correcta
+git remote -v
+# Debe mostrar:
+# origin  https://...operadora-dev.git (fetch)
+# origin  https://...operadora-dev.git (push)
+
+# Si apunta a as-operadora, corregir con:
+git remote set-url origin https://ghp_TOKEN@github.com/sergioaguilargranados-ai/operadora-dev.git
+```
+
+**Razón:** El sitio en producción (www.as-ope-viajes.company) despliega desde `operadora-dev`, NO desde `as-operadora`.
+
 ### Proyectos Vercel
 
 | Proyecto | Repo | URL | Ambiente |
 |----------|------|-----|----------|
 | **AS Operadora (nuevo)** | as-operadora | (pendiente configurar) | DEV |
-| **Operadora Dev (actual)** | operadora-dev | https://app.asoperadora.com | UAT |
+| **Operadora Dev (actual)** | operadora-dev | https://app.asoperadora.com y www.as-ope-viajes.company | PRODUCCIÓN |
 
 ---
 
@@ -534,6 +551,47 @@ node -e "require('dotenv').config({path:'.env.local'}); console.log(process.env.
 
 **Causa:** Vercel intenta compilar la app móvil.
 **Solución:** Excluir `operadora-mobile` en `.vercelignore` y `tsconfig.json`.
+
+### Error: "Cambios no se despliegan en producción (www.as-ope-viajes.company)"
+
+**Causa:** El remote `origin` apunta a `as-operadora` en lugar de `operadora-dev`.
+
+**Síntomas:**
+- `git push origin main` es exitoso
+- Los cambios aparecen en GitHub en el repo `as-operadora`
+- Pero NO se despliegan en www.as-ope-viajes.company
+- La versión en producción no se actualiza
+
+**Diagnóstico:**
+```bash
+# Verificar a qué repositorio apunta origin
+git remote -v
+
+# Si muestra as-operadora, ese es el problema
+# origin  https://...as-operadora.git (fetch)
+# origin  https://...as-operadora.git (push)
+```
+
+**Solución:**
+```bash
+# Cambiar origin para que apunte a operadora-dev
+git remote set-url origin https://ghp_TOKEN@github.com/sergioaguilargranados-ai/operadora-dev.git
+
+# Verificar que cambió correctamente
+git remote -v
+
+# Hacer push al repositorio correcto
+git push origin main
+
+# Si es necesario forzar un nuevo deploy en Vercel
+git commit --allow-empty -m "Force Vercel redeploy - vX.XXX"
+git push origin main
+```
+
+**Importante:**
+- El sitio en producción (www.as-ope-viajes.company) despliega desde `operadora-dev`
+- El repo `as-operadora` es para desarrollo/pruebas
+- Siempre verificar con `git remote -v` antes de hacer push
 
 ---
 
