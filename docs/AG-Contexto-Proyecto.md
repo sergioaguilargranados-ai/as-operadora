@@ -64,64 +64,46 @@ Sistema completo de gestión de viajes corporativos con búsqueda, reservas, apr
 
 | Repositorio | Propósito | URL | Estado |
 |-------------|-----------|-----|--------|
-| **as-operadora** | Producción (nuevo dominio) | https://github.com/sergioaguilargranados-ai/as-operadora | ✅ PRODUCCIÓN |
-| **operadora-dev** | Producción (dominio anterior) | https://github.com/sergioaguilargranados-ai/operadora-dev | ✅ PRODUCCIÓN |
+| **as-operadora** | Producción | https://github.com/sergioaguilargranados-ai/as-operadora | ✅ PRODUCCIÓN |
+| **operadora-dev** | Desarrollo/Backup | https://github.com/sergioaguilargranados-ai/operadora-dev | ⚠️ NO USAR PARA PROD |
 
-**Estrategia Actual:**
-- Ambos repositorios están en PRODUCCIÓN
-- `as-operadora` → www.as-ope-viajes.company (dominio nuevo)
-- `operadora-dev` → app.asoperadora.com (dominio anterior)
-- Los cambios deben pushearse a **ambos** repositorios para mantener sincronización
+**Estrategia Actual Correcta:**
+- **as-operadora** → www.as-ope-viajes.company (ÚNICO SITIO DE PRODUCCIÓN)
+- Todos los cambios deben ir dirigidos a este repositorio (`as-operadora`).
+- El repositorio `operadora-dev` queda como respaldo o entorno de desarrollo secundario.
 
 **⚠️ IMPORTANTE - Configuración de Git Remote:**
 
-El directorio local `operadora-dev/` debe tener **DOS** remotes configurados:
+Para desplegar en producción, el remote debe ser `as-operadora`:
 
 ```bash
-# Verificar configuración correcta
+# Verificar configuración
 git remote -v
 
-# Debe mostrar:
-# origin          https://...operadora-dev.git (fetch)
-# origin          https://...operadora-dev.git (push)
+# Debe existir el remote 'as-operadora' (o 'origin' apuntando a as-operadora)
 # as-operadora    https://...as-operadora.git (fetch)
 # as-operadora    https://...as-operadora.git (push)
-```
-
-**Si falta algún remote, agregar con:**
-
-```bash
-# Agregar remote para operadora-dev (si no existe)
-git remote add origin https://ghp_TOKEN@github.com/sergioaguilargranados-ai/operadora-dev.git
-
-# Agregar remote para as-operadora (si no existe)
-git remote add as-operadora https://ghp_TOKEN@github.com/sergioaguilargranados-ai/as-operadora.git
 ```
 
 **Flujo de trabajo para hacer cambios:**
 
 ```bash
-# 1. Hacer cambios en código
-# 2. Agregar y commitear
+# 1. Hacer cambios y commit
 git add .
-git commit -m "vX.XXX - Descripción de cambios"
+git commit -m "vX.XXX - Descripción"
 
-# 3. Push a AMBOS repositorios
-git push origin main              # → app.asoperadora.com
-git push as-operadora main        # → www.as-ope-viajes.company
-
-# Alternativamente, push a ambos a la vez:
-git push origin main && git push as-operadora main
+# 2. Push SOLAMENTE a as-operadora (Producción)
+git push as-operadora main
 ```
 
-**Razón:** Ambos dominios están en producción y deben mantenerse sincronizados.
+**Razón:** Centralizar el despliegue en el nuevo dominio y repositorio oficial.
 
 ### Proyectos Vercel
 
 | Proyecto | Repo | URL | Ambiente |
 |----------|------|-----|----------|
-| **AS Operadora (nuevo)** | as-operadora | www.as-ope-viajes.company | PRODUCCIÓN |
-| **Operadora Dev (anterior)** | operadora-dev | app.asoperadora.com | PRODUCCIÓN |
+| **AS Operadora** | as-operadora | www.as-ope-viajes.company | ✅ PRODUCCIÓN |
+| **Operadora Dev** | operadora-dev | app.asoperadora.com | ⚠️ OBSOLETO / DEV |
 
 ---
 
@@ -578,55 +560,20 @@ node -e "require('dotenv').config({path:'.env.local'}); console.log(process.env.
 **Causa:** Vercel intenta compilar la app móvil.
 **Solución:** Excluir `operadora-mobile` en `.vercelignore` y `tsconfig.json`.
 
-### Error: "Cambios no se despliegan en producción"
-
-**Causa:** Los cambios se pushearon solo a uno de los dos repositorios.
-
-**Contexto:** Hay DOS dominios en producción:
-- **www.as-ope-viajes.company** → despliega desde `as-operadora`
-- **app.asoperadora.com** → despliega desde `operadora-dev`
-
+### Error: "Cambios no se despliegan en producción (www.as-ope-viajes.company)"
+**Causa:** Se hizo push al repositorio incorrecto (`operadora-dev`).
+**Contexto:** El único repositorio que despliega a producción es **`as-operadora`**.
 **Síntomas:**
-- `git push` es exitoso
-- Los cambios aparecen en GitHub en uno de los repos
-- Pero NO se despliegan en uno o ambos dominios
-- La versión en el footer no se actualiza
-
-**Diagnóstico:**
-
-```bash
-# 1. Verificar qué remotes están configurados
-git remote -v
-
-# 2. Verificar último commit en cada remote
-git log origin/main --oneline -1        # operadora-dev
-git log as-operadora/main --oneline -1  # as-operadora
-
-# 3. Verificar si están sincronizados
-git log origin/main..as-operadora/main  # Commits en as-operadora que no están en origin
-git log as-operadora/main..origin/main  # Commits en origin que no están en as-operadora
-```
-
+- `git push` exitoso pero sin cambios en www.as-ope-viajes.company
+- Los cambios están en el repo `operadora-dev` pero no en `as-operadora`
 **Solución:**
-
 ```bash
-# Opción 1: Push a ambos repositorios
-git push origin main              # → app.asoperadora.com
-git push as-operadora main        # → www.as-ope-viajes.company
-
-# Opción 2: Push a ambos a la vez
-git push origin main && git push as-operadora main
-
-# Si es necesario forzar un nuevo deploy en Vercel
-git commit --allow-empty -m "Force Vercel redeploy - vX.XXX"
-git push origin main && git push as-operadora main
+# Push explícito al repositorio de producción
+git push as-operadora main
 ```
-
 **Importante:**
-- **SIEMPRE** hacer push a ambos repositorios para mantener sincronización
-- Verificar con `git remote -v` que ambos remotes estén configurados
-- Esperar 2-3 minutos después del push para que Vercel despliegue
-
+- Siempre verificar con `git remote -v`
+- Asegurar que `as-operadora` esté configurado como remote
 ---
 
 ## 📈 PRÓXIMOS PASOS
