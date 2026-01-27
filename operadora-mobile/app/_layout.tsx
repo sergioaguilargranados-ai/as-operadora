@@ -20,7 +20,20 @@ export default function RootLayout() {
         NotificationsService.registerForPushNotificationsAsync()
     }, [])
 
-    // ... (keep auth logic)
+    // Manejar redirección basada en autenticación
+    useEffect(() => {
+        if (isLoading) return
+
+        const inAuthGroup = segments[0] === '(auth)'
+
+        if (isAuthenticated && inAuthGroup) {
+            // Si está autenticado y está en pantallas de auth, ir a tabs
+            router.replace('/(tabs)')
+        } else if (!isAuthenticated && !inAuthGroup) {
+            // Si no está autenticado y no está en auth, ir a login
+            router.replace('/(auth)/login')
+        }
+    }, [isAuthenticated, segments, isLoading])
 
     return (
         <StripeProvider

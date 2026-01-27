@@ -2,10 +2,10 @@ import React, { useState, useEffect } from 'react'
 import { View, StyleSheet } from 'react-native'
 import { Text, Card, FAB, Portal, Modal } from 'react-native-paper'
 import { useLocalSearchParams } from 'expo-router'
-import InfiniteScrollList from '../../components/InfiniteScrollList'
-import AdvancedFilters from '../../components/AdvancedFilters'
-import { Colors, Spacing, FontSizes } from '../../constants/theme'
-import FlightsService, { Flight } from '../../services/flights.service'
+import InfiniteScrollList from '../components/InfiniteScrollList'
+import AdvancedFilters from '../components/AdvancedFilters'
+import { Colors, Spacing, FontSizes } from '../constants/theme'
+import FlightsService, { Flight } from '../services/flights.service'
 
 // Definición de filtros para vuelos
 const FLIGHT_FILTERS = [
@@ -207,7 +207,7 @@ export default function FlightResultsScreen() {
                 hasMore={hasMore}
                 loading={loading}
                 keyExtractor={(item) => item.id}
-                estimatedItemSize={150}
+
             />
 
             <FAB

@@ -4,6 +4,7 @@ import "./globals.css";
 import ClientBody from "./ClientBody";
 import Script from "next/script";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { FeaturesProvider } from "@/contexts/FeaturesContext";
 import { CookieConsent } from "@/components/CookieConsent";
 import { ChatWidget } from "@/components/ChatWidget";
 
@@ -37,9 +38,11 @@ export default function RootLayout({
       </head>
       <body suppressHydrationWarning className="antialiased">
         <AuthProvider>
-          <ClientBody>{children}</ClientBody>
-          <CookieConsent />
-          <ChatWidget />
+          <FeaturesProvider>
+            <ClientBody>{children}</ClientBody>
+            <CookieConsent />
+            <ChatWidget />
+          </FeaturesProvider>
         </AuthProvider>
       </body>
     </html>

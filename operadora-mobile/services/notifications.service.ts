@@ -41,11 +41,15 @@ const NotificationsService = {
             }
 
             // Obtener el token
-            token = (await Notifications.getExpoPushTokenAsync({
-                projectId: 'your-project-id' // Debes configurar esto en app.json
-            })).data
-
-            console.log('Push Token:', token)
+            try {
+                // Intenta obtener el token, si falla (ej. sin projectId configurado), no detiene la app
+                const tokenResponse = await Notifications.getExpoPushTokenAsync()
+                token = tokenResponse.data
+                console.log('Push Token:', token)
+            } catch (error) {
+                console.log('Error getting push token. Skipping...', error)
+                return null
+            }
 
             // Enviar token al backend para asociarlo al usuario
             try {

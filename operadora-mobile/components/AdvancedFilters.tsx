@@ -1,25 +1,26 @@
-import React from 'react'
-import { View, StyleSheet, FlatList, ActivityIndicator } from 'react-native'
-import { Text, Card, Chip, Button } from 'react-native-paper'
-import { Colors, Spacing, FontSizes } from '../constants/theme'
+import React, { useState } from 'react'
+import { View, StyleSheet, ScrollView } from 'react-native'
+import { Text, Button, Checkbox, Divider, IconButton } from 'react-native-paper'
+import { Colors, Spacing, FontSizes, BorderRadius } from '../constants/theme'
+import { SafeAreaView } from 'react-native-safe-area-context'
 
 interface FilterOption {
-    id: string
+    id: string | number
     label: string
     value: any
-    type: 'checkbox' | 'range' | 'select'
+    type: 'checkbox' | 'radio'
 }
 
-interface FilterGroup {
+interface FilterSection {
     id: string
     title: string
     options: FilterOption[]
 }
 
 interface AdvancedFiltersProps {
-    filters: FilterGroup[]
-    selectedFilters: { [key: string]: any }
-    onFilterChange: (filterId: string, value: any) => void
+    filters: FilterSection[]
+    selectedFilters: { [key: string]: any[] }
+    onFilterChange: (sectionId: string, value: any[]) => void
     onApply: () => void
     onClear: () => void
 }
@@ -29,133 +30,120 @@ export default function AdvancedFilters({
     selectedFilters,
     onFilterChange,
     onApply,
-    onClear,
+    onClear
 }: AdvancedFiltersProps) {
-    const isFilterSelected = (filterId: string, value: any) => {
-        const selected = selectedFilters[filterId]
-        if (Array.isArray(selected)) {
-            return selected.includes(value)
-        }
-        return selected === value
-    }
 
-    const toggleFilter = (filterId: string, value: any) => {
-        const current = selectedFilters[filterId]
+    const toggleFilter = (sectionId: string, value: any, type: 'checkbox' | 'radio') => {
+        const currentSelection = selectedFilters[sectionId] || []
 
-        if (Array.isArray(current)) {
-            // Para filtros múltiples (checkbox)
-            const newValue = current.includes(value)
-                ? current.filter(v => v !== value)
-                : [...current, value]
-            onFilterChange(filterId, newValue)
+        if (type === 'checkbox') {
+            const exists = currentSelection.includes(value)
+            let newSelection
+
+            if (exists) {
+                newSelection = currentSelection.filter(item => item !== value)
+            } else {
+                newSelection = [...currentSelection, value]
+            }
+            onFilterChange(sectionId, newSelection)
         } else {
-            // Para filtros simples
-            onFilterChange(filterId, value)
+            // Radio logic if needed (single selection)
+            onFilterChange(sectionId, [value])
         }
     }
-
-    const renderFilterGroup = ({ item: group }: { item: FilterGroup }) => (
-        <View style={styles.filterGroup} key={group.id}>
-            <Text style={styles.groupTitle}>{group.title}</Text>
-            <View style={styles.optionsContainer}>
-                {group.options.map((option) => (
-                    <Chip
-                        key={option.id}
-                        selected={isFilterSelected(group.id, option.value)}
-                        onPress={() => toggleFilter(group.id, option.value)}
-                        style={styles.chip}
-                        textStyle={styles.chipText}
-                    >
-                        {option.label}
-                    </Chip>
-                ))}
-            </View>
-        </View>
-    )
 
     return (
-        <View style={styles.container}>
+        <SafeAreaView style={styles.container} edges={['top']}>
             <View style={styles.header}>
+                <IconButton icon="close" onPress={onApply} />
                 <Text style={styles.title}>Filtros</Text>
-                <Button mode="text" onPress={onClear} compact>
-                    Limpiar
-                </Button>
+                <Button onPress={onClear}>Limpiar</Button>
             </View>
 
-            <FlatList
-                data={filters}
-                renderItem={renderFilterGroup}
-                keyExtractor={(item) => item.id}
-                contentContainerStyle={styles.listContent}
-            />
+            <ScrollView style={styles.scroll}>
+                {filters.map((section, index) => (
+                    <View key={section.id} style={styles.section}>
+                        <Text style={styles.sectionTitle}>{section.title}</Text>
+
+                        {section.options.map((option) => {
+                            const isSelected = selectedFilters[section.id]?.includes(option.value)
+
+                            return (
+                                <View key={option.id} style={styles.optionRow}>
+                                    <View style={styles.optionLabel}>
+                                        <Text>{option.label}</Text>
+                                    </View>
+                                    <Checkbox.Android
+                                        status={isSelected ? 'checked' : 'unchecked'}
+                                        onPress={() => toggleFilter(section.id, option.value, option.type)}
+                                        color={Colors.primary}
+                                    />
+                                </View>
+                            )
+                        })}
+
+                        {index < filters.length - 1 && <Divider style={styles.divider} />}
+                    </View>
+                ))}
+            </ScrollView>
 
             <View style={styles.footer}>
-                <Button
-                    mode="contained"
-                    onPress={onApply}
-                    style={styles.applyButton}
-                    contentStyle={styles.applyButtonContent}
-                >
-                    Aplicar Filtros
+                <Button mode="contained" onPress={onApply} style={styles.applyButton}>
+                    Ver Resultados
                 </Button>
             </View>
-        </View>
+        </SafeAreaView>
     )
 }
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: Colors.background,
+        backgroundColor: Colors.white,
     },
     header: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        padding: Spacing.md,
+        paddingHorizontal: Spacing.sm,
         borderBottomWidth: 1,
         borderBottomColor: Colors.border,
-        backgroundColor: Colors.white,
+        height: 56,
     },
     title: {
-        fontSize: FontSizes.xl,
+        fontSize: FontSizes.lg,
         fontWeight: 'bold',
-        color: Colors.text,
     },
-    listContent: {
+    scroll: {
+        flex: 1,
+    },
+    section: {
         padding: Spacing.md,
     },
-    filterGroup: {
-        marginBottom: Spacing.lg,
-    },
-    groupTitle: {
+    sectionTitle: {
         fontSize: FontSizes.md,
-        fontWeight: '600',
-        color: Colors.text,
+        fontWeight: 'bold',
         marginBottom: Spacing.sm,
+        color: Colors.text,
     },
-    optionsContainer: {
+    optionRow: {
         flexDirection: 'row',
-        flexWrap: 'wrap',
-        gap: 8,
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingVertical: 4,
     },
-    chip: {
-        marginRight: Spacing.xs,
-        marginBottom: Spacing.xs,
+    optionLabel: {
+        flex: 1,
     },
-    chipText: {
-        fontSize: FontSizes.sm,
+    divider: {
+        marginTop: Spacing.md,
     },
     footer: {
         padding: Spacing.md,
         borderTopWidth: 1,
         borderTopColor: Colors.border,
-        backgroundColor: Colors.white,
     },
     applyButton: {
         backgroundColor: Colors.primary,
-    },
-    applyButtonContent: {
-        paddingVertical: Spacing.sm,
-    },
+    }
 })

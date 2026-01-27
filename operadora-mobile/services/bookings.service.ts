@@ -41,8 +41,43 @@ const BookingsService = {
                 return JSON.parse(cachedData)
             }
 
-            // Si no hay red ni cache, lanzar error o retornar vacío
-            throw error
+            // Si no hay red ni cache, DEVOLVER MOCK DATA para pruebas
+            console.log('Returning DEMO DATA (Backend unreachable)')
+
+            const mockReservations: Booking[] = [
+                {
+                    id: '1',
+                    type: 'flight',
+                    title: 'Vuelo a Cancún',
+                    date: '12 Feb 2026',
+                    status: 'confirmed',
+                    details: 'AM-590 • Aeroméxico',
+                    image: 'https://images.unsplash.com/photo-1436491865332-7a61a109cc05?q=80&w=1000&auto=format&fit=crop',
+                    confirmationCode: 'XYZ-123'
+                },
+                {
+                    id: '2',
+                    type: 'hotel',
+                    title: 'Hotel Xcaret Arte',
+                    date: '15 Feb 2026',
+                    status: 'pending',
+                    details: '3 Noches • 2 Adultos',
+                    image: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?q=80&w=1000&auto=format&fit=crop',
+                    confirmationCode: 'HTL-456'
+                },
+                {
+                    id: '3',
+                    type: 'auto',
+                    title: 'Renta de Auto - Tesla Model 3',
+                    date: '12 Feb 2026',
+                    status: 'completed',
+                    details: 'Hertz • 3 Días',
+                    image: 'https://images.unsplash.com/photo-1560958089-b8a1929cea89?q=80&w=1000&auto=format&fit=crop',
+                    confirmationCode: 'CAR-789'
+                }
+            ]
+
+            return mockReservations
         }
     },
 

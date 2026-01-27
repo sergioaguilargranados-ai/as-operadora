@@ -1,6 +1,6 @@
 "use client"
 
-// Build: 14 Jan 2026 - v2.223 - Fix login (degradación sin tablas), compatibilidad móvil (envelope + campos)
+// Build: 27 Ene 2026 - v2.233 - Sistema de Administración Granular de Funciones
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
@@ -18,6 +18,8 @@ import { Logo } from "@/components/Logo"
 import { useAuth } from "@/contexts/AuthContext"
 import { User as UserIcon, LogOut } from "lucide-react"
 import { useSearch } from "@/hooks/useSearch"
+import { FeatureGate, useFeatureCheck } from "@/components/FeatureGate"
+import { useFeatures } from "@/contexts/FeaturesContext"
 import type {
   Promotion,
   FeaturedHero,
@@ -654,6 +656,13 @@ export default function Home() {
                               <Calendar className="w-4 h-4" />
                               Itinerarios
                             </button>
+                            <button
+                              onClick={() => router.push('/admin/features')}
+                              className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center gap-3 text-blue-600 font-medium"
+                            >
+                              <Shield className="w-4 h-4" />
+                              Administración de Funciones
+                            </button>
                           </>
                         )}
                       </div>
@@ -707,122 +716,153 @@ export default function Home() {
                 <div className="mb-6 bg-white/50 backdrop-blur-md rounded-xl p-2 space-y-1">
                   {/* Fila 1: Hoteles - AS Home - Vuelos - Traslados - Autos - Actividades - Seguros */}
                   <TabsList className="bg-transparent h-auto p-0 w-full justify-center flex-wrap gap-1">
-                    <TabsTrigger
-                      value="stays"
-                      className="rounded-lg border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-white/80 px-3 md:px-4 py-2 flex items-center gap-1.5 text-sm"
-                    >
-                      <Hotel className="w-4 h-4" />
-                      <span>Hoteles</span>
-                    </TabsTrigger>
-                    <TabsTrigger
-                      value="ashome"
-                      className="rounded-lg border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-white/80 px-3 md:px-4 py-2 flex items-center gap-1.5 text-sm"
-                    >
-                      <HomeIcon className="w-4 h-4" />
-                      <span>AS Home</span>
-                    </TabsTrigger>
-                    <TabsTrigger
-                      value="flights"
-                      className="rounded-lg border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-white/80 px-3 md:px-4 py-2 flex items-center gap-1.5 text-sm"
-                    >
-                      <Plane className="w-4 h-4" />
-                      <span>Vuelos</span>
-                    </TabsTrigger>
-                    <TabsTrigger
-                      value="transfers"
-                      className="rounded-lg border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-white/80 px-3 md:px-4 py-2 flex items-center gap-1.5 text-sm"
-                    >
-                      <Bus className="w-4 h-4" />
-                      <span>Traslados</span>
-                    </TabsTrigger>
-                    <TabsTrigger
-                      value="cars"
-                      className="rounded-lg border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-white/80 px-3 md:px-4 py-2 flex items-center gap-1.5 text-sm"
-                    >
-                      <Car className="w-4 h-4" />
-                      <span>Autos</span>
-                    </TabsTrigger>
-                    <TabsTrigger
-                      value="things"
-                      className="rounded-lg border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-white/80 px-3 md:px-4 py-2 flex items-center gap-1.5 text-sm"
-                    >
-                      <Activity className="w-4 h-4" />
-                      <span>Actividades</span>
-                    </TabsTrigger>
-                    <TabsTrigger
-                      value="insurance"
-                      className="rounded-lg border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-white/80 px-3 md:px-4 py-2 flex items-center gap-1.5 text-sm"
-                    >
-                      <span>Seguros</span>
-                    </TabsTrigger>
-                    <TabsTrigger
-                      value="esim"
-                      className="rounded-lg border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-white/80 px-3 md:px-4 py-2 flex items-center gap-1.5 text-sm"
-                    >
-                      <Smartphone className="w-4 h-4" />
-                      <span>E-Sim</span>
-                    </TabsTrigger>
+                    <FeatureGate feature="SEARCH_HOTELS">
+                      <TabsTrigger
+                        value="stays"
+                        className="rounded-lg border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-white/80 px-3 md:px-4 py-2 flex items-center gap-1.5 text-sm"
+                      >
+                        <Hotel className="w-4 h-4" />
+                        <span>Hoteles</span>
+                      </TabsTrigger>
+                    </FeatureGate>
+                    <FeatureGate feature="SEARCH_ASHOME">
+                      <TabsTrigger
+                        value="ashome"
+                        className="rounded-lg border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-white/80 px-3 md:px-4 py-2 flex items-center gap-1.5 text-sm"
+                      >
+                        <HomeIcon className="w-4 h-4" />
+                        <span>AS Home</span>
+                      </TabsTrigger>
+                    </FeatureGate>
+                    <FeatureGate feature="SEARCH_FLIGHTS">
+                      <TabsTrigger
+                        value="flights"
+                        className="rounded-lg border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-white/80 px-3 md:px-4 py-2 flex items-center gap-1.5 text-sm"
+                      >
+                        <Plane className="w-4 h-4" />
+                        <span>Vuelos</span>
+                      </TabsTrigger>
+                    </FeatureGate>
+                    <FeatureGate feature="SEARCH_TRANSFERS">
+                      <TabsTrigger
+                        value="transfers"
+                        className="rounded-lg border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-white/80 px-3 md:px-4 py-2 flex items-center gap-1.5 text-sm"
+                      >
+                        <Bus className="w-4 h-4" />
+                        <span>Traslados</span>
+                      </TabsTrigger>
+                    </FeatureGate>
+                    <FeatureGate feature="SEARCH_CARS">
+                      <TabsTrigger
+                        value="cars"
+                        className="rounded-lg border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-white/80 px-3 md:px-4 py-2 flex items-center gap-1.5 text-sm"
+                      >
+                        <Car className="w-4 h-4" />
+                        <span>Autos</span>
+                      </TabsTrigger>
+                    </FeatureGate>
+                    <FeatureGate feature="SEARCH_ACTIVITIES">
+                      <TabsTrigger
+                        value="things"
+                        className="rounded-lg border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-white/80 px-3 md:px-4 py-2 flex items-center gap-1.5 text-sm"
+                      >
+                        <Activity className="w-4 h-4" />
+                        <span>Actividades</span>
+                      </TabsTrigger>
+                    </FeatureGate>
+                    <FeatureGate feature="SEARCH_INSURANCE">
+                      <TabsTrigger
+                        value="insurance"
+                        className="rounded-lg border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-white/80 px-3 md:px-4 py-2 flex items-center gap-1.5 text-sm"
+                      >
+                        <span>Seguros</span>
+                      </TabsTrigger>
+                    </FeatureGate>
+                    <FeatureGate feature="SEARCH_ESIM">
+                      <TabsTrigger
+                        value="esim"
+                        className="rounded-lg border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-white/80 px-3 md:px-4 py-2 flex items-center gap-1.5 text-sm"
+                      >
+                        <Smartphone className="w-4 h-4" />
+                        <span>E-Sim</span>
+                      </TabsTrigger>
+                    </FeatureGate>
                   </TabsList>
 
-                  {/* Fila 2: Paquetes - Cruceros - Viajes Grupales - Disney - Universal - Xcaret - Conekta - E-Sim */}
+                  {/* Fila 2: Paquetes - Cruceros - Viajes Grupales - Disney - Universal - Xcaret - Conekta - Restaurantes */}
                   <TabsList className="bg-transparent h-auto p-0 w-full justify-center flex-wrap gap-1">
-                    <TabsTrigger
-                      value="packages"
-                      className="rounded-lg border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-white/80 px-3 md:px-4 py-2 flex items-center gap-1.5 text-sm"
-                    >
-                      <Package className="w-4 h-4" />
-                      <span>Paquetes</span>
-                    </TabsTrigger>
-                    <TabsTrigger
-                      value="cruises"
-                      className="rounded-lg border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-white/80 px-3 md:px-4 py-2 flex items-center gap-1.5 text-sm"
-                    >
-                      <Compass className="w-4 h-4" />
-                      <span>Cruceros</span>
-                    </TabsTrigger>
-                    <TabsTrigger
-                      value="groups"
-                      className="rounded-lg border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-white/80 px-3 md:px-4 py-2 flex items-center gap-1.5 text-sm"
-                    >
-                      <Users className="w-4 h-4" />
-                      <span>Viajes Grupales</span>
-                    </TabsTrigger>
-                    <TabsTrigger
-                      value="disney"
-                      className="rounded-lg border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-white/80 px-3 md:px-4 py-2 flex items-center gap-1.5 text-sm"
-                    >
-                      <Sparkles className="w-4 h-4" />
-                      <span>Disney</span>
-                    </TabsTrigger>
-                    <TabsTrigger
-                      value="universal"
-                      className="rounded-lg border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-white/80 px-3 md:px-4 py-2 flex items-center gap-1.5 text-sm"
-                    >
-                      <Star className="w-4 h-4" />
-                      <span>Universal</span>
-                    </TabsTrigger>
-                    <TabsTrigger
-                      value="xcaret"
-                      className="rounded-lg border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-white/80 px-3 md:px-4 py-2 flex items-center gap-1.5 text-sm"
-                    >
-                      <Activity className="w-4 h-4" />
-                      <span>Xcaret</span>
-                    </TabsTrigger>
-                    <TabsTrigger
-                      value="conekta"
-                      className="rounded-lg border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-white/80 px-3 md:px-4 py-2 flex items-center gap-1.5 text-sm"
-                    >
-                      <Users className="w-4 h-4" />
-                      <span>Conekta</span>
-                    </TabsTrigger>
-
-                    <TabsTrigger
-                      value="restaurants"
-                      className="rounded-lg border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-white/80 px-3 md:px-4 py-2 flex items-center gap-1.5 text-sm"
-                    >
-                      <Utensils className="w-4 h-4" />
-                      <span>Restaurantes</span>
-                    </TabsTrigger>
+                    <FeatureGate feature="SEARCH_PACKAGES">
+                      <TabsTrigger
+                        value="packages"
+                        className="rounded-lg border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-white/80 px-3 md:px-4 py-2 flex items-center gap-1.5 text-sm"
+                      >
+                        <Package className="w-4 h-4" />
+                        <span>Paquetes</span>
+                      </TabsTrigger>
+                    </FeatureGate>
+                    <FeatureGate feature="SEARCH_CRUISES">
+                      <TabsTrigger
+                        value="cruises"
+                        className="rounded-lg border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-white/80 px-3 md:px-4 py-2 flex items-center gap-1.5 text-sm"
+                      >
+                        <Compass className="w-4 h-4" />
+                        <span>Cruceros</span>
+                      </TabsTrigger>
+                    </FeatureGate>
+                    <FeatureGate feature="SEARCH_GROUPS">
+                      <TabsTrigger
+                        value="groups"
+                        className="rounded-lg border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-white/80 px-3 md:px-4 py-2 flex items-center gap-1.5 text-sm"
+                      >
+                        <Users className="w-4 h-4" />
+                        <span>Viajes Grupales</span>
+                      </TabsTrigger>
+                    </FeatureGate>
+                    <FeatureGate feature="SEARCH_DISNEY">
+                      <TabsTrigger
+                        value="disney"
+                        className="rounded-lg border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-white/80 px-3 md:px-4 py-2 flex items-center gap-1.5 text-sm"
+                      >
+                        <Sparkles className="w-4 h-4" />
+                        <span>Disney</span>
+                      </TabsTrigger>
+                    </FeatureGate>
+                    <FeatureGate feature="SEARCH_UNIVERSAL">
+                      <TabsTrigger
+                        value="universal"
+                        className="rounded-lg border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-white/80 px-3 md:px-4 py-2 flex items-center gap-1.5 text-sm"
+                      >
+                        <Star className="w-4 h-4" />
+                        <span>Universal</span>
+                      </TabsTrigger>
+                    </FeatureGate>
+                    <FeatureGate feature="SEARCH_XCARET">
+                      <TabsTrigger
+                        value="xcaret"
+                        className="rounded-lg border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-white/80 px-3 md:px-4 py-2 flex items-center gap-1.5 text-sm"
+                      >
+                        <Activity className="w-4 h-4" />
+                        <span>Xcaret</span>
+                      </TabsTrigger>
+                    </FeatureGate>
+                    <FeatureGate feature="SEARCH_CONEKTA">
+                      <TabsTrigger
+                        value="conekta"
+                        className="rounded-lg border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-white/80 px-3 md:px-4 py-2 flex items-center gap-1.5 text-sm"
+                      >
+                        <Users className="w-4 h-4" />
+                        <span>Conekta</span>
+                      </TabsTrigger>
+                    </FeatureGate>
+                    <FeatureGate feature="SEARCH_RESTAURANTS">
+                      <TabsTrigger
+                        value="restaurants"
+                        className="rounded-lg border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-white/80 px-3 md:px-4 py-2 flex items-center gap-1.5 text-sm"
+                      >
+                        <Utensils className="w-4 h-4" />
+                        <span>Restaurantes</span>
+                      </TabsTrigger>
+                    </FeatureGate>
                   </TabsList>
                 </div>
 
@@ -2616,7 +2656,7 @@ export default function Home() {
             <p>© 2024 AS Operadora de Viajes y Eventos. Todos los derechos reservados.</p>
             <p className="text-xs mt-1">AS Viajando</p>
             <p className="text-xs mt-2 opacity-50">
-              v2.232 | Build: 21 Ene 2026, 19:50 CST
+              v2.233 | Build: 27 Ene 2026, 11:15 CST
             </p>
             {dbInfo && (
               <div className="text-xs mt-3 opacity-70 bg-slate-100 p-3 rounded inline-block">
@@ -2626,7 +2666,7 @@ export default function Home() {
                 </p>
                 <p className="font-mono mt-1">
                   👥 Usuarios: <span className="font-bold">{dbInfo.totalUsers}</span> |
-                  📦 Versión: <span className="font-bold">v2.226</span>
+                  📦 Versión: <span className="font-bold">v2.233</span>
                 </p>
               </div>
             )}

@@ -1,12 +1,14 @@
 import { View, StyleSheet, FlatList, RefreshControl } from 'react-native'
 import { Text, Card, SegmentedButtons, Chip, Button, Avatar } from 'react-native-paper'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useRouter } from 'expo-router'
 import { Colors, Spacing, FontSizes, BorderRadius } from '../../constants/theme'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 import BookingsService, { Booking } from '../../services/bookings.service'
 
 export default function BookingsScreen() {
+    const router = useRouter()
     const [view, setView] = useState('upcoming')
     const [refreshing, setRefreshing] = useState(false)
     const [bookings, setBookings] = useState<Booking[]>([])

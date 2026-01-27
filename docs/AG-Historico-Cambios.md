@@ -1,7 +1,7 @@
 # 📋 AG-Histórico de Cambios - AS Operadora
 
-**Última actualización:** 21 de Enero de 2026 - 19:50 CST  
-**Versión actual:** v2.232  
+**Última actualización:** 27 de Enero de 2026 - 11:15 CST  
+**Versión actual:** v2.233  
 **Actualizado por:** AntiGravity AI Assistant  
 **Propósito:** Documento maestro del proyecto para trabajo con agentes AntiGravity
 
@@ -34,6 +34,56 @@ Esto permite detectar si se perdieron tablas/campos entre versiones.
 ---
 
 ## 📅 HISTORIAL DE CAMBIOS
+
+### v2.233 - 27 de Enero de 2026 - 11:15 CST
+
+**🆕 Nueva Funcionalidad: Sistema de Administración Granular de Funciones**
+
+Esta versión implementa un sistema completo de feature flags con control granular por rol y plataforma (Web/Móvil).
+
+**Cambios Backend:**
+- **Nueva tabla `features`**: Catálogo de 38 funciones controlables organizadas en 6 categorías.
+- **Nueva tabla `feature_role_access`**: Permisos granulares por rol (SUPER_ADMIN, ADMIN, MANAGER, EMPLOYEE).
+- **Nueva tabla `app_settings`**: Configuración global (login obligatorio, versión, etc.).
+- **FeatureService.ts**: Servicio completo con métodos para verificar permisos, obtener features habilitados, actualizar configuración.
+- **API `/api/admin/features`**: GET (listar), PUT (actualizar feature), POST (actualizar settings).
+- **API `/api/features/user`**: Obtener features habilitados para usuario actual.
+
+**Cambios Frontend:**
+- **FeaturesContext.tsx**: Contexto React para gestión global de features.
+- **FeatureGate.tsx**: Componente wrapper para controlar visibilidad de elementos.
+- **page.tsx**: 16 tabs de búsqueda ahora envueltos con `<FeatureGate>`.
+- **Panel `/admin/features`**: Nueva página de administración con:
+  - Toggle global ON/OFF por feature
+  - Toggle por plataforma (Web/Móvil)
+  - Filtros por categoría
+  - Búsqueda por nombre/código
+  - Resumen estadístico
+
+**Configuración Inicial de Producción:**
+- ✅ SEARCH_GROUPS (Viajes Grupales/MegaTravel) = ON
+- ❌ Resto de buscadores = OFF (Hoteles, Vuelos, etc.)
+- ✅ LOGIN_REQUIRED_WEB = true
+- ✅ LOGIN_REQUIRED_MOBILE = true
+- ✅ Funciones admin = ON
+
+**Archivos Nuevos:**
+- `migrations/015_create_features_tables.sql`
+- `src/services/FeatureService.ts`
+- `src/contexts/FeaturesContext.tsx`
+- `src/components/FeatureGate.tsx`
+- `src/app/api/admin/features/route.ts`
+- `src/app/api/features/user/route.ts`
+- `src/app/admin/features/page.tsx`
+
+**Archivos Modificados:**
+- `src/app/layout.tsx` (agregado FeaturesProvider)
+- `src/app/page.tsx` (tabs envueltos con FeatureGate, menú actualizado)
+
+**Cifra de Control:**
+- T: 60 | C: 570 (3 tablas nuevas, 25 campos nuevos)
+
+---
 
 ### v2.232 - 21 de Enero de 2026 - 19:50 CST
 

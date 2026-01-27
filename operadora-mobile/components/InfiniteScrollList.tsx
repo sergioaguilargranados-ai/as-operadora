@@ -1,19 +1,16 @@
-import React, { useState, useCallback } from 'react'
-import { FlatList, ActivityIndicator, View, StyleSheet, RefreshControl } from 'react-native'
+import React from 'react'
+import { FlatList, RefreshControl, ActivityIndicator, View, StyleSheet, FlatListProps } from 'react-native'
+import { Colors, Spacing } from '../constants/theme'
 import { Text } from 'react-native-paper'
-import { Colors, Spacing, FontSizes } from '../constants/theme'
 
-interface InfiniteScrollListProps<T> {
+interface InfiniteScrollListProps<T> extends Omit<FlatListProps<T>, 'data' | 'renderItem'> {
     data: T[]
-    renderItem: ({ item, index }: { item: T; index: number }) => React.ReactElement
-    onLoadMore: () => Promise<void>
-    onRefresh?: () => Promise<void>
+    renderItem: ({ item }: { item: T }) => React.ReactElement
+    onLoadMore: () => void
+    onRefresh: () => void
     hasMore: boolean
     loading: boolean
-    keyExtractor: (item: T, index: number) => string
-    ListHeaderComponent?: React.ReactElement
-    ListEmptyComponent?: React.ReactElement
-    estimatedItemSize?: number
+    emptyText?: string
 }
 
 export default function InfiniteScrollList<T>({
@@ -23,34 +20,15 @@ export default function InfiniteScrollList<T>({
     onRefresh,
     hasMore,
     loading,
-    keyExtractor,
-    ListHeaderComponent,
-    ListEmptyComponent,
-    estimatedItemSize = 100,
+    emptyText = 'No se encontraron resultados',
+    ...props
 }: InfiniteScrollListProps<T>) {
-    const [refreshing, setRefreshing] = useState(false)
-
-    const handleLoadMore = useCallback(() => {
-        if (!loading && hasMore) {
-            onLoadMore()
-        }
-    }, [loading, hasMore, onLoadMore])
-
-    const handleRefresh = useCallback(async () => {
-        if (onRefresh) {
-            setRefreshing(true)
-            await onRefresh()
-            setRefreshing(false)
-        }
-    }, [onRefresh])
 
     const renderFooter = () => {
-        if (!loading) return null
-
+        if (!loading || !hasMore) return null
         return (
             <View style={styles.footer}>
                 <ActivityIndicator size="small" color={Colors.primary} />
-                <Text style={styles.loadingText}>Cargando más resultados...</Text>
             </View>
         )
     }
@@ -58,16 +36,14 @@ export default function InfiniteScrollList<T>({
     const renderEmpty = () => {
         if (loading && data.length === 0) {
             return (
-                <View style={styles.emptyContainer}>
+                <View style={styles.center}>
                     <ActivityIndicator size="large" color={Colors.primary} />
-                    <Text style={styles.emptyText}>Cargando...</Text>
                 </View>
             )
         }
-
-        return ListEmptyComponent || (
-            <View style={styles.emptyContainer}>
-                <Text style={styles.emptyText}>No hay resultados</Text>
+        return (
+            <View style={styles.center}>
+                <Text>{emptyText}</Text>
             </View>
         )
     }
@@ -76,56 +52,43 @@ export default function InfiniteScrollList<T>({
         <FlatList
             data={data}
             renderItem={renderItem}
-            keyExtractor={keyExtractor}
-            onEndReached={handleLoadMore}
+            onEndReached={hasMore ? onLoadMore : null}
             onEndReachedThreshold={0.5}
             ListFooterComponent={renderFooter}
-            ListHeaderComponent={ListHeaderComponent}
             ListEmptyComponent={renderEmpty}
             refreshControl={
-                onRefresh ? (
-                    <RefreshControl
-                        refreshing={refreshing}
-                        onRefresh={handleRefresh}
-                        colors={[Colors.primary]}
-                        tintColor={Colors.primary}
-                    />
-                ) : undefined
+                <RefreshControl
+                    refreshing={loading && data.length > 0}
+                    onRefresh={onRefresh}
+                    colors={[Colors.primary]}
+                    tintColor={Colors.primary}
+                />
             }
-            removeClippedSubviews={true}
-            maxToRenderPerBatch={10}
-            updateCellsBatchingPeriod={50}
-            initialNumToRender={10}
-            windowSize={10}
-            getItemLayout={(data, index) => ({
-                length: estimatedItemSize,
-                offset: estimatedItemSize * index,
-                index,
-            })}
+            contentContainerStyle={[
+                styles.listContent,
+                data.length === 0 && styles.emptyList
+            ]}
+            {...props}
         />
     )
 }
 
 const styles = StyleSheet.create({
-    footer: {
-        paddingVertical: Spacing.lg,
-        alignItems: 'center',
-        justifyContent: 'center',
+    listContent: {
+        paddingBottom: Spacing.xl,
     },
-    loadingText: {
-        marginTop: Spacing.sm,
-        color: Colors.textSecondary,
-        fontSize: FontSizes.sm,
-    },
-    emptyContainer: {
+    emptyList: {
         flex: 1,
-        alignItems: 'center',
         justifyContent: 'center',
-        paddingVertical: Spacing.xxl,
     },
-    emptyText: {
-        marginTop: Spacing.md,
-        color: Colors.textSecondary,
-        fontSize: FontSizes.md,
+    footer: {
+        paddingVertical: Spacing.md,
+        alignItems: 'center',
+    },
+    center: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: Spacing.xl,
     },
 })

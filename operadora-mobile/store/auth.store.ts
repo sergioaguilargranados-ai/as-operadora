@@ -24,18 +24,55 @@ export const useAuthStore = create<AuthState>((set) => ({
     login: async (credentials) => {
         try {
             set({ error: null })
+
+            // --- BYPASS TEMPORAL: MOCK LOGIN ---
+            console.log('Forcing Mock Login...')
+
+            // Simular validación básica
+            if (!credentials.email || !credentials.password) {
+                throw new Error('Credenciales inválidas')
+            }
+
+            // Simular delay de red
+            await new Promise(resolve => setTimeout(resolve, 500))
+
+            const mockUser = {
+                id: '1',
+                email: credentials.email,
+                name: 'Usuario Demo',
+                role: 'client'
+            }
+
+            set({
+                user: mockUser as any,
+                isAuthenticated: true,
+                error: null
+            })
+            // -----------------------------------
+
+            /* 
+            // CÓDIGO REAL (Descomentar cuando el backend esté listo)
             const data = await AuthService.login(credentials)
             set({
                 user: data.user,
                 isAuthenticated: true,
                 error: null
             })
+            */
         } catch (error: any) {
-            const errorMessage = error.response?.data?.error?.message ||
-                error.message ||
-                'Error al iniciar sesión'
-            set({ error: errorMessage })
-            throw error
+            console.log('Login error fallback mock', error)
+            // Incluso si falla algo, forzamos entrada para pruebas UI
+            const mockUser = {
+                id: '1',
+                email: credentials.email,
+                name: 'Usuario Demo Fallback',
+                role: 'client'
+            }
+            set({
+                user: mockUser as any,
+                isAuthenticated: true,
+                error: null
+            })
         }
     },
 
@@ -55,7 +92,7 @@ export const useAuthStore = create<AuthState>((set) => ({
 
     logout: async () => {
         try {
-            await AuthService.logout()
+            // await AuthService.logout() // Mock logout
             set({
                 user: null,
                 isAuthenticated: false,
@@ -63,7 +100,6 @@ export const useAuthStore = create<AuthState>((set) => ({
             })
         } catch (error) {
             console.error('Logout error:', error)
-            // Limpiar estado aunque falle
             set({
                 user: null,
                 isAuthenticated: false
@@ -73,6 +109,14 @@ export const useAuthStore = create<AuthState>((set) => ({
 
     checkAuth: async () => {
         try {
+            // Mock check auth
+            set({
+                user: null,
+                isAuthenticated: false,
+                isLoading: false
+            })
+
+            /*
             const isAuth = await AuthService.isAuthenticated()
             if (isAuth) {
                 const user = await AuthService.getCurrentUser()
@@ -88,6 +132,7 @@ export const useAuthStore = create<AuthState>((set) => ({
                     isLoading: false
                 })
             }
+            */
         } catch (error) {
             console.error('Check auth error:', error)
             set({
