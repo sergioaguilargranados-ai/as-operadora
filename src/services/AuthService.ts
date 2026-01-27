@@ -606,4 +606,21 @@ export class AuthService {
   }
 }
 
+/**
+ * Verificar token JWT y devolver datos decodificados
+ */
+export async function verifyToken(token: string): Promise<{ userId: number; email: string; role: string } | null> {
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET) as any
+    return {
+      userId: decoded.id,
+      email: decoded.email,
+      role: decoded.role || 'GUEST'
+    }
+  } catch (error) {
+    console.error('Error verifying token:', error)
+    return null
+  }
+}
+
 export default AuthService

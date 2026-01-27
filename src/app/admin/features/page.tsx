@@ -23,7 +23,7 @@ import {
     X,
     Loader2
 } from 'lucide-react';
-import Logo from '@/components/Logo';
+import { Logo } from '@/components/Logo';
 
 interface Feature {
     id: number;
@@ -46,7 +46,7 @@ interface AppSetting {
 
 export default function AdminFeaturesPage() {
     const router = useRouter();
-    const { user, accessToken, isAuthenticated } = useAuth();
+    const { user, isAuthenticated } = useAuth();
 
     const [features, setFeatures] = useState<Feature[]>([]);
     const [settings, setSettings] = useState<AppSetting[]>([]);
@@ -56,6 +56,15 @@ export default function AdminFeaturesPage() {
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
+    const [accessToken, setAccessToken] = useState<string | null>(null);
+
+    // Obtener token del localStorage
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            const token = localStorage.getItem('as_token');
+            setAccessToken(token);
+        }
+    }, []);
 
     // Verificar acceso
     useEffect(() => {
