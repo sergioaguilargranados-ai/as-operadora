@@ -178,7 +178,7 @@ export class FeatureService {
     ): Promise<Feature | null> {
         try {
             const updates: string[] = [];
-            const values: (string | boolean)[] = [];
+            const values: (string | boolean | null)[] = [];
             let paramCount = 1;
 
             if (data.is_global_enabled !== undefined) {
