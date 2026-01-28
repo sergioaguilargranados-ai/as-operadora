@@ -319,7 +319,7 @@ export default function Home() {
 
   // Estados para configuraciones de visibilidad
   const [homeSettings, setHomeSettings] = useState<Record<string, string>>({})
-  const [toursVideoUrl, setToursVideoUrl] = useState('https://images.unsplash.com/photo-1499856871958-5b9337606a3e?w=1600')
+  const [toursVideoUrl, setToursVideoUrl] = useState('https://www.youtube.com/embed/dQw4w9WgXcQ')
 
   // Cargar datos dinámicos
   useEffect(() => {
