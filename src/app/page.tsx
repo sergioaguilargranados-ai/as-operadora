@@ -2139,6 +2139,28 @@ export default function Home() {
                         <ChevronRight className="w-4 h-4 ml-1" />
                       </Button>
                     </div>
+                    {/* Video promocional */}
+                    <div className="relative w-full h-64 md:h-80 rounded-2xl overflow-hidden mb-6">
+                      {toursVideoUrl.includes('youtube') || toursVideoUrl.includes('vimeo') ? (
+                        <iframe
+                          src={toursVideoUrl + '?autoplay=1&mute=1&loop=1&controls=0'}
+                          className="w-full h-full"
+                          allow="autoplay; muted; loop"
+                          style={{ pointerEvents: 'none' }}
+                        />
+                      ) : (
+                        <img
+                          src={toursVideoUrl}
+                          alt="Tours y Viajes Grupales"
+                          className="w-full h-full object-cover"
+                        />
+                      )}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
+                      <div className="absolute bottom-4 left-4 right-4 text-white">
+                        <h4 className="text-2xl font-bold mb-2">Descubre el Mundo</h4>
+                        <p className="text-sm opacity-90">Tours todo incluido con vuelo, hotel y guía turístico</p>
+                      </div>
+                    </div>
 
                     {loadingTours ? (
                       <div className="flex items-center justify-center py-8">
