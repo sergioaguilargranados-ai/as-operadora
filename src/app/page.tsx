@@ -1,6 +1,6 @@
 "use client"
 
-// Build: 28 Ene 2026 - v2.237 - Secciones parametrizables
+// Build: 28 Ene 2026 - v2.244 - Header mas alto, video YouTube
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
@@ -2152,7 +2152,12 @@ export default function Home() {
                     <div className="relative w-full h-64 md:h-80 rounded-2xl overflow-hidden mb-6">
                       {toursVideoUrl.includes('youtube') || toursVideoUrl.includes('vimeo') ? (
                         <iframe
-                          src={toursVideoUrl + '?autoplay=1&mute=1&loop=1&controls=0&playlist=' + toursVideoUrl.split('/').pop()}
+                          src={(() => {
+                            // Extraer video ID de la URL
+                            const videoId = toursVideoUrl.split('/').pop()?.split('?')[0] || '';
+                            const separator = toursVideoUrl.includes('?') ? '&' : '?';
+                            return `${toursVideoUrl}${separator}autoplay=1&mute=1&loop=1&controls=0&playlist=${videoId}`;
+                          })()}
                           className="w-full h-full"
                           allow="autoplay; encrypted-media"
                           style={{ pointerEvents: 'none', border: 'none' }}
@@ -2923,7 +2928,7 @@ export default function Home() {
             <p>© 2024 AS Operadora de Viajes y Eventos. Todos los derechos reservados.</p>
             <p className="text-xs mt-1">AS Viajando</p>
             <p className="text-xs mt-2 opacity-50">
-              v2.237 | Build: 28 Ene 2026, 10:30 CST
+              v2.244 | Build: 28 Ene 2026, 14:50 CST
             </p>
             {dbInfo && (
               <div className="text-xs mt-3 opacity-70 bg-slate-100 p-3 rounded inline-block">
@@ -2933,13 +2938,13 @@ export default function Home() {
                 </p>
                 <p className="font-mono mt-1">
                   👥 Usuarios: <span className="font-bold">{dbInfo.totalUsers}</span> |
-                  📦 Versión: <span className="font-bold">v2.237</span>
+                  📦 Versión: <span className="font-bold">v2.244</span>
                 </p>
               </div>
             )}
           </div>
         </div>
-      </footer>
-    </div>
+      </footer >
+    </div >
   )
 }

@@ -199,9 +199,9 @@ function ToursContent() {
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/30">
-            {/* Header traslúcido - mismo tamaño que la principal */}
+            {/* Header traslúcido - más alto */}
             <header className="sticky top-0 z-50 backdrop-blur-md bg-white/80 border-b border-gray-200/50 shadow-soft">
-                <div className="container mx-auto px-4 py-6">
+                <div className="container mx-auto px-4 py-8">
                     <div className="flex items-center justify-between">
                         {/* Logo y botón regresar */}
                         <div className="flex items-center gap-4">
