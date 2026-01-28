@@ -907,119 +907,128 @@ export default function Home() {
                 </div>
 
                 <TabsContent value="stays" className="mt-6">
-                  <div className="space-y-4">
-                    {/* Buscador en una sola fila */}
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-                      {/* Destino con Datalist (como AS Home) */}
-                      <div className="md:col-span-1 relative z-30">
-                        <label className="block text-sm font-medium mb-2 text-gray-900">¿A dónde?</label>
-                        <div className="relative">
-                          <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground z-10" />
-                          <Input
-                            placeholder="Ciudad o destino"
-                            className="pl-10 h-12 bg-white relative z-20"
-                            value={destination}
-                            onChange={(e) => setDestination(e.target.value)}
-                            list="hoteles-destinations-list"
-                          />
-                          <datalist id="hoteles-destinations-list">
-                            <option value="Cancún, Quintana Roo, México" />
-                            <option value="Playa del Carmen, Quintana Roo, México" />
-                            <option value="Tulum, Quintana Roo, México" />
-                            <option value="Riviera Maya, Quintana Roo, México" />
-                            <option value="Los Cabos, Baja California Sur, México" />
-                            <option value="Puerto Vallarta, Jalisco, México" />
-                            <option value="Ciudad de México, CDMX, México" />
-                            <option value="Guadalajara, Jalisco, México" />
-                            <option value="Monterrey, Nuevo León, México" />
-                            <option value="Mérida, Yucatán, México" />
-                            <option value="Oaxaca, Oaxaca, México" />
-                            <option value="San Miguel de Allende, Guanajuato, México" />
-                            <option value="Valle de Bravo, Estado de México, México" />
-                            <option value="Acapulco, Guerrero, México" />
-                            <option value="Mazatlán, Sinaloa, México" />
-                            <option value="Miami, Florida, Estados Unidos" />
-                            <option value="Orlando, Florida, Estados Unidos" />
-                            <option value="Nueva York, New York, Estados Unidos" />
-                            <option value="Las Vegas, Nevada, Estados Unidos" />
-                            <option value="Los Angeles, California, Estados Unidos" />
-                            <option value="Madrid, España" />
-                            <option value="Barcelona, España" />
-                            <option value="París, Francia" />
-                            <option value="Roma, Italia" />
-                            <option value="Londres, Reino Unido" />
-                            <option value="Punta Cana, República Dominicana" />
-                          </datalist>
+                  {homeSettings.HOME_SEARCH_HOTELS === 'true' ? (
+                    <div className="space-y-4">
+                      {/* Buscador en una sola fila */}
+                      <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+                        {/* Destino con Datalist (como AS Home) */}
+                        <div className="md:col-span-1 relative z-30">
+                          <label className="block text-sm font-medium mb-2 text-gray-900">¿A dónde?</label>
+                          <div className="relative">
+                            <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground z-10" />
+                            <Input
+                              placeholder="Ciudad o destino"
+                              className="pl-10 h-12 bg-white relative z-20"
+                              value={destination}
+                              onChange={(e) => setDestination(e.target.value)}
+                              list="hoteles-destinations-list"
+                            />
+                            <datalist id="hoteles-destinations-list">
+                              <option value="Cancún, Quintana Roo, México" />
+                              <option value="Playa del Carmen, Quintana Roo, México" />
+                              <option value="Tulum, Quintana Roo, México" />
+                              <option value="Riviera Maya, Quintana Roo, México" />
+                              <option value="Los Cabos, Baja California Sur, México" />
+                              <option value="Puerto Vallarta, Jalisco, México" />
+                              <option value="Ciudad de México, CDMX, México" />
+                              <option value="Guadalajara, Jalisco, México" />
+                              <option value="Monterrey, Nuevo León, México" />
+                              <option value="Mérida, Yucatán, México" />
+                              <option value="Oaxaca, Oaxaca, México" />
+                              <option value="San Miguel de Allende, Guanajuato, México" />
+                              <option value="Valle de Bravo, Estado de México, México" />
+                              <option value="Acapulco, Guerrero, México" />
+                              <option value="Mazatlán, Sinaloa, México" />
+                              <option value="Miami, Florida, Estados Unidos" />
+                              <option value="Orlando, Florida, Estados Unidos" />
+                              <option value="Nueva York, New York, Estados Unidos" />
+                              <option value="Las Vegas, Nevada, Estados Unidos" />
+                              <option value="Los Angeles, California, Estados Unidos" />
+                              <option value="Madrid, España" />
+                              <option value="Barcelona, España" />
+                              <option value="París, Francia" />
+                              <option value="Roma, Italia" />
+                              <option value="Londres, Reino Unido" />
+                              <option value="Punta Cana, República Dominicana" />
+                            </datalist>
+                          </div>
+                        </div>
+
+                        {/* Fechas */}
+                        <div className="md:col-span-1 relative z-20">
+                          <label className="block text-sm font-medium mb-2 text-gray-900">Fechas</label>
+                          <DateRangePicker onDateChange={handleDateRangeChange} />
+                        </div>
+
+                        {/* Viajeros */}
+                        <div className="md:col-span-1 relative z-10">
+                          <label className="block text-sm font-medium mb-2 text-gray-900">Viajeros</label>
+                          <GuestSelector />
+                        </div>
+
+                        {/* Botón Buscar */}
+                        <div className="md:col-span-1 flex items-end">
+                          <motion.div
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            className="w-full"
+                          >
+                            <Button
+                              className="w-full h-12 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
+                              onClick={handleSearchHotels}
+                              disabled={loading}
+                            >
+                              {loading ? (
+                                <>
+                                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                                  Buscando...
+                                </>
+                              ) : (
+                                <>
+                                  <Search className="w-5 h-5 mr-2" />
+                                  Buscar
+                                </>
+                              )}
+                            </Button>
+                          </motion.div>
                         </div>
                       </div>
 
-                      {/* Fechas */}
-                      <div className="md:col-span-1 relative z-20">
-                        <label className="block text-sm font-medium mb-2 text-gray-900">Fechas</label>
-                        <DateRangePicker onDateChange={handleDateRangeChange} />
-                      </div>
-
-                      {/* Viajeros */}
-                      <div className="md:col-span-1 relative z-10">
-                        <label className="block text-sm font-medium mb-2 text-gray-900">Viajeros</label>
-                        <GuestSelector />
-                      </div>
-
-                      {/* Botón Buscar */}
-                      <div className="md:col-span-1 flex items-end">
-                        <motion.div
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.98 }}
-                          className="w-full"
-                        >
-                          <Button
-                            className="w-full h-12 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
-                            onClick={handleSearchHotels}
-                            disabled={loading}
-                          >
-                            {loading ? (
-                              <>
-                                <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                                Buscando...
-                              </>
-                            ) : (
-                              <>
-                                <Search className="w-5 h-5 mr-2" />
-                                Buscar
-                              </>
-                            )}
-                          </Button>
-                        </motion.div>
+                      {/* Checkboxes */}
+                      <div className="flex gap-4 pt-2">
+                        <label className="flex items-center gap-2 cursor-pointer text-gray-900">
+                          <input type="checkbox" className="w-4 h-4 accent-primary" />
+                          <span className="text-sm font-medium">Agregar un vuelo</span>
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer text-gray-900">
+                          <span className="text-sm font-medium">Agregar un auto</span>
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer text-gray-900">
+                          <input type="checkbox" className="w-4 h-4 accent-primary" />
+                          <span className="text-sm font-medium">E-Sim</span>
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer text-gray-900">
+                          <input type="checkbox" className="w-4 h-4 accent-primary" />
+                          <span className="text-sm font-medium">Seguro</span>
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer text-gray-900">
+                          <input type="checkbox" className="w-4 h-4 accent-primary" />
+                          <span className="text-sm font-medium">Traslados</span>
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer text-gray-900">
+                          <input type="checkbox" className="w-4 h-4 accent-primary" />
+                          <span className="text-sm font-medium">Actividades</span>
+                        </label>
                       </div>
                     </div>
-
-                    {/* Checkboxes */}
-                    <div className="flex gap-4 pt-2">
-                      <label className="flex items-center gap-2 cursor-pointer text-gray-900">
-                        <input type="checkbox" className="w-4 h-4 accent-primary" />
-                        <span className="text-sm font-medium">Agregar un vuelo</span>
-                      </label>
-                      <label className="flex items-center gap-2 cursor-pointer text-gray-900">
-                        <span className="text-sm font-medium">Agregar un auto</span>
-                      </label>
-                      <label className="flex items-center gap-2 cursor-pointer text-gray-900">
-                        <input type="checkbox" className="w-4 h-4 accent-primary" />
-                        <span className="text-sm font-medium">E-Sim</span>
-                      </label>
-                      <label className="flex items-center gap-2 cursor-pointer text-gray-900">
-                        <input type="checkbox" className="w-4 h-4 accent-primary" />
-                        <span className="text-sm font-medium">Seguro</span>
-                      </label>
-                      <label className="flex items-center gap-2 cursor-pointer text-gray-900">
-                        <input type="checkbox" className="w-4 h-4 accent-primary" />
-                        <span className="text-sm font-medium">Traslados</span>
-                      </label>
-                      <label className="flex items-center gap-2 cursor-pointer text-gray-900">
-                        <input type="checkbox" className="w-4 h-4 accent-primary" />
-                        <span className="text-sm font-medium">Actividades</span>
-                      </label>
+                  ) : (
+                    <div className="text-center py-12 text-gray-500">
+                      <Hotel className="w-16 h-16 mx-auto mb-4 opacity-50" />
+                      <h3 className="text-xl font-semibold mb-2">Búsqueda de hoteles próximamente</h3>
+                      <p className="text-sm">¡Estamos trabajando para ofrecerte la mejor experiencia de búsqueda!</p>
+                      <p className="text-sm mt-2">Mientras tanto, explora nuestros <button onClick={() => router.push('/tours')} className="text-blue-600 underline">Tours y Viajes Grupales</button></p>
                     </div>
-                  </div>
+                  )}
                 </TabsContent>
 
                 <TabsContent value="flights" className="mt-6">

@@ -35,7 +35,7 @@ import {
 } from 'lucide-react'
 import { Logo } from '@/components/Logo'
 
-const WHATSAPP_NUMBER = '+525512345678' // Número de pruebas
+const WHATSAPP_NUMBER = '+525621486939' // Número oficial AS Operadora
 
 interface TourDetail {
     id: string

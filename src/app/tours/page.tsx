@@ -84,13 +84,16 @@ const CATEGORIES = [
     { code: 'favoritos', name: 'Favoritos, los imperdibles', icon: '⭐', filter: 'featured' },
 ]
 
-const WHATSAPP_NUMBER = '+5255 1234 5678' // Número de pruebas
+const WHATSAPP_NUMBER = '+525621486939' // Número oficial AS Operadora
 
 function ToursContent() {
     const router = useRouter()
     const searchParams = useSearchParams()
 
     const [packages, setPackages] = useState<TourPackage[]>([])
+    const [allPackages, setAllPackages] = useState<TourPackage[]>([])
+    const [regions, setRegions] = useState<string[]>([])
+    const [selectedRegion, setSelectedRegion] = useState<string | null>(null)
     const [loading, setLoading] = useState(true)
     const [search, setSearch] = useState(searchParams?.get('search') || '')
     const [selectedCategory, setSelectedCategory] = useState(searchParams?.get('cat') || 'ofertas')
@@ -100,6 +103,16 @@ function ToursContent() {
         fetchPackages()
         fetchSettings()
     }, [selectedCategory])
+
+    // Filtrar por región cuando cambia
+    useEffect(() => {
+        if (selectedRegion) {
+            const filtered = allPackages.filter(p => p.region === selectedRegion)
+            setPackages(filtered)
+        } else {
+            setPackages(allPackages)
+        }
+    }, [selectedRegion, allPackages])
 
     const fetchSettings = async () => {
         try {
@@ -134,7 +147,13 @@ function ToursContent() {
             const data = await response.json()
 
             if (data.success) {
-                setPackages(data.data.packages || [])
+                const pkgs = data.data.packages || []
+                setAllPackages(pkgs)
+                setPackages(pkgs)
+                // Extraer regiones únicas
+                const uniqueRegions = [...new Set(pkgs.map((p: TourPackage) => p.region))].filter(Boolean) as string[]
+                setRegions(uniqueRegions)
+                setSelectedRegion(null) // Reset filtro de región
             }
         } catch (error) {
             console.error('Error fetching packages:', error)
@@ -189,8 +208,8 @@ function ToursContent() {
                                     key={cat.code}
                                     onClick={() => setSelectedCategory(cat.code)}
                                     className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${selectedCategory === cat.code
-                                            ? 'bg-blue-600 text-white shadow-lg'
-                                            : 'text-gray-700 hover:bg-gray-100'
+                                        ? 'bg-blue-600 text-white shadow-lg'
+                                        : 'text-gray-700 hover:bg-gray-100'
                                         }`}
                                 >
                                     <span className="mr-1">{cat.icon}</span>
@@ -229,8 +248,8 @@ function ToursContent() {
                                     key={cat.code}
                                     onClick={() => setSelectedCategory(cat.code)}
                                     className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all ${selectedCategory === cat.code
-                                            ? 'bg-blue-600 text-white'
-                                            : 'bg-gray-100 text-gray-700'
+                                        ? 'bg-blue-600 text-white'
+                                        : 'bg-gray-100 text-gray-700'
                                         }`}
                                 >
                                     {cat.icon} {cat.name}
@@ -298,6 +317,41 @@ function ToursContent() {
                     </motion.div>
                 </div>
             </section>
+
+            {/* Filtros por Región/Destino */}
+            {regions.length > 0 && (
+                <section className="py-4 border-b bg-white/50 backdrop-blur-sm">
+                    <div className="container mx-auto px-4">
+                        <div className="flex items-center gap-2 mb-3">
+                            <Globe className="w-5 h-5 text-blue-600" />
+                            <h3 className="font-semibold text-gray-800">Filtrar por Destino</h3>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                            <button
+                                onClick={() => setSelectedRegion(null)}
+                                className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${!selectedRegion
+                                        ? 'bg-blue-600 text-white shadow'
+                                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                    }`}
+                            >
+                                Todos ({allPackages.length})
+                            </button>
+                            {regions.map((region) => (
+                                <button
+                                    key={region}
+                                    onClick={() => setSelectedRegion(region)}
+                                    className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${selectedRegion === region
+                                            ? 'bg-blue-600 text-white shadow'
+                                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                        }`}
+                                >
+                                    {region} ({allPackages.filter(p => p.region === region).length})
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                </section>
+            )}
 
             {/* Lista de paquetes */}
             <section className="py-8 md:py-12">
