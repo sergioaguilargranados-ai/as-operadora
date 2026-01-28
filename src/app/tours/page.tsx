@@ -1,9 +1,9 @@
 // Catálogo de Tours y Viajes Grupales
-// Build: 27 Ene 2026 - v2.235 - Sistema Híbrido MegaTravel
+// Build: 27 Ene 2026 - v2.236 - Fix Suspense boundary
 
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -14,18 +14,13 @@ import { Input } from '@/components/ui/input'
 import {
     Search,
     MapPin,
-    Calendar,
     Users,
     Plane,
     Star,
     ArrowRight,
-    Filter,
     Globe,
     Clock,
-    ChevronDown,
-    Sparkles,
     Tag,
-    X,
     Loader2
 } from 'lucide-react'
 import { Logo } from '@/components/Logo'
@@ -84,15 +79,15 @@ const REGIONS = [
     { code: 'Cruceros', name: 'Cruceros', icon: '🚢' },
 ]
 
-export default function ToursPage() {
+// Componente interno que usa useSearchParams
+function ToursContent() {
     const router = useRouter()
     const searchParams = useSearchParams()
 
     const [packages, setPackages] = useState<TourPackage[]>([])
     const [loading, setLoading] = useState(true)
-    const [search, setSearch] = useState(searchParams.get('search') || '')
-    const [selectedRegion, setSelectedRegion] = useState(searchParams.get('region') || 'all')
-    const [showFilters, setShowFilters] = useState(false)
+    const [search, setSearch] = useState(searchParams?.get('search') || '')
+    const [selectedRegion, setSelectedRegion] = useState(searchParams?.get('region') || 'all')
 
     useEffect(() => {
         fetchPackages()
@@ -397,11 +392,32 @@ export default function ToursPage() {
                             <span className="text-sm text-gray-400">Tours y Viajes Grupales</span>
                         </div>
                         <div className="text-sm text-gray-400">
-                            © 2026 AS Operadora. Todos los derechos reservados. v2.235
+                            © 2026 AS Operadora. Todos los derechos reservados. v2.236
                         </div>
                     </div>
                 </div>
             </footer>
         </div>
+    )
+}
+
+// Loading fallback
+function ToursLoading() {
+    return (
+        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/30 flex items-center justify-center">
+            <div className="text-center">
+                <Loader2 className="w-12 h-12 animate-spin text-blue-600 mx-auto mb-4" />
+                <p className="text-gray-600">Cargando tours...</p>
+            </div>
+        </div>
+    )
+}
+
+// Componente principal envuelto en Suspense
+export default function ToursPage() {
+    return (
+        <Suspense fallback={<ToursLoading />}>
+            <ToursContent />
+        </Suspense>
     )
 }
