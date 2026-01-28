@@ -77,3 +77,40 @@ export async function GET(request: NextRequest) {
         }, { status: 500 })
     }
 }
+
+// PUT: Actualizar un setting
+export async function PUT(request: NextRequest) {
+    try {
+        const body = await request.json()
+        const { key, value, description } = body
+
+        if (!key || value === undefined) {
+            return NextResponse.json(
+                { success: false, error: { message: 'Se requieren key y value' } },
+                { status: 400 }
+            )
+        }
+
+        // Upsert en app_settings
+        const result = await pool.query(`
+            INSERT INTO app_settings (key, value, description, updated_at)
+            VALUES ($1, $2, $3, NOW())
+            ON CONFLICT (key) DO UPDATE SET
+                value = EXCLUDED.value,
+                description = COALESCE(EXCLUDED.description, app_settings.description),
+                updated_at = NOW()
+            RETURNING key, value, description
+        `, [key, value, description || null])
+
+        return NextResponse.json({
+            success: true,
+            data: result.rows[0]
+        })
+    } catch (error) {
+        console.error('Error updating setting:', error)
+        return NextResponse.json(
+            { success: false, error: { message: 'Error al actualizar el setting' } },
+            { status: 500 }
+        )
+    }
+}

@@ -751,7 +751,7 @@ export default function Home() {
               transition={{ duration: 0.5 }}
               className="backdrop-blur-xl bg-white/85 rounded-3xl shadow-2xl p-8 border border-white/30"
             >
-              <Tabs defaultValue="stays" className="w-full">
+              <Tabs defaultValue="groups" className="w-full">
                 {/* Barra de navegación en 2 filas */}
                 <div className="mb-6 bg-white/50 backdrop-blur-md rounded-xl p-2 space-y-1">
                   {/* Fila 1: Hoteles - AS Home - Vuelos - Traslados - Autos - Actividades - Seguros */}

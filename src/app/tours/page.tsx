@@ -78,10 +78,26 @@ interface TourPackage {
 
 // Categorías de navegación
 const CATEGORIES = [
+    { code: 'todos', name: 'Todos los Tours', icon: '🌍', filter: 'all' },
     { code: 'ofertas', name: 'OFERTAS Especiales', icon: '🔥', filter: 'offer' },
     { code: 'bloqueos', name: 'Bloqueos, aparta tu lugar', icon: '🎯', filter: 'featured' },
     { code: 'semana-santa', name: 'Ofertas de Semana Santa', icon: '🌴', filter: 'semana-santa' },
     { code: 'favoritos', name: 'Favoritos, los imperdibles', icon: '⭐', filter: 'featured' },
+]
+
+// Categorías especiales (eventos)
+const EVENT_CATEGORIES = [
+    { code: 'bodas', name: 'Bodas', icon: '💒' },
+    { code: 'quinceaneras', name: 'Quinceañeras', icon: '👗' },
+    { code: 'graduaciones', name: 'Graduaciones', icon: '🎓' },
+    { code: 'corporativo', name: 'Viajes Corporativos', icon: '🏢' },
+    { code: 'grupos', name: 'Grupos Especiales', icon: '👥' },
+]
+
+// Lista fija de regiones/destinos (siempre mostrar todas)
+const ALL_REGIONS = [
+    'Europa', 'Asia', 'Medio Oriente', 'Norte América', 'Centro América',
+    'Sudamérica', 'Caribe', 'África', 'Oceanía', 'México'
 ]
 
 const WHATSAPP_NUMBER = '+525621486939' // Número oficial AS Operadora
@@ -184,8 +200,8 @@ function ToursContent() {
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/30">
             {/* Header traslúcido - mismo tamaño que la principal */}
-            <header className="sticky top-0 z-50 backdrop-blur-md bg-white/80 border-b border-white/20 shadow-sm">
-                <div className="container mx-auto px-4 py-4">
+            <header className="sticky top-0 z-50 backdrop-blur-md bg-white/80 border-b border-gray-200/50 shadow-soft">
+                <div className="container mx-auto px-4 py-5">
                     <div className="flex items-center justify-between">
                         {/* Logo y botón regresar */}
                         <div className="flex items-center gap-4">
@@ -318,40 +334,69 @@ function ToursContent() {
                 </div>
             </section>
 
-            {/* Filtros por Región/Destino */}
-            {regions.length > 0 && (
-                <section className="py-4 border-b bg-white/50 backdrop-blur-sm">
-                    <div className="container mx-auto px-4">
-                        <div className="flex items-center gap-2 mb-3">
-                            <Globe className="w-5 h-5 text-blue-600" />
-                            <h3 className="font-semibold text-gray-800">Filtrar por Destino</h3>
-                        </div>
-                        <div className="flex flex-wrap gap-2">
-                            <button
-                                onClick={() => setSelectedRegion(null)}
-                                className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${!selectedRegion
-                                        ? 'bg-blue-600 text-white shadow'
-                                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                                    }`}
-                            >
-                                Todos ({allPackages.length})
-                            </button>
-                            {regions.map((region) => (
+            {/* Filtros por Región/Destino - Siempre mostrar todas las regiones */}
+            <section className="py-4 border-b bg-white/50 backdrop-blur-sm">
+                <div className="container mx-auto px-4">
+                    {/* Regiones */}
+                    <div className="flex items-center gap-2 mb-3">
+                        <Globe className="w-5 h-5 text-blue-600" />
+                        <h3 className="font-semibold text-gray-800">Filtrar por Destino</h3>
+                    </div>
+                    <div className="flex flex-wrap gap-2 mb-4">
+                        <button
+                            onClick={() => setSelectedRegion(null)}
+                            className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${!selectedRegion
+                                ? 'bg-blue-600 text-white shadow'
+                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                }`}
+                        >
+                            Todos ({allPackages.length})
+                        </button>
+                        {ALL_REGIONS.map((region) => {
+                            const count = allPackages.filter(p => p.region === region).length;
+                            return (
                                 <button
                                     key={region}
                                     onClick={() => setSelectedRegion(region)}
                                     className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${selectedRegion === region
-                                            ? 'bg-blue-600 text-white shadow'
-                                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                        ? 'bg-blue-600 text-white shadow'
+                                        : count > 0
+                                            ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                            : 'bg-gray-50 text-gray-400 cursor-default'
                                         }`}
+                                    disabled={count === 0}
                                 >
-                                    {region} ({allPackages.filter(p => p.region === region).length})
+                                    {region} ({count})
                                 </button>
-                            ))}
-                        </div>
+                            );
+                        })}
                     </div>
-                </section>
-            )}
+
+                    {/* Separador */}
+                    <div className="border-t border-gray-200 my-4" />
+
+                    {/* Categorías de eventos */}
+                    <div className="flex items-center gap-2 mb-3">
+                        <Users className="w-5 h-5 text-indigo-600" />
+                        <h3 className="font-semibold text-gray-800">Viajes para Eventos Especiales</h3>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                        {EVENT_CATEGORIES.map((cat) => (
+                            <button
+                                key={cat.code}
+                                onClick={() => {
+                                    // Por ahora solo muestra una búsqueda con el término
+                                    setSearch(cat.name);
+                                    // Trigger búsqueda
+                                }}
+                                className="px-4 py-2 rounded-full text-sm font-medium bg-indigo-50 text-indigo-700 hover:bg-indigo-100 transition-all"
+                            >
+                                {cat.icon} {cat.name}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            </section>
 
             {/* Lista de paquetes */}
             <section className="py-8 md:py-12">
@@ -485,62 +530,31 @@ function ToursContent() {
                 </div>
             </section>
 
-            {/* CTA Cotización grupal */}
-            <section className="py-12 bg-gradient-to-r from-blue-600 to-indigo-700">
-                <div className="container mx-auto px-4 text-center">
-                    <h2 className="text-2xl md:text-3xl font-bold text-white mb-4">
-                        ¿Viajan más de 10 personas?
-                    </h2>
-                    <p className="text-white/80 mb-6 max-w-xl mx-auto">
-                        Obtén una cotización personalizada con descuentos especiales para grupos.
-                    </p>
-                    <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                        <Button
-                            size="lg"
-                            onClick={() => router.push('/viajes-grupales')}
-                            className="bg-white text-blue-600 hover:bg-white/90 font-semibold px-8"
-                        >
-                            <Users className="w-5 h-5 mr-2" />
-                            Solicitar Cotización
-                        </Button>
-                        <Button
-                            size="lg"
-                            variant="outline"
-                            onClick={handleWhatsApp}
-                            className="border-white text-white hover:bg-white/10 font-semibold px-8"
-                        >
-                            <MessageCircle className="w-5 h-5 mr-2" />
-                            WhatsApp
-                        </Button>
-                    </div>
-                </div>
-            </section>
-
-            {/* Footer completo */}
-            <footer className="bg-gray-900 text-white py-10">
+            {/* Footer gris claro - mismo estilo que la principal */}
+            <footer className="bg-[#F7F7F7] py-10">
                 <div className="container mx-auto px-4">
                     <div className="grid md:grid-cols-4 gap-8 mb-8">
-                        {/* Logo */}
+                        {/* Logo y descripción */}
                         <div>
-                            <Logo className="h-10 brightness-0 invert mb-4" />
-                            <p className="text-gray-400 text-sm">
+                            <Logo className="h-10 mb-4" />
+                            <p className="text-gray-600 text-sm mt-2">
                                 Tu agencia de viajes de confianza. Más de 10 años creando experiencias inolvidables.
                             </p>
                         </div>
 
                         {/* Contacto */}
                         <div>
-                            <h4 className="font-bold mb-4">Contacto</h4>
-                            <div className="space-y-2 text-sm text-gray-400">
-                                <a href={`tel:${WHATSAPP_NUMBER}`} className="flex items-center gap-2 hover:text-white">
+                            <h4 className="font-semibold mb-4 text-gray-800">Contacto</h4>
+                            <div className="space-y-2 text-sm text-gray-600">
+                                <a href={`tel:${WHATSAPP_NUMBER}`} className="flex items-center gap-2 hover:text-blue-600">
                                     <Phone className="w-4 h-4" />
                                     {WHATSAPP_NUMBER}
                                 </a>
-                                <a href="mailto:viajes@asoperadora.com" className="flex items-center gap-2 hover:text-white">
+                                <a href="mailto:viajes@asoperadora.com" className="flex items-center gap-2 hover:text-blue-600">
                                     <Mail className="w-4 h-4" />
                                     viajes@asoperadora.com
                                 </a>
-                                <button onClick={handleWhatsApp} className="flex items-center gap-2 hover:text-green-400">
+                                <button onClick={handleWhatsApp} className="flex items-center gap-2 hover:text-green-600">
                                     <MessageCircle className="w-4 h-4" />
                                     WhatsApp
                                 </button>
@@ -549,23 +563,23 @@ function ToursContent() {
 
                         {/* Ayuda */}
                         <div>
-                            <h4 className="font-bold mb-4">Ayuda</h4>
-                            <div className="space-y-2 text-sm text-gray-400">
-                                <Link href="/preguntas-frecuentes" className="block hover:text-white">Preguntas frecuentes</Link>
-                                <Link href="/terminos" className="block hover:text-white">Términos y condiciones</Link>
-                                <Link href="/privacidad" className="block hover:text-white">Política de privacidad</Link>
+                            <h4 className="font-semibold mb-4 text-gray-800">Ayuda</h4>
+                            <div className="space-y-2 text-sm text-gray-600">
+                                <Link href="/preguntas-frecuentes" className="block hover:text-blue-600">Preguntas frecuentes</Link>
+                                <Link href="/terminos" className="block hover:text-blue-600">Términos y condiciones</Link>
+                                <Link href="/privacidad" className="block hover:text-blue-600">Política de privacidad</Link>
                             </div>
                         </div>
 
                         {/* Categorías */}
                         <div>
-                            <h4 className="font-bold mb-4">Categorías</h4>
-                            <div className="space-y-2 text-sm text-gray-400">
+                            <h4 className="font-semibold mb-4 text-gray-800">Categorías</h4>
+                            <div className="space-y-2 text-sm text-gray-600">
                                 {CATEGORIES.map(cat => (
                                     <button
                                         key={cat.code}
                                         onClick={() => setSelectedCategory(cat.code)}
-                                        className="block hover:text-white"
+                                        className="block hover:text-blue-600"
                                     >
                                         {cat.icon} {cat.name}
                                     </button>
@@ -574,12 +588,12 @@ function ToursContent() {
                         </div>
                     </div>
 
-                    <div className="border-t border-gray-800 pt-6 flex flex-col md:flex-row items-center justify-between gap-4">
-                        <p className="text-sm text-gray-400">
+                    <div className="border-t border-gray-300 pt-6 flex flex-col md:flex-row items-center justify-between gap-4">
+                        <p className="text-sm text-gray-600">
                             © 2026 AS Operadora de Viajes y Eventos. Todos los derechos reservados.
                         </p>
                         <p className="text-sm text-gray-500">
-                            v2.237 | Build: 28 Ene 2026
+                            v2.241 | Build: 28 Ene 2026
                         </p>
                     </div>
                 </div>

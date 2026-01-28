@@ -10,6 +10,7 @@ import { PageHeader } from "@/components/PageHeader"
 import { Logo } from "@/components/Logo"
 import { useAuth } from "@/contexts/AuthContext"
 import { ContentModal } from "@/components/admin/ContentModal"
+import { VideoUrlEditor } from "@/components/admin/VideoUrlEditor"
 import {
   Plus, Edit, Trash2, DollarSign, Calendar, Plane, Hotel, Package,
   Home, Globe, CheckCircle2, AlertCircle, X
@@ -29,7 +30,7 @@ export default function AdminContentPage() {
   const [editingType, setEditingType] = useState<string>('')
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [activeTab, setActiveTab] = useState("hero")
-  const [toast, setToast] = useState<{message: string, type: 'success' | 'error'} | null>(null)
+  const [toast, setToast] = useState<{ message: string, type: 'success' | 'error' } | null>(null)
 
   useEffect(() => {
     if (!isAuthenticated || !user?.role || !['SUPER_ADMIN', 'ADMIN', 'MANAGER'].includes(user.role)) {
@@ -346,17 +347,15 @@ export default function AdminContentPage() {
       {/* Toast */}
       {toast && (
         <div className="fixed top-4 right-4 z-50 animate-in slide-in-from-top">
-          <Card className={`p-4 flex items-center gap-3 ${
-            toast.type === 'success' ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'
-          }`}>
+          <Card className={`p-4 flex items-center gap-3 ${toast.type === 'success' ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'
+            }`}>
             {toast.type === 'success' ? (
               <CheckCircle2 className="w-5 h-5 text-green-600" />
             ) : (
               <AlertCircle className="w-5 h-5 text-red-600" />
             )}
-            <p className={`text-sm font-medium ${
-              toast.type === 'success' ? 'text-green-900' : 'text-red-900'
-            }`}>
+            <p className={`text-sm font-medium ${toast.type === 'success' ? 'text-green-900' : 'text-red-900'
+              }`}>
               {toast.message}
             </p>
             <Button
@@ -396,7 +395,7 @@ export default function AdminContentPage() {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-4 mb-8">
+          <TabsList className="grid w-full grid-cols-5 mb-8">
             <TabsTrigger value="hero" className="flex items-center gap-2">
               <Home className="w-4 h-4" />
               Banner Principal
@@ -412,6 +411,10 @@ export default function AdminContentPage() {
             <TabsTrigger value="packages" className="flex items-center gap-2">
               <Package className="w-4 h-4" />
               Paquetes
+            </TabsTrigger>
+            <TabsTrigger value="videos" className="flex items-center gap-2">
+              <Globe className="w-4 h-4" />
+              Videos/URLs
             </TabsTrigger>
           </TabsList>
 
@@ -658,6 +661,56 @@ export default function AdminContentPage() {
                   <p className="text-muted-foreground">No hay paquetes configurados</p>
                 </div>
               )}
+            </Card>
+          </TabsContent>
+
+          {/* VIDEOS TAB */}
+          <TabsContent value="videos">
+            <Card className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold">URLs de Videos/Multimedia</h2>
+              </div>
+
+              <div className="space-y-6">
+                {/* Video Tours */}
+                <div className="border rounded-lg p-4">
+                  <h3 className="font-semibold mb-2">🎬 Video Página de Tours</h3>
+                  <p className="text-sm text-muted-foreground mb-3">
+                    URL del video que aparece en el hero de la página de Tours y Viajes Grupales
+                  </p>
+                  <VideoUrlEditor
+                    settingKey="TOURS_PROMO_VIDEO_URL"
+                    label="URL del Video de Tours"
+                    onSave={() => showToast('Video de Tours actualizado', 'success')}
+                  />
+                </div>
+
+                {/* Video Home */}
+                <div className="border rounded-lg p-4">
+                  <h3 className="font-semibold mb-2">🏠 Video Página Principal</h3>
+                  <p className="text-sm text-muted-foreground mb-3">
+                    URL del video o imagen de fondo en la página principal
+                  </p>
+                  <VideoUrlEditor
+                    settingKey="HOME_HERO_VIDEO_URL"
+                    label="URL del Video/Imagen Principal"
+                    onSave={() => showToast('Video Principal actualizado', 'success')}
+                  />
+                </div>
+
+                {/* Video Viajes Grupales Tab */}
+                <div className="border rounded-lg p-4">
+                  <h3 className="font-semibold mb-2">👥 Video Tab Viajes Grupales</h3>
+                  <p className="text-sm text-muted-foreground mb-3">
+                    URL del video que aparece en el tab de Viajes Grupales en la página principal
+                  </p>
+                  <VideoUrlEditor
+                    settingKey="GROUPS_TAB_VIDEO_URL"
+                    label="URL del Video de Grupos"
+                    onSave={() => showToast('Video de Grupos actualizado', 'success')}
+                  />
+                </div>
+              </div>
             </Card>
           </TabsContent>
         </Tabs>

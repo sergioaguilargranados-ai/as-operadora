@@ -196,9 +196,9 @@ export default function TourDetailPage({ params }: { params: Promise<{ code: str
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/30">
-            {/* Header traslúcido */}
-            <header className="sticky top-0 z-50 backdrop-blur-md bg-white/80 border-b border-white/20 shadow-sm">
-                <div className="container mx-auto px-4 py-4">
+            {/* Header traslúcido - mismo tamaño que la principal */}
+            <header className="sticky top-0 z-50 backdrop-blur-md bg-white/80 border-b border-gray-200/50 shadow-soft">
+                <div className="container mx-auto px-4 py-5">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4">
                             <button
@@ -549,31 +549,31 @@ export default function TourDetailPage({ params }: { params: Promise<{ code: str
                 </div>
             </section>
 
-            {/* Footer completo */}
-            <footer className="bg-gray-900 text-white py-10">
+            {/* Footer gris claro - mismo estilo que la principal */}
+            <footer className="bg-[#F7F7F7] py-10">
                 <div className="container mx-auto px-4">
                     <div className="grid md:grid-cols-4 gap-8 mb-8">
-                        {/* Logo */}
+                        {/* Logo y descripción */}
                         <div>
-                            <Logo className="h-10 brightness-0 invert mb-4" />
-                            <p className="text-gray-400 text-sm">
+                            <Logo className="h-10 mb-4" />
+                            <p className="text-gray-600 text-sm mt-2">
                                 Tu agencia de viajes de confianza. Más de 10 años creando experiencias inolvidables.
                             </p>
                         </div>
 
                         {/* Contacto */}
                         <div>
-                            <h4 className="font-bold mb-4">Contacto</h4>
-                            <div className="space-y-2 text-sm text-gray-400">
-                                <a href={`tel:${WHATSAPP_NUMBER}`} className="flex items-center gap-2 hover:text-white">
+                            <h4 className="font-semibold mb-4 text-gray-800">Contacto</h4>
+                            <div className="space-y-2 text-sm text-gray-600">
+                                <a href={`tel:${WHATSAPP_NUMBER}`} className="flex items-center gap-2 hover:text-blue-600">
                                     <Phone className="w-4 h-4" />
                                     {WHATSAPP_NUMBER}
                                 </a>
-                                <a href="mailto:viajes@asoperadora.com" className="flex items-center gap-2 hover:text-white">
+                                <a href="mailto:viajes@asoperadora.com" className="flex items-center gap-2 hover:text-blue-600">
                                     <Mail className="w-4 h-4" />
                                     viajes@asoperadora.com
                                 </a>
-                                <button onClick={handleWhatsApp} className="flex items-center gap-2 hover:text-green-400">
+                                <button onClick={handleWhatsApp} className="flex items-center gap-2 hover:text-green-600">
                                     <MessageCircle className="w-4 h-4" />
                                     WhatsApp
                                 </button>
@@ -582,33 +582,33 @@ export default function TourDetailPage({ params }: { params: Promise<{ code: str
 
                         {/* Ayuda */}
                         <div>
-                            <h4 className="font-bold mb-4">Ayuda</h4>
-                            <div className="space-y-2 text-sm text-gray-400">
-                                <Link href="/preguntas-frecuentes" className="block hover:text-white">Preguntas frecuentes</Link>
-                                <Link href="/terminos" className="block hover:text-white">Términos y condiciones</Link>
-                                <Link href="/privacidad" className="block hover:text-white">Política de privacidad</Link>
-                                <Link href="/contacto" className="block hover:text-white">Contáctanos</Link>
+                            <h4 className="font-semibold mb-4 text-gray-800">Ayuda</h4>
+                            <div className="space-y-2 text-sm text-gray-600">
+                                <Link href="/preguntas-frecuentes" className="block hover:text-blue-600">Preguntas frecuentes</Link>
+                                <Link href="/terminos" className="block hover:text-blue-600">Términos y condiciones</Link>
+                                <Link href="/privacidad" className="block hover:text-blue-600">Política de privacidad</Link>
+                                <Link href="/contacto" className="block hover:text-blue-600">Contáctanos</Link>
                             </div>
                         </div>
 
                         {/* Tours */}
                         <div>
-                            <h4 className="font-bold mb-4">Tours</h4>
-                            <div className="space-y-2 text-sm text-gray-400">
-                                <Link href="/tours?cat=ofertas" className="block hover:text-white">🔥 Ofertas Especiales</Link>
-                                <Link href="/tours?cat=bloqueos" className="block hover:text-white">🎯 Bloqueos</Link>
-                                <Link href="/tours?cat=semana-santa" className="block hover:text-white">🌴 Semana Santa</Link>
-                                <Link href="/tours?cat=favoritos" className="block hover:text-white">⭐ Favoritos</Link>
+                            <h4 className="font-semibold mb-4 text-gray-800">Tours</h4>
+                            <div className="space-y-2 text-sm text-gray-600">
+                                <Link href="/tours?cat=ofertas" className="block hover:text-blue-600">🔥 Ofertas Especiales</Link>
+                                <Link href="/tours?cat=bloqueos" className="block hover:text-blue-600">🎯 Bloqueos</Link>
+                                <Link href="/tours?cat=semana-santa" className="block hover:text-blue-600">🌴 Semana Santa</Link>
+                                <Link href="/tours?cat=favoritos" className="block hover:text-blue-600">⭐ Favoritos</Link>
                             </div>
                         </div>
                     </div>
 
-                    <div className="border-t border-gray-800 pt-6 flex flex-col md:flex-row items-center justify-between gap-4">
-                        <p className="text-sm text-gray-400">
+                    <div className="border-t border-gray-300 pt-6 flex flex-col md:flex-row items-center justify-between gap-4">
+                        <p className="text-sm text-gray-600">
                             © 2026 AS Operadora de Viajes y Eventos. Todos los derechos reservados.
                         </p>
                         <p className="text-sm text-gray-500">
-                            v2.237 | Build: 28 Ene 2026
+                            v2.241 | Build: 28 Ene 2026
                         </p>
                     </div>
                 </div>
