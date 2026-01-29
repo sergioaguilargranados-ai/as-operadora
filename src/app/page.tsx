@@ -2152,7 +2152,15 @@ export default function Home() {
                     <div className="relative w-full h-64 md:h-80 rounded-2xl overflow-hidden mb-6 bg-gray-900">
                       {toursVideoUrl.includes('youtube') || toursVideoUrl.includes('vimeo') ? (
                         <iframe
-                          src={toursVideoUrl.replace('watch?v=', 'embed/')}
+                          src={(() => {
+                            // Convertir URL de watch a embed y agregar autoplay
+                            let embedUrl = toursVideoUrl.replace('watch?v=', 'embed/');
+                            // Extraer video ID para playlist (necesario para loop)
+                            const videoId = embedUrl.split('/').pop()?.split('?')[0] || '';
+                            // Agregar parámetros de autoplay
+                            const separator = embedUrl.includes('?') ? '&' : '?';
+                            return `${embedUrl}${separator}autoplay=1&mute=1&loop=1&playlist=${videoId}`;
+                          })()}
                           className="w-full h-full"
                           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                           allowFullScreen
