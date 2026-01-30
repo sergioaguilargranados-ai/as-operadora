@@ -1,6 +1,6 @@
 "use client"
 
-// Build: 28 Ene 2026 - v2.244 - Header mas alto, video YouTube
+// Build: 30 Ene 2026 - v2.248 - Videos parametrizables en hero y tab grupos
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
@@ -320,6 +320,8 @@ export default function Home() {
   // Estados para configuraciones de visibilidad
   const [homeSettings, setHomeSettings] = useState<Record<string, string>>({})
   const [toursVideoUrl, setToursVideoUrl] = useState('https://www.youtube.com/embed/dQw4w9WgXcQ')
+  const [homeHeroVideoUrl, setHomeHeroVideoUrl] = useState('')  // Video de fondo del hero
+  const [groupsTabVideoUrl, setGroupsTabVideoUrl] = useState('') // Video del tab de grupos
 
   // Cargar datos dinámicos
   useEffect(() => {
@@ -405,12 +407,18 @@ export default function Home() {
     // Cargar configuraciones de visibilidad
     const fetchHomeSettings = async () => {
       try {
-        const res = await fetch('/api/settings?keys=HOME_SEARCH_HOTELS,HOME_PACKAGES_CTA,HOME_OFFERS_SECTION,HOME_FLIGHTS_SECTION,HOME_ACCOMMODATION_SECTION,HOME_WEEKEND_SECTION,HOME_VACATION_PACKAGES,HOME_UNIQUE_STAYS,HOME_EXPLORE_WORLD,TOURS_PROMO_VIDEO_URL')
+        const res = await fetch('/api/settings?keys=HOME_SEARCH_HOTELS,HOME_PACKAGES_CTA,HOME_OFFERS_SECTION,HOME_FLIGHTS_SECTION,HOME_ACCOMMODATION_SECTION,HOME_WEEKEND_SECTION,HOME_VACATION_PACKAGES,HOME_UNIQUE_STAYS,HOME_EXPLORE_WORLD,TOURS_PROMO_VIDEO_URL,HOME_HERO_VIDEO_URL,GROUPS_TAB_VIDEO_URL')
         const data = await res.json()
         if (data.success && data.settings) {
           setHomeSettings(data.settings)
           if (data.settings.TOURS_PROMO_VIDEO_URL) {
             setToursVideoUrl(data.settings.TOURS_PROMO_VIDEO_URL)
+          }
+          if (data.settings.HOME_HERO_VIDEO_URL) {
+            setHomeHeroVideoUrl(data.settings.HOME_HERO_VIDEO_URL)
+          }
+          if (data.settings.GROUPS_TAB_VIDEO_URL) {
+            setGroupsTabVideoUrl(data.settings.GROUPS_TAB_VIDEO_URL)
           }
         }
       } catch (error) {
@@ -728,17 +736,55 @@ export default function Home() {
         </div>
       </header>
 
-      {/* Hero Section with Background Image and Filters */}
+      {/* Hero Section with Background Image/Video and Filters */}
       <main className="relative">
-        {/* Background Image Section */}
-        <div
-          className="relative min-h-[600px] bg-cover bg-center bg-no-repeat"
-          style={{
-            backgroundImage: featuredHero
-              ? `url(${featuredHero.image_url})`
-              : 'url(https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1600&h=900&fit=crop)'
-          }}
-        >
+        {/* Background Image/Video Section */}
+        <div className="relative min-h-[600px]">
+          {/* Video o Imagen de fondo */}
+          {homeHeroVideoUrl ? (
+            // Video de fondo configurable
+            <div className="absolute inset-0 overflow-hidden">
+              {homeHeroVideoUrl.includes('youtube') || homeHeroVideoUrl.includes('vimeo') ? (
+                <iframe
+                  src={(() => {
+                    let embedUrl = homeHeroVideoUrl.replace('watch?v=', 'embed/');
+                    const videoIdMatch = embedUrl.match(/(?:embed\/|v=)([a-zA-Z0-9_-]+)/);
+                    const videoId = videoIdMatch ? videoIdMatch[1] : '';
+                    const separator = embedUrl.includes('?') ? '&' : '?';
+                    return `${embedUrl}${separator}autoplay=1&mute=1&loop=1&playlist=${videoId}&controls=0&showinfo=0&rel=0`;
+                  })()}
+                  className="absolute w-full h-full object-cover scale-150"
+                  style={{ pointerEvents: 'none' }}
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  frameBorder="0"
+                />
+              ) : homeHeroVideoUrl.includes('.mp4') || homeHeroVideoUrl.includes('.webm') ? (
+                <video
+                  src={homeHeroVideoUrl}
+                  className="absolute w-full h-full object-cover"
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                />
+              ) : (
+                <div
+                  className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+                  style={{ backgroundImage: `url(${homeHeroVideoUrl})` }}
+                />
+              )}
+            </div>
+          ) : (
+            // Imagen de fondo por defecto
+            <div
+              className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+              style={{
+                backgroundImage: featuredHero
+                  ? `url(${featuredHero.image_url})`
+                  : 'url(https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1600&h=900&fit=crop)'
+              }}
+            />
+          )}
           {/* Overlay oscuro para mejor contraste */}
           <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/20 to-black/40" />
 
@@ -2148,46 +2194,50 @@ export default function Home() {
                         <ChevronRight className="w-4 h-4 ml-1" />
                       </Button>
                     </div>
-                    {/* Video promocional */}
-                    <div className="relative w-full h-64 md:h-80 rounded-2xl overflow-hidden mb-6 bg-gray-900">
-                      {toursVideoUrl.includes('youtube') || toursVideoUrl.includes('vimeo') ? (
-                        <iframe
-                          src={(() => {
-                            // Convertir URL de watch a embed y agregar autoplay
-                            let embedUrl = toursVideoUrl.replace('watch?v=', 'embed/');
-                            // Extraer video ID para playlist (necesario para loop)
-                            const videoId = embedUrl.split('/').pop()?.split('?')[0] || '';
-                            // Agregar parámetros de autoplay
-                            const separator = embedUrl.includes('?') ? '&' : '?';
-                            return `${embedUrl}${separator}autoplay=1&mute=1&loop=1&playlist=${videoId}`;
-                          })()}
-                          className="w-full h-full"
-                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                          allowFullScreen
-                          title="Video promocional de tours"
-                        />
-                      ) : toursVideoUrl.includes('.mp4') || toursVideoUrl.includes('.webm') ? (
-                        <video
-                          src={toursVideoUrl}
-                          className="w-full h-full object-cover"
-                          autoPlay
-                          muted
-                          loop
-                          playsInline
-                        />
-                      ) : (
-                        <img
-                          src={toursVideoUrl}
-                          alt="Tours y Viajes Grupales"
-                          className="w-full h-full object-cover"
-                        />
-                      )}
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
-                      <div className="absolute bottom-4 left-4 right-4 text-white">
-                        <h4 className="text-2xl font-bold mb-2">Descubre el Mundo</h4>
-                        <p className="text-sm opacity-90">Tours todo incluido con vuelo, hotel y guía turístico</p>
-                      </div>
-                    </div>
+                    {/* Video promocional - usa GROUPS_TAB_VIDEO_URL o TOURS_PROMO_VIDEO_URL como fallback */}
+                    {(() => {
+                      const videoUrl = groupsTabVideoUrl || toursVideoUrl;
+                      return (
+                        <div className="relative w-full h-64 md:h-80 rounded-2xl overflow-hidden mb-6 bg-gray-900">
+                          {videoUrl.includes('youtube') || videoUrl.includes('vimeo') ? (
+                            <iframe
+                              src={(() => {
+                                let embedUrl = videoUrl.replace('watch?v=', 'embed/');
+                                const videoIdMatch = embedUrl.match(/(?:embed\/|v=)([a-zA-Z0-9_-]+)/);
+                                const videoId = videoIdMatch ? videoIdMatch[1] : '';
+                                const separator = embedUrl.includes('?') ? '&' : '?';
+                                return `${embedUrl}${separator}autoplay=1&mute=1&loop=1&playlist=${videoId}&controls=0&showinfo=0&rel=0`;
+                              })()}
+                              className="w-full h-full"
+                              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                              allowFullScreen
+                              frameBorder="0"
+                              title="Video promocional de viajes grupales"
+                            />
+                          ) : videoUrl.includes('.mp4') || videoUrl.includes('.webm') ? (
+                            <video
+                              src={videoUrl}
+                              className="w-full h-full object-cover"
+                              autoPlay
+                              muted
+                              loop
+                              playsInline
+                            />
+                          ) : (
+                            <img
+                              src={videoUrl}
+                              alt="Tours y Viajes Grupales"
+                              className="w-full h-full object-cover"
+                            />
+                          )}
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
+                          <div className="absolute bottom-4 left-4 right-4 text-white">
+                            <h4 className="text-2xl font-bold mb-2">Descubre el Mundo</h4>
+                            <p className="text-sm opacity-90">Tours todo incluido con vuelo, hotel y guía turístico</p>
+                          </div>
+                        </div>
+                      );
+                    })()}
 
                     {loadingTours ? (
                       <div className="flex items-center justify-center py-8">
@@ -2950,7 +3000,7 @@ export default function Home() {
                 </p>
                 <p className="font-mono mt-1">
                   👥 Usuarios: <span className="font-bold">{dbInfo.totalUsers}</span> |
-                  📦 Versión: <span className="font-bold">v2.244</span>
+                  📦 Versión: <span className="font-bold">v2.248</span>
                 </p>
               </div>
             )}
