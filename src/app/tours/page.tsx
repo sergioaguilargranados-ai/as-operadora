@@ -1,5 +1,5 @@
 // Catálogo de Tours y Viajes Grupales
-// Build: 28 Ene 2026 - v2.237 - Rediseño completo con navegación por categorías
+// Build: 30 Ene 2026 - v2.247 - Fix autoplay de video YouTube en hero
 
 'use client'
 
@@ -282,9 +282,20 @@ function ToursContent() {
                 <div className="absolute inset-0">
                     {videoUrl.includes('youtube') || videoUrl.includes('vimeo') ? (
                         <iframe
-                            src={videoUrl}
+                            src={(() => {
+                                // Convertir URL de watch a embed si es necesario
+                                let embedUrl = videoUrl.replace('watch?v=', 'embed/');
+                                // Extraer video ID para playlist (necesario para loop)
+                                const videoIdMatch = embedUrl.match(/(?:embed\/|v=)([a-zA-Z0-9_-]+)/);
+                                const videoId = videoIdMatch ? videoIdMatch[1] : '';
+                                // Agregar parámetros de autoplay, mute y loop
+                                const separator = embedUrl.includes('?') ? '&' : '?';
+                                return `${embedUrl}${separator}autoplay=1&mute=1&loop=1&playlist=${videoId}&controls=0&showinfo=0&rel=0`;
+                            })()}
                             className="w-full h-full object-cover"
-                            allow="autoplay; muted; loop"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            frameBorder="0"
+                            allowFullScreen
                             style={{ pointerEvents: 'none' }}
                         />
                     ) : (
