@@ -1,7 +1,7 @@
 # 📋 AG-Histórico de Cambios - AS Operadora
 
-**Última actualización:** 31 de Enero de 2026 - 14:10 CST  
-**Versión actual:** v2.250  
+**Última actualización:** 31 de Enero de 2026 - 14:50 CST  
+**Versión actual:** v2.251  
 **Actualizado por:** AntiGravity AI Assistant  
 **Propósito:** Documento maestro del proyecto para trabajo con agentes AntiGravity
 
@@ -34,6 +34,30 @@ Esto permite detectar si se perdieron tablas/campos entre versiones.
 ---
 
 ## 📅 HISTORIAL DE CAMBIOS
+
+### v2.251 - 31 de Enero de 2026 - 14:50 CST
+
+**🎥 Mejora Visual: Video Pantalla Completa en Tours**
+
+**Cambios:**
+- ✅ Video de fondo en `/tours` ahora a pantalla completa (`scale-150`)
+- ✅ Overlay cambiado de `bg-white/90` a `bg-gradient-to-b from-white/20 via-white/10 to-white/30` (muy traslúcido)
+- ✅ Texto cambiado a blanco con `drop-shadow` para mejor legibilidad sobre video
+- ✅ Barra de búsqueda con `backdrop-blur-xl` para mantener contraste
+- ✅ **Versiones actualizadas en footers** de todas las páginas principales para verificar deployment
+
+**Archivos modificados:**
+- `src/app/tours/page.tsx` - Video pantalla completa + overlay traslúcido + versión v2.251
+- `src/app/page.tsx` - Versión actualizada en footer a v2.251
+- `src/app/cotizar-tour/page.tsx` - Versión agregada en footer
+- `docs/AG-Historico-Cambios.md` - Nueva entrada v2.251
+
+**Lecciones aprendidas:**
+- ✅ Mantener versiones en footers ayuda a verificar deployments y evitar problemas de caché
+- ✅ El overlay muy traslúcido (`/10` a `/30`) permite apreciar el video sin sacrificar legibilidad
+- ✅ `drop-shadow` en texto blanco es esencial para legibilidad sobre videos dinámicos
+
+---
 
 ### v2.250 - 31 de Enero de 2026 - 14:10 CST
 
