@@ -1,5 +1,5 @@
 // Catálogo de Tours y Viajes Grupales
-// Build: 31 Ene 2026 - v2.251 - Video a pantalla completa con overlay muy traslúcido
+// Build: 31 Ene 2026 - v2.252 - Overlay ajustado y texto negro sobre video
 
 'use client'
 
@@ -304,8 +304,8 @@ function ToursContent() {
                             style={{ backgroundImage: `url(${videoUrl})` }}
                         />
                     )}
-                    {/* Overlay muy traslúcido para que se vea el video */}
-                    <div className="absolute inset-0 bg-gradient-to-b from-white/20 via-white/10 to-white/30" />
+                    {/* Overlay un poco menos transparente para mejor legibilidad */}
+                    <div className="absolute inset-0 bg-gradient-to-b from-white/25 via-white/15 to-white/40" />
                 </div>
 
                 <div className="container mx-auto px-4 relative z-10">
@@ -314,10 +314,10 @@ function ToursContent() {
                         animate={{ opacity: 1, y: 0 }}
                         className="text-center"
                     >
-                        <h1 className="text-3xl md:text-5xl font-bold mb-4 text-white drop-shadow-lg">
+                        <h1 className="text-3xl md:text-5xl font-bold mb-4 text-gray-900 drop-shadow-sm">
                             {CATEGORIES.find(c => c.code === selectedCategory)?.icon} {CATEGORIES.find(c => c.code === selectedCategory)?.name}
                         </h1>
-                        <p className="text-lg md:text-xl text-white drop-shadow-md mb-6 max-w-2xl mx-auto">
+                        <p className="text-lg md:text-xl text-gray-800 drop-shadow-sm mb-6 max-w-2xl mx-auto">
                             Descubre el mundo con nuestros paquetes todo incluido.
                             Europa, Asia, Medio Oriente y más destinos te esperan.
                         </p>
@@ -605,7 +605,7 @@ function ToursContent() {
                             © 2026 AS Operadora de Viajes y Eventos. Todos los derechos reservados.
                         </p>
                         <p className="text-sm text-gray-500">
-                            v2.251 | Build: 31 Ene 2026
+                            v2.252 | Build: 31 Ene 2026
                         </p>
                     </div>
                 </div>
