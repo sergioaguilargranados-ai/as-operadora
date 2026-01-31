@@ -1,5 +1,5 @@
 // Catálogo de Tours y Viajes Grupales
-// Build: 31 Ene 2026 - v2.250 - Hero section blanco traslúcido estilo AS Operadora
+// Build: 31 Ene 2026 - v2.251 - Video a pantalla completa con overlay muy traslúcido
 
 'use client'
 
@@ -292,7 +292,7 @@ function ToursContent() {
                                 const separator = embedUrl.includes('?') ? '&' : '?';
                                 return `${embedUrl}${separator}autoplay=1&mute=1&loop=1&playlist=${videoId}&controls=0&showinfo=0&rel=0`;
                             })()}
-                            className="w-full h-full object-cover"
+                            className="absolute w-full h-full object-cover scale-150"
                             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                             frameBorder="0"
                             allowFullScreen
@@ -304,26 +304,27 @@ function ToursContent() {
                             style={{ backgroundImage: `url(${videoUrl})` }}
                         />
                     )}
-                    <div className="absolute inset-0 bg-white/90 backdrop-blur-sm" />
+                    {/* Overlay muy traslúcido para que se vea el video */}
+                    <div className="absolute inset-0 bg-gradient-to-b from-white/20 via-white/10 to-white/30" />
                 </div>
 
                 <div className="container mx-auto px-4 relative z-10">
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="text-center text-gray-900"
+                        className="text-center"
                     >
-                        <h1 className="text-3xl md:text-5xl font-bold mb-4 text-gray-900">
+                        <h1 className="text-3xl md:text-5xl font-bold mb-4 text-white drop-shadow-lg">
                             {CATEGORIES.find(c => c.code === selectedCategory)?.icon} {CATEGORIES.find(c => c.code === selectedCategory)?.name}
                         </h1>
-                        <p className="text-lg md:text-xl text-gray-700 mb-6 max-w-2xl mx-auto">
+                        <p className="text-lg md:text-xl text-white drop-shadow-md mb-6 max-w-2xl mx-auto">
                             Descubre el mundo con nuestros paquetes todo incluido.
                             Europa, Asia, Medio Oriente y más destinos te esperan.
                         </p>
 
                         {/* Barra de búsqueda */}
                         <form onSubmit={handleSearch} className="max-w-xl mx-auto">
-                            <div className="flex gap-2 bg-white/80 backdrop-blur-sm rounded-xl p-2 shadow-lg border border-gray-200">
+                            <div className="flex gap-2 backdrop-blur-xl bg-white/90 rounded-xl p-2 shadow-2xl border border-white/30">
                                 <div className="relative flex-1">
                                     <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                                     <Input
@@ -604,7 +605,7 @@ function ToursContent() {
                             © 2026 AS Operadora de Viajes y Eventos. Todos los derechos reservados.
                         </p>
                         <p className="text-sm text-gray-500">
-                            v2.250 | Build: 31 Ene 2026
+                            v2.251 | Build: 31 Ene 2026
                         </p>
                     </div>
                 </div>
