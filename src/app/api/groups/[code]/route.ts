@@ -127,7 +127,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
                 [],
             importantNotes: pkg.important_notes ?
                 (typeof pkg.important_notes === 'string' ?
-                    [pkg.important_notes] :
+                    JSON.parse(pkg.important_notes) :
                     pkg.important_notes) :
                 [],
             mapImage: pkg.map_image,
