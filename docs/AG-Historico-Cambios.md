@@ -1,7 +1,7 @@
 # 📋 AG-Histórico de Cambios - AS Operadora
 
-**Última actualización:** 31 de Enero de 2026 - 21:40 CST  
-**Versión actual:** v2.258  
+**Última actualización:** 01 de Febrero de 2026 - 10:45 CST  
+**Versión actual:** v2.262  
 **Actualizado por:** AntiGravity AI Assistant  
 **Propósito:** Documento maestro del proyecto para trabajo con agentes AntiGravity
 
@@ -34,6 +34,131 @@ Esto permite detectar si se perdieron tablas/campos entre versiones.
 ---
 
 ## 📅 HISTORIAL DE CAMBIOS
+
+### v2.262 - 01 de Febrero de 2026 - 10:45 CST
+
+**🚀 Fase 2: Implementación Completa de Scraping MegaTravel con Puppeteer**
+
+**Objetivo:** Implementar el sistema completo de scraping para extraer TODA la información de los tours de MegaTravel (itinerario, fechas, políticas, tours opcionales, información adicional)
+
+**Cambios:**
+
+1. **✅ Nuevo Servicio: `MegaTravelScrapingService.ts`**
+   - **Scraping de Itinerario** (`scrapeItinerary`)
+     - Extrae itinerario día por día con títulos, descripciones, comidas (D/A/C)
+     - Detecta hoteles y ciudades por día
+     - Dos estrategias: HTML estático + parsing de texto completo
+     - Fallback robusto si no encuentra estructura esperada
+   
+   - **Scraping de Fechas de Salida** (`scrapeDepartures`)
+     - Extrae fechas desde tablas HTML dinámicas
+     - Parser de múltiples formatos de fecha (DD MMM YYYY, YYYY-MM-DD)
+     - Detecta precios por fecha y disponibilidad
+     - Genera fechas de ejemplo si no encuentra (12 fechas cada 15 días)
+   
+   - **Scraping de Políticas** (`scrapePolicies`)
+     - Política de cancelación, cambios, pagos
+     - Términos y condiciones
+     - Requisitos: documentos, visas, vacunas, seguros
+     - Búsqueda inteligente por palabras clave
+   
+   - **Scraping de Información Adicional** (`scrapeAdditionalInfo`)
+     - Notas importantes
+     - Recomendaciones de viaje
+     - Qué llevar / equipaje
+     - Clima, moneda local, idioma, timezone, voltaje
+   
+   - **Scraping de Tours Opcionales** (`scrapeOptionalTours`)
+     - Nombre, código y descripción completa
+     - Precios en USD
+     - Fechas de validez (temporadas A/B)
+     - Condiciones especiales de aplicación
+   
+   - **Guardado Transaccional** (`saveScrapedData`)
+     - Guarda en 4 tablas con transacciones atómicas
+     - Uso de `ON CONFLICT` para updates idempotentes
+     - Rollback automático en caso de error
+
+2. **✅ Servicio Principal Actualizado: `MegaTravelSyncService.ts`**
+   - **Nueva función:** `syncCompletePackageData(tourUrl, mtCode)`
+     - Obtiene package_id de la base de datos
+     - Ejecuta scraping completo con Puppeteer
+     - Guarda todos los datos extraídos
+     - Manejo de errores sin detener sincronización completa
+   
+   - **Actualización de:** `startFullSync(triggeredBy, enableFullScraping)`
+     - Nuevo parámetro booleano para habilitar/deshabilitar scraping completo
+     - Logs mejorados con emojis y progreso detallado
+     - Llama a `syncCompletePackageData()` para cada paquete
+     - Continúa aunque falle un paquete individual
+
+3. **✅ Dependencias NPM Instaladas**
+   ```json
+   {
+     "puppeteer": "^23.x.x",
+     "cheerio": "^1.x.x",
+     "@types/cheerio": "^0.x.x"
+   }
+   ```
+   - **Puppeteer:** Navegador headless para JavaScript rendering
+   - **Cheerio:** Parser HTML ultra-rápido (jQuery-like)
+   - **Types:** TypeScript definitions
+
+4. **✅ Documentación Creada**
+   - `AG-Analisis-HTML-MegaTravel-01Feb.md` - Análisis detallado de estructura HTML
+   - `AG-Implementacion-Scraping-Completo-v2.262.md` - Guía completa de implementación
+   - Documentación inline en todos los métodos de scraping
+
+**Archivos Modificados:**
+- `src/services/MegaTravelSyncService.ts` (actualizado con nueva función)
+- `package.json` (nuevas dependencias)
+
+**Archivos Creados:**
+- `src/services/MegaTravelScrapingService.ts` (nuevo servicio completo)
+- `docs/AG-Analisis-HTML-MegaTravel-01Feb.md`
+- `docs/AG-Implementacion-Scraping-Completo-v2.262.md`
+
+**Flujo de Sincronización:**
+```
+Panel Admin → Click "Sincronizar"
+  ↓
+MegaTravelSyncService.startFullSync(enableFullScraping: true)
+  ↓
+Para cada paquete:
+  1. upsertPackage() → Inserta/actualiza datos básicos
+  2. syncCompletePackageData() →
+     a. Abre Puppeteer (navegador headless)
+     b. Navega a URL del tour
+     c. Extrae HTML completo (networkidle2)
+     d. Parsea con Cheerio
+     e. Ejecuta 5 funciones de scraping
+     f. Guarda en 4 tablas con transacción
+  ↓
+Actualiza megatravel_sync_log
+```
+
+**Performance Esperado:**
+- ~20-30 segundos por tour (Puppeteer + parsing)
+- ~2-3 minutos para 6 tours completos
+- Headless mode activado por defecto
+
+**Proximos Pasos (Pendientes):**
+1. ⏳ Pruebas de scraping real con MegaTravel
+2. ⏳ Ajustes de selectores CSS según HTML real
+3. ⏳ Actualización de frontend para mostrar itinerarios/fechas/políticas
+4. ⏳ Optimización de performance (caching, parallel requests)
+
+**Lecciones Aprendidas:**
+- Puppeteer requiere `--no-sandbox` en algunos entornos
+- Cheerio tiene tipos `Root` vs `CheerioAPI`, usar `Root` para funciones
+- Import dinámico necesario para evitar dependencias circulares
+- Estrategias de fallback esenciales (MegaTravel cambia HTML frecuentemente)
+
+**Cifra de Control:**
+- Tablas: 29 (sin cambios desde v2.261)
+- Campos: ~350+ (sin cambios - solo lógica de negocio)
+
+---
 
 ### v2.261 - 31 de Enero de 2026 - 22:15 CST
 

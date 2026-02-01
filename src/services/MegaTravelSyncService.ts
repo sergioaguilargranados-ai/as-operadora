@@ -630,9 +630,12 @@ export class MegaTravelSyncService {
     }
 
     /**
-     * Iniciar sincronización completa
+     * Iniciar sincronización completa CON SCRAPING TOTAL
      */
-    static async startFullSync(triggeredBy: string = 'system'): Promise<SyncResult> {
+    static async startFullSync(
+        triggeredBy: string = 'system',
+        enableFullScraping: boolean = true
+    ): Promise<SyncResult> {
         const startTime = Date.now();
         let syncId: number | undefined;
         const errors: string[] = [];
@@ -649,9 +652,9 @@ export class MegaTravelSyncService {
             syncId = syncResult.rows[0].id;
 
             console.log(`🔄 Iniciando sincronización MegaTravel (ID: ${syncId})`);
+            console.log(`   Scraping completo: ${enableFullScraping ? '✅ ACTIVADO' : '❌ Desactivado'}`);
 
-            // Por ahora usamos los paquetes de ejemplo
-            // En producción aquí iría el scraping real con Puppeteer
+            // Usar paquetes de ejemplo como base
             const packages = SAMPLE_PACKAGES;
 
             // Obtener margen configurado
@@ -663,13 +666,24 @@ export class MegaTravelSyncService {
             // Sincronizar cada paquete
             for (const pkg of packages) {
                 try {
+                    console.log(`\n📦 Procesando: ${pkg.name} (${pkg.mt_code})`);
+
+                    // 1. Insertar/actualizar datos básicos del paquete
                     await this.upsertPackage(pkg, margin);
+
+                    // 2. Si está habilitado, hacer scraping completo
+                    if (enableFullScraping) {
+                        await this.syncCompletePackageData(pkg.mt_url, pkg.mt_code);
+                    }
+
                     packagesSynced++;
+                    console.log(`   ✅ ${pkg.mt_code} sincronizado`);
+
                 } catch (err) {
                     packagesFailed++;
                     const errorMsg = `Error sincronizando ${pkg.mt_code}: ${err}`;
                     errors.push(errorMsg);
-                    console.error(errorMsg);
+                    console.error(`   ❌ ${errorMsg}`);
                 }
             }
 
@@ -792,6 +806,41 @@ export class MegaTravelSyncService {
             JSON.stringify(pkg.detailed_hotels || []), JSON.stringify(pkg.supplements || []), JSON.stringify(pkg.visa_requirements || []), JSON.stringify(pkg.important_notes || []),
             margin
         ]);
+    }
+
+    /**
+     * Sincronizar datos completos de un paquete (itinerario, fechas, políticas, etc.)
+     */
+    private static async syncCompletePackageData(tourUrl: string, mtCode: string): Promise<void> {
+        try {
+            console.log(`   🔍 Scraping completo de ${mtCode}...`);
+
+            // Obtener el package_id de la base de datos
+            const result = await pool.query(`
+                SELECT id FROM megatravel_packages WHERE mt_code = $1
+            `, [mtCode]);
+
+            if (result.rows.length === 0) {
+                throw new Error(`Paquete ${mtCode} no encontrado en BD`);
+            }
+
+            const packageId = result.rows[0].id;
+
+            // Importar dinámicamente el servicio de scraping
+            const { MegaTravelScrapingService } = await import('./MegaTravelScrapingService');
+
+            // Hacer scraping completo
+            const scrapedData = await MegaTravelScrapingService.scrapeTourComplete(tourUrl, packageId);
+
+            // Guardar los datos en la BD
+            await MegaTravelScrapingService.saveScrapedData(packageId, scrapedData);
+
+            console.log(`   ✅ Scraping completado para ${mtCode}`);
+
+        } catch (error) {
+            console.error(`   ❌ Error en scraping de ${mtCode}:`, error);
+            // No lanzamos el error para que continúe con otros paquetes
+        }
     }
 
     /**
