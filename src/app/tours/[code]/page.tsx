@@ -912,6 +912,66 @@ export default function TourDetailPage({ params }: { params: Promise<{ code: str
                             )}
                         </div>
                     </div>
+
+                    {/* Columna derecha - Sidebar de precios */}
+                    <div className="lg:col-span-1">
+                        <div className="sticky top-24 space-y-4">
+                            {/* Card de precio */}
+                            <Card className="p-6 border-2 border-blue-200">
+                                {/* Precio principal */}
+                                <div className="text-center mb-6">
+                                    <div className="text-4xl font-bold text-blue-600 mb-2">
+                                        ${formatPrice(tour.pricing.basePrice)}
+                                        <span className="text-lg text-gray-600 ml-2">USD</span>
+                                    </div>
+                                    <p className="text-sm text-gray-600">Por persona en habitación Doble</p>
+                                </div>
+
+                                <div className="space-y-3 mb-6 pb-6 border-b">
+                                    <div className="flex justify-between text-sm">
+                                        <span className="text-gray-600">Precio base:</span>
+                                        <span className="font-semibold">${formatPrice(tour.pricing.basePrice)} USD</span>
+                                    </div>
+                                    <div className="flex justify-between text-sm">
+                                        <span className="text-gray-600">Impuestos:</span>
+                                        <span className="font-semibold">${formatPrice(tour.pricing.taxes)} USD</span>
+                                    </div>
+                                </div>
+
+                                {/* Total */}
+                                <div className="flex justify-between items-center mb-6 pb-6 border-b">
+                                    <span className="text-lg font-bold text-gray-900">Total:</span>
+                                    <span className="text-2xl font-bold text-blue-600">
+                                        ${formatPrice(tour.pricing.basePrice + tour.pricing.taxes)} USD
+                                    </span>
+                                </div>
+
+                                {/* Botón Cotizar Tour (reemplaza WhatsApp) */}
+                                <Button
+                                    size="lg"
+                                    className="w-full bg-blue-600 hover:bg-blue-700 text-white py-6 text-lg font-semibold shadow-lg hover:shadow-xl transition-all"
+                                    onClick={() => {
+                                        const params = new URLSearchParams({
+                                            tourId: tour.id,
+                                            tourName: tour.name,
+                                            tourPrice: tour.pricing.basePrice.toString(),
+                                            tourRegion: tour.region,
+                                            tourDays: tour.days.toString(),
+                                            tourCities: tour.cities.join(', ')
+                                        })
+                                        window.location.href = `/cotizar-tour?${params.toString()}`
+                                    }}
+                                >
+                                    <Send className="w-5 h-5 mr-2" />
+                                    Cotizar Tour
+                                </Button>
+
+                                <p className="text-xs text-center text-gray-500 mt-4">
+                                    Respuesta inmediata • Asesoría personalizada
+                                </p>
+                            </Card>
+                        </div>
+                    </div>
                 </div>
             </div>
 

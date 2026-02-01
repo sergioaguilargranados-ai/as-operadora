@@ -1,7 +1,7 @@
 # 📋 AG-Histórico de Cambios - AS Operadora
 
-**Última actualización:** 31 de Enero de 2026 - 14:50 CST  
-**Versión actual:** v2.251  
+**Última actualización:** 31 de Enero de 2026 - 21:40 CST  
+**Versión actual:** v2.258  
 **Actualizado por:** AntiGravity AI Assistant  
 **Propósito:** Documento maestro del proyecto para trabajo con agentes AntiGravity
 
@@ -34,6 +34,47 @@ Esto permite detectar si se perdieron tablas/campos entre versiones.
 ---
 
 ## 📅 HISTORIAL DE CAMBIOS
+
+### v2.258 - 31 de Enero de 2026 - 21:40 CST
+
+**🔧 Restauración de Funcionalidad Perdida + Mapa Interactivo**
+
+**Cambios:**
+- ✅ **HOTFIX:** Arreglado error de compilación en `TourMap.tsx` (uso de `window.google` en lugar de `google` directo)
+- ✅ **Restaurado:** Botón "Cotizar Tour" que se perdió en v2.257
+  - Ubicación: Después del itinerario, antes de hoteles
+  - Diseño: Card con gradiente azul, botón grande con ícono Send
+  - Funcionalidad: Redirige a `/cotizar-tour` con parámetros pre-llenados (tourId, tourName, tourPrice, tourRegion, tourDays, tourCities)
+- ✅ **Confirmado:** Sección de hoteles detallados SÍ está presente (no se perdió)
+- ✅ **Agregado:** Buscador en página principal (sección "Tours y Viajes Grupales")
+  - Ubicación: Entre título y grid de tours
+  - Funcionalidad: Búsqueda con Enter o botón, redirige a `/tours?search=...`
+- ✅ **Agregado:** Componente `TourMap.tsx` con Google Maps JavaScript API
+  - Marcadores numerados para cada ciudad
+  - Info windows al hacer click
+  - Auto-ajuste para mostrar todas las ciudades
+- ✅ **Agregado:** Sección de itinerario en detalle de tour
+  - Muestra primeros 3 días
+  - Botón "Ver itinerario completo"
+  - Contador de días restantes
+
+**Archivos modificados:**
+- `src/components/TourMap.tsx` - Arreglado error de TypeScript
+- `src/app/tours/[code]/page.tsx` - Restaurado botón "Cotizar Tour"
+- `src/app/page.tsx` - Agregado buscador en sección de tours
+- `docs/AG-Historico-Cambios.md` - Nueva entrada v2.258
+- `docs/AG-Contexto-Proyecto.md` - Actualizado con lecciones aprendidas
+
+**Lecciones Aprendidas:**
+- ✅ **Importante:** Al hacer cambios grandes (como agregar mapa), verificar que no se pierdan funcionalidades existentes
+- ✅ **TypeScript:** Para Google Maps API sin tipos instalados, usar `(window as any).google` y tipos `any`
+- ✅ **Versiones:** Mantener un solo número de versión en la página principal para referencia
+- ✅ **Documentación:** Revisar `AG-Historico-Cambios.md` antes de hacer cambios para no perder funcionalidades previas
+
+**Cifra de Control:**
+- T: 58 | C: 566 (Sin cambios en BD)
+
+---
 
 ### v2.251 - 31 de Enero de 2026 - 14:50 CST
 

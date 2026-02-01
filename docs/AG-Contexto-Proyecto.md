@@ -1,7 +1,7 @@
 # 🎯 AG-Contexto-Proyecto - AS Operadora
 
-**Última actualización:** 28 de Enero de 2026 - 10:30 CST  
-**Versión actual:** v2.237  
+**Última actualización:** 31 de Enero de 2026 - 21:40 CST  
+**Versión actual:** v2.258  
 **Actualizado por:** AntiGravity AI Assistant  
 **Propósito:** Documento maestro del proyecto para trabajo con agentes AntiGravity
 
@@ -19,7 +19,7 @@ Sergio Aguilar Granados
 Sistema completo de gestión de viajes corporativos con búsqueda, reservas, aprobaciones, pagos, reportes y dashboard ejecutivo. Competir con plataformas como Expedia con funcionalidades superiores.
 
 ### Estado Actual
-- **Versión:** v2.237
+- **Versión:** v2.258
 - **Progreso:** 98% completo
 - **Ambiente:** Desarrollo activo con usuarios en UAT
 - **Deploy:** Automático vía Git → Vercel
@@ -641,6 +641,39 @@ Antes de finalizar cualquier sesión:
 - [ ] Commit con mensaje descriptivo
 - [ ] Push a GitHub exitoso
 - [ ] Deploy verificado en Vercel
+
+---
+
+## 🎓 LECCIONES APRENDIDAS IMPORTANTES
+
+### Google Maps API
+- **Problema:** TypeScript no reconoce `google` sin tipos instalados
+- **Solución:** Usar `(window as any).google` y tipos `any`
+- **Archivo:** `src/components/TourMap.tsx`
+- **Lección:** Para APIs externas sin tipos, usar `window` y `any` para evitar errores de compilación
+
+### Pérdida de Funcionalidades
+- **Problema:** Al agregar nuevas funciones (ej: mapa), se pueden perder funcionalidades existentes (ej: botón "Cotizar Tour")
+- **Solución:** SIEMPRE revisar `AG-Historico-Cambios.md` antes de hacer cambios grandes
+- **Lección:** Verificar que las funcionalidades previas sigan presentes después de cambios grandes
+
+### Versiones en Footers
+- **Problema:** Múltiples versiones en diferentes páginas causan confusión
+- **Solución:** Mantener UN SOLO número de versión en la página principal (`src/app/page.tsx`)
+- **Lección:** Usar la versión de la página principal como referencia única
+
+### Búsqueda de Tours
+- **Implementación:** Búsqueda parcial en múltiples campos (nombre, descripción, región, país, ciudades)
+- **Backend:** `src/services/MegaTravelSyncService.ts`
+- **Frontend:** Buscador en página principal y en `/tours`
+- **Lección:** La búsqueda debe ser flexible y buscar en múltiples campos para mejor UX
+
+### Módulo de Cotizaciones (v2.250)
+- **Funcionalidad:** Formulario completo de cotización que reemplazó el botón de WhatsApp
+- **Páginas:** `/cotizar-tour` y `/cotizacion/[folio]`
+- **API:** `/api/tours/quote`
+- **Tabla:** `tour_quotes` (21 campos)
+- **Lección:** Este módulo es CRÍTICO, no debe perderse en futuras actualizaciones
 
 ---
 
