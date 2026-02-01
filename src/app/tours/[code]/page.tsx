@@ -232,7 +232,7 @@ export default function TourDetailPage({ params }: { params: Promise<{ code: str
         <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/30">
             {/* Header - exactamente igual a la principal */}
             <header className="bg-white/95 backdrop-blur-md border-b border-gray-200 sticky top-0 z-50 shadow-sm">
-                <div className="container mx-auto px-4 py-4">
+                <div className="container mx-auto px-6 py-6">
                     <div className="flex items-center justify-between">
                         <Link href="/" className="flex items-center gap-3">
                             <Logo className="h-10 w-auto" />
@@ -327,8 +327,8 @@ export default function TourDetailPage({ params }: { params: Promise<{ code: str
                                                     key={i}
                                                     onClick={() => setCurrentImageIndex(i)}
                                                     className={`w-2 h-2 rounded-full transition-all ${i === currentImageIndex
-                                                            ? 'bg-white w-8'
-                                                            : 'bg-white/50 hover:bg-white/75'
+                                                        ? 'bg-white w-8'
+                                                        : 'bg-white/50 hover:bg-white/75'
                                                         }`}
                                                 />
                                             ))}
@@ -387,18 +387,21 @@ export default function TourDetailPage({ params }: { params: Promise<{ code: str
                         </Card>
 
                         {/* NUEVO: Mapa del Tour */}
-                        {tour.mapImage && (
+                        {(tour.mapImage || tour.mainCountry) && (
                             <Card className="p-6">
                                 <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
                                     <MapIcon className="w-6 h-6 text-blue-600" />
                                     Mapa del Tour
                                 </h2>
                                 <div className="relative h-96 bg-gray-100 rounded-xl overflow-hidden">
-                                    <Image
-                                        src={tour.mapImage}
-                                        alt="Mapa del tour"
-                                        fill
-                                        className="object-contain"
+                                    <iframe
+                                        src={`https://www.google.com/maps/embed/v1/place?key=${process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY}&q=${encodeURIComponent(tour.mainCountry || tour.countries?.[0] || 'World')}&zoom=6`}
+                                        width="100%"
+                                        height="100%"
+                                        style={{ border: 0 }}
+                                        allowFullScreen
+                                        loading="lazy"
+                                        referrerPolicy="no-referrer-when-downgrade"
                                     />
                                 </div>
                             </Card>

@@ -46,6 +46,7 @@ export default function Home() {
   const [checkOut, setCheckOut] = useState("")
   const [guests, setGuests] = useState(2)
   const [rooms, setRooms] = useState(1)
+  const [tourSearch, setTourSearch] = useState("")
 
   // Destinos organizados por país con tipo (playa, ciudad, pueblo mágico)
   const allDestinations = [
@@ -2536,19 +2537,50 @@ export default function Home() {
           {/* NUEVA SECCIÓN: Tours y Viajes Grupales */}
           {groupTours.length > 0 && (
             <div className="mb-12">
-              <div className="flex items-center justify-between mb-6">
-                <div>
-                  <h2 className="text-3xl font-bold">Ofertas en Tours y Viajes Grupales</h2>
-                  <p className="text-gray-600 mt-1">Descubre el mundo con nuestros paquetes todo incluido</p>
+              <div className="mb-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h2 className="text-3xl font-bold">Ofertas en Tours y Viajes Grupales</h2>
+                    <p className="text-gray-600 mt-1">Descubre el mundo con nuestros paquetes todo incluido</p>
+                  </div>
+                  <Button
+                    variant="link"
+                    className="text-[#0066FF] font-semibold"
+                    onClick={() => router.push('/tours')}
+                  >
+                    Ver todos los tours
+                    <ChevronRight className="w-5 h-5 ml-1" />
+                  </Button>
                 </div>
-                <Button
-                  variant="link"
-                  className="text-[#0066FF] font-semibold"
-                  onClick={() => router.push('/tours')}
-                >
-                  Ver todos los tours
-                  <ChevronRight className="w-5 h-5 ml-1" />
-                </Button>
+
+                {/* Buscador de Tours */}
+                <div className="max-w-2xl">
+                  <div className="relative">
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                    <Input
+                      type="text"
+                      placeholder="Buscar destino, país o tour..."
+                      value={tourSearch}
+                      onChange={(e) => setTourSearch(e.target.value)}
+                      onKeyPress={(e) => {
+                        if (e.key === 'Enter' && tourSearch.trim()) {
+                          router.push(`/tours?search=${encodeURIComponent(tourSearch)}`)
+                        }
+                      }}
+                      className="pl-12 pr-32 py-6 text-lg rounded-full border-2 border-gray-200 focus:border-blue-500 bg-white"
+                    />
+                    <Button
+                      onClick={() => {
+                        if (tourSearch.trim()) {
+                          router.push(`/tours?search=${encodeURIComponent(tourSearch)}`)
+                        }
+                      }}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full px-8 py-5 bg-blue-600 hover:bg-blue-700"
+                    >
+                      Buscar
+                    </Button>
+                  </div>
+                </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
