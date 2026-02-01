@@ -954,10 +954,10 @@ export default function TourDetailPage({ params }: { params: Promise<{ code: str
                                         const params = new URLSearchParams({
                                             tourId: tour.id,
                                             tourName: tour.name,
-                                            tourPrice: tour.pricing.basePrice.toString(),
-                                            tourRegion: tour.region,
-                                            tourDays: tour.days.toString(),
-                                            tourCities: tour.cities.join(', ')
+                                            price: tour.pricing.basePrice.toString(),
+                                            region: tour.region,
+                                            duration: `${tour.days} días / ${tour.nights} noches`,
+                                            cities: tour.cities.join(', ')
                                         })
                                         window.location.href = `/cotizar-tour?${params.toString()}`
                                     }}
