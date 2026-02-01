@@ -42,6 +42,8 @@ import {
     Map as MapIcon
 } from 'lucide-react'
 import { Logo } from '@/components/Logo'
+import { TourMap } from '@/components/TourMap'
+
 
 const WHATSAPP_NUMBER = '+525621486939' // Número oficial AS Operadora
 const GOOGLE_MAPS_API_KEY = 'AIzaSyDc8NB8nvcbY2OTv6Dcvzm7AwAbV7tPgF0' // Google Maps API Key
@@ -387,26 +389,22 @@ export default function TourDetailPage({ params }: { params: Promise<{ code: str
                             </div>
                         </Card>
 
-                        {/* NUEVO: Mapa del Tour */}
-                        {(tour.mapImage || tour.mainCountry) && (
+                        {/* NUEVO: Mapa del Tour con marcadores */}
+                        {(tour.cities && tour.cities.length > 0) && (
                             <Card className="p-6">
                                 <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
                                     <MapIcon className="w-6 h-6 text-blue-600" />
                                     Mapa del Tour
                                 </h2>
-                                <div className="relative h-96 bg-gray-100 rounded-xl overflow-hidden">
-                                    <iframe
-                                        src={`https://www.google.com/maps/embed/v1/place?key=${GOOGLE_MAPS_API_KEY}&q=${encodeURIComponent(tour.mainCountry || tour.countries?.[0] || 'World')}&zoom=6`}
-                                        width="100%"
-                                        height="100%"
-                                        style={{ border: 0 }}
-                                        allowFullScreen
-                                        loading="lazy"
-                                        referrerPolicy="no-referrer-when-downgrade"
-                                    />
-                                </div>
+                                <TourMap
+                                    cities={tour.cities}
+                                    countries={tour.countries || []}
+                                    mainCountry={tour.mainCountry || tour.countries?.[0] || 'World'}
+                                    tourName={tour.name}
+                                />
                             </Card>
                         )}
+
 
                         {/* NUEVO: Itinerario del Tour */}
                         <Card className="p-6">
