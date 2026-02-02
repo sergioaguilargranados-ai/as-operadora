@@ -1,5 +1,5 @@
 // Catálogo de Tours y Viajes Grupales
-// Build: 01 Feb 2026 - v2.292 - Fix filtros + Cargar 325 tours + Error búsqueda
+// Build: 01 Feb 2026 - v2.293 - Consultar precio + Modal itinerario completo
 
 'use client'
 
@@ -864,13 +864,21 @@ function ToursContent() {
                                                                     <div className="border-t pt-3 mt-3">
                                                                         <div className="flex items-end justify-between">
                                                                             <div>
-                                                                                <span className="text-xs text-gray-500">Desde</span>
-                                                                                <div className="flex items-baseline gap-1">
-                                                                                    <span className="text-2xl font-bold text-blue-600">
-                                                                                        ${formatPrice(pkg.pricing.totalPrice)}
-                                                                                    </span>
-                                                                                    <span className="text-sm text-gray-500">USD</span>
-                                                                                </div>
+                                                                                {pkg.pricing?.totalPrice ? (
+                                                                                    <>
+                                                                                        <span className="text-xs text-gray-500">Desde</span>
+                                                                                        <div className="flex items-baseline gap-1">
+                                                                                            <span className="text-2xl font-bold text-blue-600">
+                                                                                                ${formatPrice(pkg.pricing.totalPrice)}
+                                                                                            </span>
+                                                                                            <span className="text-sm text-gray-500">USD</span>
+                                                                                        </div>
+                                                                                    </>
+                                                                                ) : (
+                                                                                    <div className="text-lg font-semibold text-gray-600">
+                                                                                        Consultar precio
+                                                                                    </div>
+                                                                                )}
                                                                             </div>
                                                                             <Button
                                                                                 size="sm"

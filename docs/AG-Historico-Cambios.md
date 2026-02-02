@@ -1,7 +1,7 @@
 # 📋 AG-Histórico de Cambios - AS Operadora
 
-**Última actualización:** 01 de Febrero de 2026 - 22:47 CST  
-**Versión actual:** v2.292  
+**Última actualización:** 01 de Febrero de 2026 - 23:00 CST  
+**Versión actual:** v2.293  
 **Actualizado por:** AntiGravity AI Assistant  
 **Propósito:** Documento maestro del proyecto para trabajo con agentes AntiGravity
 
@@ -34,6 +34,49 @@ Esto permite detectar si se perdieron tablas/campos entre versiones.
 ---
 
 ## 📅 HISTORIAL DE CAMBIOS
+
+### v2.293 - 01 de Febrero de 2026 - 23:00 CST
+
+**✨ Mejoras de UX - Tours**
+
+**Cambios:**
+
+1. **✅ Mostrar "Consultar precio" si tour no tiene precio**
+   - Tours sin precio ahora muestran "Consultar precio" en vez de $0
+   - Mejora la experiencia del usuario
+   - Archivo: `src/app/tours/page.tsx`
+
+2. **✅ Modal de itinerario completo implementado**
+   - Botón "Ver itinerario completo" ahora funcional
+   - Modal con scroll para ver todos los días del tour
+   - Muestra datos reales desde `tour.itinerary`
+   - Diseño limpio con header, contenido scrolleable y footer
+   - Archivo: `src/app/tours/[code]/page.tsx`
+
+3. **✅ Itinerario dinámico desde base de datos**
+   - Reemplazado itinerario hardcodeado por datos reales
+   - Muestra primeros 3 días + indicador de días restantes
+   - Mensaje "Itinerario no disponible" si no hay datos
+   - Archivo: `src/app/tours/[code]/page.tsx`
+
+**Archivos Modificados:**
+- `src/app/tours/page.tsx` - Mostrar "Consultar precio"
+- `src/app/tours/[code]/page.tsx` - Modal itinerario + datos dinámicos
+- `src/app/page.tsx` - Footer v2.293
+- `docs/AG-Historico-Cambios.md` - v2.293
+
+**Pendientes (para v2.294):**
+- [ ] Verificar scraping de includes/not_includes (listas cortas)
+- [ ] Re-ejecutar scraping de precios para tours faltantes
+- [ ] Optimizar responsive tablet (768-1023px)
+
+**Cifra de Control:** (Sin cambios)
+- **Tablas:** 48
+- **Campos:** 624
+
+---
+
+### v2.292 - 01 de Febrero de 2026 - 22:47 CST
 
 ### v2.292 - 01 de Febrero de 2026 - 22:47 CST
 
