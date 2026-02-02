@@ -1,5 +1,5 @@
 // Catálogo de Tours y Viajes Grupales
-// Build: 01 Feb 2026 - v2.268 - Paginación 20 tours/página + Scraping imágenes/tags
+// Build: 01 Feb 2026 - v2.291 - Filtros sidebar + Responsive móvil + Precios USD
 
 'use client'
 
@@ -29,7 +29,13 @@ import {
     HelpCircle,
     Sparkles,
     Calendar,
-    Heart
+    Heart,
+    Filter,
+    X,
+    ChevronDown,
+    ChevronUp,
+    DollarSign,
+    Menu
 } from 'lucide-react'
 import { Logo } from '@/components/Logo'
 
@@ -101,6 +107,12 @@ const ALL_REGIONS = [
     'Sudamérica', 'Caribe', 'África', 'Oceanía', 'México'
 ]
 
+// Meses para filtro de fechas
+const MONTHS = [
+    'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+    'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+]
+
 const WHATSAPP_NUMBER = '+525621486939' // Número oficial AS Operadora
 
 function ToursContent() {
@@ -116,6 +128,25 @@ function ToursContent() {
     const [selectedCategory, setSelectedCategory] = useState(searchParams?.get('cat') || 'ofertas')
     const [videoUrl, setVideoUrl] = useState('https://images.unsplash.com/photo-1499856871958-5b9337606a3e?w=1600')
 
+    // Nuevos filtros avanzados
+    const [selectedCountry, setSelectedCountry] = useState<string | null>(null)
+    const [selectedCity, setSelectedCity] = useState<string | null>(null)
+    const [priceRange, setPriceRange] = useState<[number, number]>([0, 10000]) // USD
+    const [durationRange, setDurationRange] = useState<[number, number]>([1, 30])
+    const [selectedMonth, setSelectedMonth] = useState<string | null>(null)
+    const [selectedTags, setSelectedTags] = useState<string[]>([])
+
+    // UI State
+    const [showMobileFilters, setShowMobileFilters] = useState(false)
+    const [expandedFilters, setExpandedFilters] = useState({
+        search: true,
+        country: true,
+        price: true,
+        duration: true,
+        dates: false,
+        tags: false
+    })
+
     // Paginación
     const [currentPage, setCurrentPage] = useState(1)
     const TOURS_PER_PAGE = 20
@@ -125,17 +156,89 @@ function ToursContent() {
         fetchSettings()
     }, [selectedCategory])
 
-    // Filtrar por región cuando cambia
+    // Aplicar todos los filtros cuando cambia cualquiera
     useEffect(() => {
-        if (selectedRegion) {
-            const filtered = allPackages.filter(p => p.destination_region === selectedRegion)
-            setPackages(filtered)
-        } else {
-            setPackages(allPackages)
+        applyAllFilters()
+    }, [selectedRegion, selectedCountry, selectedCity, priceRange, durationRange, selectedMonth, selectedTags, allPackages, search])
+
+    const applyAllFilters = () => {
+        let filtered = [...allPackages]
+
+        // Filtro de búsqueda (texto libre)
+        if (search) {
+            const searchLower = search.toLowerCase()
+            filtered = filtered.filter(p =>
+                p.name.toLowerCase().includes(searchLower) ||
+                p.description.toLowerCase().includes(searchLower) ||
+                p.countries.some(c => c.toLowerCase().includes(searchLower)) ||
+                p.cities.some(c => c.toLowerCase().includes(searchLower))
+            )
         }
-        // Reset página al cambiar filtros
+
+        // Filtro por región
+        if (selectedRegion) {
+            filtered = filtered.filter(p => p.destination_region === selectedRegion)
+        }
+
+        // Filtro por país
+        if (selectedCountry) {
+            filtered = filtered.filter(p => p.countries.includes(selectedCountry))
+        }
+
+        // Filtro por ciudad
+        if (selectedCity) {
+            filtered = filtered.filter(p => p.cities.includes(selectedCity))
+        }
+
+        // Filtro por precio (USD)
+        filtered = filtered.filter(p => {
+            const priceUSD = p.pricing.currency === 'USD'
+                ? p.pricing.totalPrice
+                : p.pricing.totalPrice / 18 // Conversión aproximada MXN a USD
+            return priceUSD >= priceRange[0] && priceUSD <= priceRange[1]
+        })
+
+        // Filtro por duración
+        filtered = filtered.filter(p =>
+            p.days >= durationRange[0] && p.days <= durationRange[1]
+        )
+
+        // Filtro por mes de salida (si hay departure_dates)
+        if (selectedMonth) {
+            // Por ahora, este filtro está preparado para cuando tengamos departure_dates
+            // filtered = filtered.filter(p => ...)
+        }
+
+        // Filtro por tags
+        if (selectedTags.length > 0) {
+            filtered = filtered.filter(p =>
+                selectedTags.some(tag =>
+                    p.tags?.some(t => t.toLowerCase().includes(tag.toLowerCase()))
+                )
+            )
+        }
+
+        setPackages(filtered)
         setCurrentPage(1)
-    }, [selectedRegion, allPackages])
+    }
+
+    const clearAllFilters = () => {
+        setSearch('')
+        setSelectedRegion(null)
+        setSelectedCountry(null)
+        setSelectedCity(null)
+        setPriceRange([0, 10000])
+        setDurationRange([1, 30])
+        setSelectedMonth(null)
+        setSelectedTags([])
+    }
+
+    const toggleFilter = (filterName: keyof typeof expandedFilters) => {
+        setExpandedFilters(prev => ({
+            ...prev,
+            [filterName]: !prev[filterName]
+        }))
+    }
 
     // Calcular tours paginados
     const indexOfLastTour = currentPage * TOURS_PER_PAGE
@@ -227,6 +330,13 @@ function ToursContent() {
         )
         window.open(`https://wa.me/${WHATSAPP_NUMBER.replace(/\s+/g, '')}?text=${message}`, '_blank')
     }
+
+    // Obtener listas únicas para filtros
+    const allCountries = Array.from(new Set(allPackages.flatMap(p => p.countries))).sort()
+    const allCities = selectedCountry
+        ? Array.from(new Set(allPackages.filter(p => p.countries.includes(selectedCountry)).flatMap(p => p.cities))).sort()
+        : Array.from(new Set(allPackages.flatMap(p => p.cities))).sort()
+    const allTags = Array.from(new Set(allPackages.flatMap(p => p.tags || []))).sort()
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/30">
@@ -377,276 +487,462 @@ function ToursContent() {
                 </div>
             </section>
 
-            {/* Filtros por Región/Destino - Siempre mostrar todas las regiones */}
-            <section className="py-4 border-b bg-white/50 backdrop-blur-sm">
+            {/* Botón móvil de filtros */}
+            <button
+                onClick={() => setShowMobileFilters(true)}
+                className="lg:hidden fixed bottom-6 right-6 z-40 bg-blue-600 text-white rounded-full p-4 shadow-2xl hover:bg-blue-700 transition-colors"
+            >
+                <Filter className="w-6 h-6" />
+            </button>
+
+            {/* Layout con Sidebar */}
+            <section className="py-6">
                 <div className="container mx-auto px-4">
-                    {/* Regiones */}
-                    <div className="flex items-center gap-2 mb-3">
-                        <Globe className="w-5 h-5 text-blue-600" />
-                        <h3 className="font-semibold text-gray-800">Filtrar por Destino</h3>
-                    </div>
-                    <div className="flex flex-wrap gap-2 mb-4">
-                        <button
-                            onClick={() => setSelectedRegion(null)}
-                            className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${!selectedRegion
-                                ? 'bg-blue-600 text-white shadow'
-                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                                }`}
-                        >
-                            Todos ({allPackages.length})
-                        </button>
-                        {ALL_REGIONS.map((region) => {
-                            const count = allPackages.filter(p => p.destination_region === region).length;
-                            return (
+                    <div className="flex gap-6">
+                        {/* Sidebar - Filtros */}
+                        <aside className={`
+                            w-80 flex-shrink-0
+                            ${showMobileFilters ? 'fixed inset-0 z-50 bg-white p-6 overflow-y-auto' : 'hidden'}
+                            lg:block lg:static lg:p-0
+                        `}>
+                            {/* Header móvil */}
+                            <div className="lg:hidden flex items-center justify-between mb-6">
+                                <h2 className="text-xl font-bold">Filtros</h2>
                                 <button
-                                    key={region}
-                                    onClick={() => setSelectedRegion(region)}
-                                    className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${selectedRegion === region
-                                        ? 'bg-blue-600 text-white shadow'
-                                        : count > 0
-                                            ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                                            : 'bg-gray-50 text-gray-400 cursor-default'
-                                        }`}
-                                    disabled={count === 0}
+                                    onClick={() => setShowMobileFilters(false)}
+                                    className="p-2 hover:bg-gray-100 rounded-full"
                                 >
-                                    {region} ({count})
+                                    <X className="w-6 h-6" />
                                 </button>
-                            );
-                        })}
-                    </div>
+                            </div>
 
-                    {/* Separador */}
-                    <div className="border-t border-gray-200 my-4" />
-
-                    {/* Categorías de eventos */}
-                    <div className="flex items-center gap-2 mb-3">
-                        <Users className="w-5 h-5 text-indigo-600" />
-                        <h3 className="font-semibold text-gray-800">Viajes para Eventos Especiales</h3>
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                        {EVENT_CATEGORIES.map((cat) => {
-                            // Contar tours con este tag
-                            const count = allPackages.filter(p =>
-                                p.tags && p.tags.some(tag =>
-                                    tag.toLowerCase().includes(cat.code.toLowerCase())
-                                )
-                            ).length;
-
-                            return (
-                                <button
-                                    key={cat.code}
-                                    onClick={() => {
-                                        // Filtrar por tag
-                                        const filtered = allPackages.filter(p =>
-                                            p.tags && p.tags.some(tag =>
-                                                tag.toLowerCase().includes(cat.code.toLowerCase())
-                                            )
-                                        );
-                                        setPackages(filtered);
-                                        setSelectedRegion(null); // Reset filtro de región
-                                        setCurrentPage(1);
-                                    }}
-                                    className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${count > 0
-                                        ? 'bg-indigo-50 text-indigo-700 hover:bg-indigo-100'
-                                        : 'bg-gray-50 text-gray-400 cursor-default'
-                                        }`}
-                                    disabled={count === 0}
-                                >
-                                    {cat.icon} {cat.name} ({count})
-                                </button>
-                            );
-                        })}
-                    </div>
-                </div>
-            </section>
-
-            {/* Lista de paquetes */}
-            <section className="py-8 md:py-12">
-                <div className="container mx-auto px-4">
-                    <AnimatePresence mode="wait">
-                        {loading ? (
-                            <motion.div
-                                key="loading"
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                exit={{ opacity: 0 }}
-                                className="flex items-center justify-center py-20"
-                            >
-                                <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
-                                <span className="ml-3 text-gray-600">Cargando tours...</span>
-                            </motion.div>
-                        ) : packages.length === 0 ? (
-                            <motion.div
-                                key="empty"
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                className="text-center py-20"
-                            >
-                                <Globe className="w-16 h-16 mx-auto mb-4 text-gray-300" />
-                                <h3 className="text-xl font-semibold text-gray-600 mb-2">No encontramos tours</h3>
-                                <p className="text-gray-500">Intenta con otra categoría o búsqueda</p>
-                            </motion.div>
-                        ) : (
-                            <motion.div
-                                key="results"
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                            >
-                                <div className="flex items-center justify-between mb-6">
-                                    <h2 className="text-2xl font-bold text-gray-800">
-                                        {packages.length} {packages.length === 1 ? 'Tour disponible' : 'Tours disponibles'}
-                                        {totalPages > 1 && (
-                                            <span className="text-base font-normal text-gray-500 ml-2">
-                                                (Página {currentPage} de {totalPages})
-                                            </span>
-                                        )}
-                                    </h2>
-                                </div>
-
-                                <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                                    {currentTours.map((pkg, index) => (
-                                        <motion.div
-                                            key={pkg.id}
-                                            initial={{ opacity: 0, y: 20 }}
-                                            animate={{ opacity: 1, y: 0 }}
-                                            transition={{ delay: index * 0.05 }}
-                                            whileHover={{ y: -5 }}
-                                        >
-                                            <Link href={`/tours/${pkg.id}`}>
-                                                <Card className="group overflow-hidden hover:shadow-xl transition-all duration-300 cursor-pointer h-full rounded-2xl border-0 shadow-md">
-                                                    {/* Imagen */}
-                                                    <div className="relative h-48 overflow-hidden">
-                                                        <Image
-                                                            src={pkg.images.main || '/placeholder.jpg'}
-                                                            alt={pkg.name}
-                                                            fill
-                                                            className="object-cover group-hover:scale-110 transition-transform duration-500"
-                                                        />
-                                                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-
-                                                        {/* Badge OFERTA - siempre visible */}
-                                                        <div className="absolute top-3 left-3">
-                                                            <span className="px-3 py-1 bg-red-500 text-white text-xs font-bold rounded-full flex items-center gap-1 shadow-lg">
-                                                                <Tag className="w-3 h-3" /> OFERTA
-                                                            </span>
-                                                        </div>
-
-                                                        {/* Duración */}
-                                                        <div className="absolute bottom-3 left-3 flex items-center gap-2 text-white text-sm">
-                                                            <Clock className="w-4 h-4" />
-                                                            <span>{pkg.duration}</span>
-                                                        </div>
-
-                                                        {/* Vuelo incluido */}
-                                                        {pkg.flight.included && (
-                                                            <div className="absolute bottom-3 right-3 flex items-center gap-1 text-white text-xs bg-blue-600/80 px-2 py-1 rounded-full">
-                                                                <Plane className="w-3 h-3" />
-                                                                <span>Vuelo</span>
-                                                            </div>
-                                                        )}
-                                                    </div>
-
-                                                    {/* Contenido */}
-                                                    <div className="p-4">
-                                                        <span className="text-xs font-medium text-blue-600 uppercase tracking-wide">
-                                                            {pkg.region}
-                                                        </span>
-                                                        <h3 className="font-bold text-lg text-gray-800 group-hover:text-blue-600 transition-colors line-clamp-2 mt-1">
-                                                            {pkg.name}
-                                                        </h3>
-
-                                                        {/* Ciudades */}
-                                                        <div className="flex items-center gap-1 text-gray-500 text-sm mt-2">
-                                                            <MapPin className="w-4 h-4 flex-shrink-0" />
-                                                            <span className="line-clamp-1">
-                                                                {pkg.cities.slice(0, 2).join(', ')}
-                                                                {pkg.cities.length > 2 && ` +${pkg.cities.length - 2}`}
-                                                            </span>
-                                                        </div>
-
-                                                        {/* Precio */}
-                                                        <div className="border-t pt-3 mt-3">
-                                                            <div className="flex items-end justify-between">
-                                                                <div>
-                                                                    <span className="text-xs text-gray-500">Desde</span>
-                                                                    <div className="flex items-baseline gap-1">
-                                                                        <span className="text-2xl font-bold text-blue-600">
-                                                                            ${formatPrice(pkg.pricing.totalPrice)}
-                                                                        </span>
-                                                                        <span className="text-sm text-gray-500">USD</span>
-                                                                    </div>
-                                                                </div>
-                                                                <Button
-                                                                    size="sm"
-                                                                    className="bg-blue-600 hover:bg-blue-700 text-white"
-                                                                >
-                                                                    Ver
-                                                                    <ArrowRight className="w-4 h-4 ml-1" />
-                                                                </Button>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </Card>
-                                            </Link>
-                                        </motion.div>
-                                    ))}
-                                </div>
-
-                                {/* Controles de Paginación */}
-                                {totalPages > 1 && (
-                                    <div className="mt-8 flex items-center justify-center gap-2">
+                            <div className="lg:sticky lg:top-24 space-y-4">
+                                {/* Header de filtros */}
+                                <Card className="p-4">
+                                    <div className="flex items-center justify-between mb-4">
+                                        <h2 className="font-semibold text-lg flex items-center gap-2">
+                                            <Filter className="w-5 h-5 text-blue-600" />
+                                            Filtrar por
+                                        </h2>
                                         <Button
-                                            variant="outline"
-                                            onClick={goToPreviousPage}
-                                            disabled={currentPage === 1}
-                                            className="gap-2"
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={clearAllFilters}
+                                            className="text-sm text-gray-600 hover:text-red-600"
                                         >
-                                            <ArrowLeft className="w-4 h-4" />
-                                            Anterior
-                                        </Button>
-
-                                        <div className="flex gap-1">
-                                            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
-                                                // Mostrar solo páginas cercanas (máx 7 botones)
-                                                if (
-                                                    page === 1 ||
-                                                    page === totalPages ||
-                                                    (page >= currentPage - 2 && page <= currentPage + 2)
-                                                ) {
-                                                    return (
-                                                        <Button
-                                                            key={page}
-                                                            variant={currentPage === page ? "default" : "outline"}
-                                                            onClick={() => goToPage(page)}
-                                                            className={`w-10 h-10 p-0 ${currentPage === page ? 'bg-blue-600 text-white' : ''}`}
-                                                        >
-                                                            {page}
-                                                        </Button>
-                                                    )
-                                                } else if (
-                                                    page === currentPage - 3 ||
-                                                    page === currentPage + 3
-                                                ) {
-                                                    return <span key={page} className="px-2">...</span>
-                                                }
-                                                return null
-                                            })}
-                                        </div>
-
-                                        <Button
-                                            variant="outline"
-                                            onClick={goToNextPage}
-                                            disabled={currentPage === totalPages}
-                                            className="gap-2"
-                                        >
-                                            Siguiente
-                                            <ArrowRight className="w-4 h-4" />
+                                            <X className="w-4 h-4 mr-1" />
+                                            Limpiar
                                         </Button>
                                     </div>
-                                )}
-                            </motion.div>
-                        )}
-                    </AnimatePresence>
+
+                                    {/* Búsqueda por palabra clave */}
+                                    <div className="mb-4">
+                                        <label className="text-sm font-medium text-gray-700 mb-2 block">
+                                            Palabra Clave
+                                        </label>
+                                        <div className="relative">
+                                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                            <Input
+                                                type="text"
+                                                placeholder="Buscar tour, destino..."
+                                                value={search}
+                                                onChange={(e) => setSearch(e.target.value)}
+                                                className="pl-10"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    {/* Filtro por País */}
+                                    <div className="border-t pt-4">
+                                        <button
+                                            onClick={() => toggleFilter('country')}
+                                            className="w-full flex items-center justify-between text-sm font-medium text-gray-700 mb-2"
+                                        >
+                                            <span className="flex items-center gap-2">
+                                                <Globe className="w-4 h-4 text-blue-600" />
+                                                Seleccionar País
+                                            </span>
+                                            {expandedFilters.country ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                                        </button>
+                                        {expandedFilters.country && (
+                                            <select
+                                                value={selectedCountry || ''}
+                                                onChange={(e) => {
+                                                    setSelectedCountry(e.target.value || null)
+                                                    setSelectedCity(null)
+                                                }}
+                                                className="w-full px-3 py-2 border rounded-lg text-sm"
+                                            >
+                                                <option value="">Todos los países</option>
+                                                {allCountries.map(country => (
+                                                    <option key={country} value={country}>{country}</option>
+                                                ))}
+                                            </select>
+                                        )}
+                                    </div>
+
+                                    {/* Filtro por Ciudad */}
+                                    {selectedCountry && (
+                                        <div className="border-t pt-4">
+                                            <label className="text-sm font-medium text-gray-700 mb-2 block flex items-center gap-2">
+                                                <MapPin className="w-4 h-4 text-blue-600" />
+                                                Seleccionar Ciudad
+                                            </label>
+                                            <select
+                                                value={selectedCity || ''}
+                                                onChange={(e) => setSelectedCity(e.target.value || null)}
+                                                className="w-full px-3 py-2 border rounded-lg text-sm"
+                                            >
+                                                <option value="">Todas las ciudades</option>
+                                                {allCities.map(city => (
+                                                    <option key={city} value={city}>{city}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                    )}
+
+                                    {/* Filtro por Tarifa (USD) */}
+                                    <div className="border-t pt-4">
+                                        <button
+                                            onClick={() => toggleFilter('price')}
+                                            className="w-full flex items-center justify-between text-sm font-medium text-gray-700 mb-2"
+                                        >
+                                            <span className="flex items-center gap-2">
+                                                <DollarSign className="w-4 h-4 text-green-600" />
+                                                Tarifa (USD)
+                                            </span>
+                                            {expandedFilters.price ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                                        </button>
+                                        {expandedFilters.price && (
+                                            <div className="space-y-2">
+                                                <div className="flex items-center gap-2 text-sm text-gray-600">
+                                                    <span>${priceRange[0].toLocaleString()}</span>
+                                                    <span>-</span>
+                                                    <span>${priceRange[1].toLocaleString()}</span>
+                                                </div>
+                                                <input
+                                                    type="range"
+                                                    min="0"
+                                                    max="10000"
+                                                    step="100"
+                                                    value={priceRange[1]}
+                                                    onChange={(e) => setPriceRange([priceRange[0], parseInt(e.target.value)])}
+                                                    className="w-full accent-green-600"
+                                                />
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Filtro por Duración */}
+                                    <div className="border-t pt-4">
+                                        <button
+                                            onClick={() => toggleFilter('duration')}
+                                            className="w-full flex items-center justify-between text-sm font-medium text-gray-700 mb-2"
+                                        >
+                                            <span className="flex items-center gap-2">
+                                                <Clock className="w-4 h-4 text-purple-600" />
+                                                Duración
+                                            </span>
+                                            {expandedFilters.duration ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                                        </button>
+                                        {expandedFilters.duration && (
+                                            <div className="space-y-2">
+                                                <div className="flex items-center gap-2 text-sm text-gray-600">
+                                                    <span>{durationRange[0]} días</span>
+                                                    <span>-</span>
+                                                    <span>{durationRange[1]} días</span>
+                                                </div>
+                                                <input
+                                                    type="range"
+                                                    min="1"
+                                                    max="30"
+                                                    value={durationRange[1]}
+                                                    onChange={(e) => setDurationRange([durationRange[0], parseInt(e.target.value)])}
+                                                    className="w-full accent-purple-600"
+                                                />
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Filtro por Región */}
+                                    <div className="border-t pt-4">
+                                        <label className="text-sm font-medium text-gray-700 mb-2 block flex items-center gap-2">
+                                            <Globe className="w-4 h-4 text-blue-600" />
+                                            Región / Destino
+                                        </label>
+                                        <div className="space-y-1 max-h-48 overflow-y-auto">
+                                            <button
+                                                onClick={() => setSelectedRegion(null)}
+                                                className={`w-full text-left px-3 py-2 rounded text-sm transition-colors ${!selectedRegion
+                                                    ? 'bg-blue-100 text-blue-700 font-medium'
+                                                    : 'hover:bg-gray-100 text-gray-700'
+                                                    }`}
+                                            >
+                                                Todos ({allPackages.length})
+                                            </button>
+                                            {ALL_REGIONS.map(region => {
+                                                const count = allPackages.filter(p => p.destination_region === region).length
+                                                return (
+                                                    <button
+                                                        key={region}
+                                                        onClick={() => setSelectedRegion(region)}
+                                                        disabled={count === 0}
+                                                        className={`w-full text-left px-3 py-2 rounded text-sm transition-colors ${selectedRegion === region
+                                                            ? 'bg-blue-100 text-blue-700 font-medium'
+                                                            : count > 0
+                                                                ? 'hover:bg-gray-100 text-gray-700'
+                                                                : 'text-gray-400 cursor-not-allowed'
+                                                            }`}
+                                                    >
+                                                        {region} ({count})
+                                                    </button>
+                                                )
+                                            })}
+                                        </div>
+                                    </div>
+
+                                    {/* Filtro por Tags/Eventos */}
+                                    <div className="border-t pt-4">
+                                        <button
+                                            onClick={() => toggleFilter('tags')}
+                                            className="w-full flex items-center justify-between text-sm font-medium text-gray-700 mb-2"
+                                        >
+                                            <span className="flex items-center gap-2">
+                                                <Users className="w-4 h-4 text-indigo-600" />
+                                                Eventos Especiales
+                                            </span>
+                                            {expandedFilters.tags ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                                        </button>
+                                        {expandedFilters.tags && (
+                                            <div className="space-y-1 max-h-48 overflow-y-auto">
+                                                {EVENT_CATEGORIES.map(cat => {
+                                                    const count = allPackages.filter(p =>
+                                                        p.tags && p.tags.some(tag =>
+                                                            tag.toLowerCase().includes(cat.code.toLowerCase())
+                                                        )
+                                                    ).length
+                                                    const isSelected = selectedTags.includes(cat.code)
+
+                                                    return (
+                                                        <button
+                                                            key={cat.code}
+                                                            onClick={() => {
+                                                                if (isSelected) {
+                                                                    setSelectedTags(selectedTags.filter(t => t !== cat.code))
+                                                                } else {
+                                                                    setSelectedTags([...selectedTags, cat.code])
+                                                                }
+                                                            }}
+                                                            disabled={count === 0}
+                                                            className={`w-full text-left px-3 py-2 rounded text-sm transition-colors ${isSelected
+                                                                ? 'bg-indigo-100 text-indigo-700 font-medium'
+                                                                : count > 0
+                                                                    ? 'hover:bg-gray-100 text-gray-700'
+                                                                    : 'text-gray-400 cursor-not-allowed'
+                                                                }`}
+                                                        >
+                                                            {cat.icon} {cat.name} ({count})
+                                                        </button>
+                                                    )
+                                                })}
+                                            </div>
+                                        )}
+                                    </div>
+                                </Card>
+                            </div>
+                        </aside>
+
+                        {/* Main Content Area */}
+                        <main className="flex-1 min-w-0">
+                            {/* Lista de paquetes */}
+                            <div>
+                                <AnimatePresence mode="wait">
+                                    {loading ? (
+                                        <motion.div
+                                            key="loading"
+                                            initial={{ opacity: 0 }}
+                                            animate={{ opacity: 1 }}
+                                            exit={{ opacity: 0 }}
+                                            className="flex items-center justify-center py-20"
+                                        >
+                                            <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+                                            <span className="ml-3 text-gray-600">Cargando tours...</span>
+                                        </motion.div>
+                                    ) : packages.length === 0 ? (
+                                        <motion.div
+                                            key="empty"
+                                            initial={{ opacity: 0 }}
+                                            animate={{ opacity: 1 }}
+                                            className="text-center py-20"
+                                        >
+                                            <Globe className="w-16 h-16 mx-auto mb-4 text-gray-300" />
+                                            <h3 className="text-xl font-semibold text-gray-600 mb-2">No encontramos tours</h3>
+                                            <p className="text-gray-500">Intenta con otra categoría o búsqueda</p>
+                                        </motion.div>
+                                    ) : (
+                                        <motion.div
+                                            key="results"
+                                            initial={{ opacity: 0 }}
+                                            animate={{ opacity: 1 }}
+                                        >
+                                            <div className="flex items-center justify-between mb-6">
+                                                <h2 className="text-2xl font-bold text-gray-800">
+                                                    {packages.length} {packages.length === 1 ? 'Tour disponible' : 'Tours disponibles'}
+                                                    {totalPages > 1 && (
+                                                        <span className="text-base font-normal text-gray-500 ml-2">
+                                                            (Página {currentPage} de {totalPages})
+                                                        </span>
+                                                    )}
+                                                </h2>
+                                            </div>
+
+                                            <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                                                {currentTours.map((pkg, index) => (
+                                                    <motion.div
+                                                        key={pkg.id}
+                                                        initial={{ opacity: 0, y: 20 }}
+                                                        animate={{ opacity: 1, y: 0 }}
+                                                        transition={{ delay: index * 0.05 }}
+                                                        whileHover={{ y: -5 }}
+                                                    >
+                                                        <Link href={`/tours/${pkg.id}`}>
+                                                            <Card className="group overflow-hidden hover:shadow-xl transition-all duration-300 cursor-pointer h-full rounded-2xl border-0 shadow-md">
+                                                                {/* Imagen */}
+                                                                <div className="relative h-48 overflow-hidden">
+                                                                    <Image
+                                                                        src={pkg.images.main || '/placeholder.jpg'}
+                                                                        alt={pkg.name}
+                                                                        fill
+                                                                        className="object-cover group-hover:scale-110 transition-transform duration-500"
+                                                                    />
+                                                                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+
+                                                                    {/* Badge OFERTA - siempre visible */}
+                                                                    <div className="absolute top-3 left-3">
+                                                                        <span className="px-3 py-1 bg-red-500 text-white text-xs font-bold rounded-full flex items-center gap-1 shadow-lg">
+                                                                            <Tag className="w-3 h-3" /> OFERTA
+                                                                        </span>
+                                                                    </div>
+
+                                                                    {/* Duración */}
+                                                                    <div className="absolute bottom-3 left-3 flex items-center gap-2 text-white text-sm">
+                                                                        <Clock className="w-4 h-4" />
+                                                                        <span>{pkg.duration}</span>
+                                                                    </div>
+
+                                                                    {/* Vuelo incluido */}
+                                                                    {pkg.flight.included && (
+                                                                        <div className="absolute bottom-3 right-3 flex items-center gap-1 text-white text-xs bg-blue-600/80 px-2 py-1 rounded-full">
+                                                                            <Plane className="w-3 h-3" />
+                                                                            <span>Vuelo</span>
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+
+                                                                {/* Contenido */}
+                                                                <div className="p-4">
+                                                                    <span className="text-xs font-medium text-blue-600 uppercase tracking-wide">
+                                                                        {pkg.region}
+                                                                    </span>
+                                                                    <h3 className="font-bold text-lg text-gray-800 group-hover:text-blue-600 transition-colors line-clamp-2 mt-1">
+                                                                        {pkg.name}
+                                                                    </h3>
+
+                                                                    {/* Ciudades */}
+                                                                    <div className="flex items-center gap-1 text-gray-500 text-sm mt-2">
+                                                                        <MapPin className="w-4 h-4 flex-shrink-0" />
+                                                                        <span className="line-clamp-1">
+                                                                            {pkg.cities.slice(0, 2).join(', ')}
+                                                                            {pkg.cities.length > 2 && ` +${pkg.cities.length - 2}`}
+                                                                        </span>
+                                                                    </div>
+
+                                                                    {/* Precio */}
+                                                                    <div className="border-t pt-3 mt-3">
+                                                                        <div className="flex items-end justify-between">
+                                                                            <div>
+                                                                                <span className="text-xs text-gray-500">Desde</span>
+                                                                                <div className="flex items-baseline gap-1">
+                                                                                    <span className="text-2xl font-bold text-blue-600">
+                                                                                        ${formatPrice(pkg.pricing.totalPrice)}
+                                                                                    </span>
+                                                                                    <span className="text-sm text-gray-500">USD</span>
+                                                                                </div>
+                                                                            </div>
+                                                                            <Button
+                                                                                size="sm"
+                                                                                className="bg-blue-600 hover:bg-blue-700 text-white"
+                                                                            >
+                                                                                Ver
+                                                                                <ArrowRight className="w-4 h-4 ml-1" />
+                                                                            </Button>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </Card>
+                                                        </Link>
+                                                    </motion.div>
+                                                ))}
+                                            </div>
+
+                                            {/* Controles de Paginación */}
+                                            {totalPages > 1 && (
+                                                <div className="mt-8 flex items-center justify-center gap-2">
+                                                    <Button
+                                                        variant="outline"
+                                                        onClick={goToPreviousPage}
+                                                        disabled={currentPage === 1}
+                                                        className="gap-2"
+                                                    >
+                                                        <ArrowLeft className="w-4 h-4" />
+                                                        Anterior
+                                                    </Button>
+
+                                                    <div className="flex gap-1">
+                                                        {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
+                                                            // Mostrar solo páginas cercanas (máx 7 botones)
+                                                            if (
+                                                                page === 1 ||
+                                                                page === totalPages ||
+                                                                (page >= currentPage - 2 && page <= currentPage + 2)
+                                                            ) {
+                                                                return (
+                                                                    <Button
+                                                                        key={page}
+                                                                        variant={currentPage === page ? "default" : "outline"}
+                                                                        onClick={() => goToPage(page)}
+                                                                        className={`w-10 h-10 p-0 ${currentPage === page ? 'bg-blue-600 text-white' : ''}`}
+                                                                    >
+                                                                        {page}
+                                                                    </Button>
+                                                                )
+                                                            } else if (
+                                                                page === currentPage - 3 ||
+                                                                page === currentPage + 3
+                                                            ) {
+                                                                return <span key={page} className="px-2">...</span>
+                                                            }
+                                                            return null
+                                                        })}
+                                                    </div>
+
+                                                    <Button
+                                                        variant="outline"
+                                                        onClick={goToNextPage}
+                                                        disabled={currentPage === totalPages}
+                                                        className="gap-2"
+                                                    >
+                                                        Siguiente
+                                                        <ArrowRight className="w-4 h-4" />
+                                                    </Button>
+                                                </div>
+                                            )}
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
+                            </div>
+                        </main>
+                    </div>
                 </div>
             </section>
 

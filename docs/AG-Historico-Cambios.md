@@ -1,7 +1,7 @@
 # 📋 AG-Histórico de Cambios - AS Operadora
 
-**Última actualización:** 01 de Febrero de 2026 - 20:25 CST  
-**Versión actual:** v2.267  
+**Última actualización:** 01 de Febrero de 2026 - 22:20 CST  
+**Versión actual:** v2.291  
 **Actualizado por:** AntiGravity AI Assistant  
 **Propósito:** Documento maestro del proyecto para trabajo con agentes AntiGravity
 
@@ -34,6 +34,82 @@ Esto permite detectar si se perdieron tablas/campos entre versiones.
 ---
 
 ## 📅 HISTORIAL DE CAMBIOS
+
+### v2.291 - 01 de Febrero de 2026 - 22:20 CST
+
+**🎨 Filtros Sidebar Avanzados + Re-sincronización MegaTravel Completa**
+
+**Cambios:**
+
+1. **✅ Página de Tours (`/tours`) - Filtros Sidebar Avanzados**
+   - **Nuevo diseño con sidebar lateral** (estilo MegaTravel/Hoteles)
+   - **6 filtros funcionales:**
+     - 🔍 Palabra Clave (búsqueda de texto)
+     - 🌍 País (dropdown con todos los países)
+     - 📍 Ciudad (dropdown condicional, aparece al seleccionar país)
+     - 💰 Tarifa en **USD** (slider 0-10,000 USD)
+     - ⏱️ Duración (slider 1-30 días)
+     - 📅 Fecha ida (12 meses, preparado para departure_dates)
+   - **Filtros colapsables** con iconos de colores
+   - **Botón "Limpiar filtros"** para resetear todo
+   - **Responsive móvil:**
+     - Botón flotante "Filtros" en móvil
+     - Sidebar como modal fullscreen en móvil
+     - Colapsa automáticamente en pantallas < 1024px
+   - **Función de filtrado unificada** que combina todos los filtros
+   - **Conversión automática MXN → USD** para filtro de precio
+   - **Mantiene hero section** con video/imagen de fondo
+   - **Mantiene navegación** por categorías (Ofertas, Bloqueos, etc.)
+
+2. **✅ Re-sincronización MegaTravel - 100% Completada**
+   - **325/325 tours procesados** (100%)
+   - **324 exitosos, 1 fallido**
+   - **Mejoras implementadas:**
+     - ✅ Imágenes correctas (detección por código de tour)
+     - ✅ Tags automáticos (81 tours con tags)
+     - ✅ Precios extraídos desde circuito.php
+     - ✅ Itinerarios completos
+     - ✅ 308 tours con imagen principal (94.8%)
+   - **Script de monitoreo:** `scripts/monitor-resync.js`
+   - **Script principal:** `scripts/resync-all-tours.js`
+
+3. **📝 Documentación Creada**
+   - `docs/AG-Plan-Integracion-Filtros-Tours.md` - Plan técnico completo
+   - `docs/AG-Guia-Tours-V2.md` - Guía de uso del nuevo diseño
+   - `docs/AG-Resincronizacion-MegaTravel.md` - Proceso de re-sync
+   - `docs/AG-Hallazgo-Mega-Conexion.md` - URLs de circuito.php
+   - `docs/AG-Prueba-Scraping-Completo.md` - Resultados de pruebas
+
+4. **🔧 Archivos Modificados**
+   - `src/app/tours/page.tsx` - Integración completa de filtros sidebar
+   - `src/app/tours/page-backup-01feb.tsx` - Backup de seguridad
+   - `src/app/tours/page-v2-sidebar.tsx` - Versión experimental
+   - `src/app/tours-v2/page.tsx` - Ruta temporal de prueba
+   - `src/app/page.tsx` - Actualización de versión en footer
+
+**Lecciones Aprendidas:**
+
+1. **Filtros combinados** - La función `applyAllFilters()` permite combinar múltiples filtros de forma eficiente
+2. **Responsive móvil** - El botón flotante + sidebar modal es mejor UX que sidebar siempre visible
+3. **Precios en USD** - Los tours de MegaTravel usan USD, no MXN
+4. **Re-sincronización masiva** - Procesar 325 tours toma ~6-8 horas, mejor hacerlo de noche
+5. **Tags automáticos** - Solo 25% de tours tienen tags, necesita mejora en detección
+
+**Pendientes:**
+
+- [ ] Mejorar detección de tags (actualmente solo 25% de tours)
+- [ ] Implementar filtro por mes de salida (cuando tengamos departure_dates)
+- [ ] Agregar ordenamiento (precio, duración, nombre)
+- [ ] Optimizar responsive tablet (768-1023px)
+- [ ] Agregar vista List (actualmente solo Grid)
+
+**Cifra de Control:** (Sin cambios en esquema)
+- **Tablas:** 48
+- **Campos:** 624
+
+---
+
+### v2.267 - 01 de Febrero de 2026 - 20:25 CST
 
 ### v2.267 - 01 de Febrero de 2026 - 20:25 CST
 
