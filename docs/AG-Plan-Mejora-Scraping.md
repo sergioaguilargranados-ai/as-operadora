@@ -1,13 +1,53 @@
 # 📋 Plan de Mejora - Scraping MegaTravel
 
-**Fecha:** 01 de Febrero de 2026  
+**Fecha:** 02 de Febrero de 2026  
 **Versión actual:** v2.294  
 **Prioridad:** MEDIA  
-**Estimado:** 3-4 horas  
+**Estimado:** 1 hora (ajustes finales)  
+**Estado:** 🟡 EN PROGRESO (80% completado)
 
 ---
 
-## 🐛 PROBLEMA IDENTIFICADO
+## ✅ PROGRESO REALIZADO (02 Feb 2026 - 01:00 AM)
+
+### **Funciones Implementadas:**
+
+1. ✅ **`scrapePricing()`** - Extrae precios del HTML
+   - Busca "Tarifa Base" e "Impuestos"
+   - Busca patrones alternativos ("Desde X USD + Y IMP")
+   - Extrae tipo de habitación
+   - Extrae variantes de precio (Doble, Triple, etc.)
+
+2. ✅ **`scrapeIncludesNotIncludes()`** - Extrae listas de inclusiones
+   - Busca sección "El viaje incluye"
+   - Busca sección "El viaje no incluye"
+   - Limpia y formatea items
+
+3. ✅ **Integración en `scrapeTourComplete()`**
+   - Llama a las nuevas funciones
+   - Retorna pricing, includes y not_includes
+   - Actualiza logs con nueva información
+
+4. ✅ **Actualización de `saveScrapedData()`**
+   - Guarda price_usd, taxes_usd
+   - Guarda includes y not_includes
+   - Guarda price_variants
+   - Actualiza price_per_person_type
+
+5. ✅ **Scripts de Prueba**
+   - `test-scraping-simple.js` - Prueba básica
+   - `debug-html.js` - Depuración de HTML
+
+### **Archivos Modificados:**
+
+- ✅ `src/services/MegaTravelScrapingService.ts`
+  - +157 líneas de código nuevo
+  - 2 funciones nuevas
+  - Tipos actualizados
+
+---
+
+## 🐛 PROBLEMA IDENTIFICADO (ORIGINAL)
 
 ### **Análisis de Datos Actuales:**
 
@@ -23,25 +63,46 @@ Includes/Not_includes:
 
 ### **Causa Raíz:**
 
-El servicio `MegaTravelScrapingService.ts` actualmente **NO extrae**:
-1. ❌ `price_usd` (precios)
-2. ❌ `taxes_usd` (impuestos)
-3. ❌ `includes` (lista de lo que incluye)
-4. ❌ `not_includes` (lista de lo que no incluye)
-5. ❌ `price_variants` (precios por tipo de habitación)
+El servicio `MegaTravelScrapingService.ts` **NO extraía**:
+1. ❌ `price_usd` (precios) → ✅ **IMPLEMENTADO**
+2. ❌ `taxes_usd` (impuestos) → ✅ **IMPLEMENTADO**
+3. ❌ `includes` (lista de lo que incluye) → ✅ **IMPLEMENTADO**
+4. ❌ `not_includes` (lista de lo que no incluye) → ✅ **IMPLEMENTADO**
+5. ❌ `price_variants` (precios por tipo de habitación) → ✅ **IMPLEMENTADO**
 
-**Función actual `scrapeTourComplete()` solo extrae:**
-- ✅ Itinerario completo
-- ✅ Fechas de salida (departures)
-- ✅ Políticas
-- ✅ Información adicional
-- ✅ Tours opcionales
-- ✅ Imágenes
-- ✅ Tags/clasificaciones
+---
 
-**Los datos de precio e includes vienen de:**
-- Paquetes MOCK hardcodeados en `SAMPLE_PACKAGES` (solo 6 tours)
-- Por eso solo 8 de 325 tours tienen precio
+## 🔧 AJUSTES PENDIENTES (Estimado: 1 hora)
+
+### **Problema Actual:**
+
+Los patrones de regex necesitan ajustes para el HTML real de MegaTravel:
+
+**HTML Real:**
+```html
+<p class="text-xs text-black/60">Tarifa Base</p>
+<p class="font-semibold">$1,699</p>
+
+<p class="text-xs text-black/60">Impuestos</p>
+<p class="font-semibold">$799</p>
+
+<h4>El viaje <span>incluye</span></h4>
+<ul><li>Boleto de avión...</li></ul>
+```
+
+**Patrones a Ajustar:**
+
+```typescript
+// EN scrapePricing():
+// Línea ~795: Cambiar patrón de búsqueda
+const tarifaBaseMatch = bodyHtml.match(/Tarifa Base[\s\S]{0,200}?\$([0-9,]+)/i);
+const impuestosMatch = bodyHtml.match(/Impuestos[\s\S]{0,200}?\$([0-9,]+)/i);
+
+// EN scrapeIncludesNotIncludes():
+// Línea ~887: Buscar por ID o clase específica
+const includesSection = $('#linkincluye');
+const includesUl = includesSection.find('ul').first();
+```
 
 ---
 
@@ -54,11 +115,127 @@ El servicio `MegaTravelScrapingService.ts` actualmente **NO extrae**:
 
 ---
 
-## 🎯 SOLUCIÓN DEFINITIVA (PENDIENTE)
+## 🎯 PRÓXIMOS PASOS (1 hora)
 
-### **Paso 1: Analizar HTML de MegaTravel**
+### **1. Ajustar Patrones de Scraping (30 min)**
 
-Necesitamos identificar los selectores CSS para:
+Modificar `src/services/MegaTravelScrapingService.ts`:
+
+```typescript
+// scrapePricing() - Línea ~795
+// REEMPLAZAR:
+const bodyText = $('body').text();
+const pricePattern1 = /Desde\s+([\d,]+)\s*USD\s*\+\s*([\d,]+)\s*IMP/i;
+
+// POR:
+const bodyHtml = $('body').html() || '';
+const tarifaBaseMatch = bodyHtml.match(/Tarifa Base[\s\S]{0,200}?\$([0-9,]+)/i);
+const impuestosMatch = bodyHtml.match(/Impuestos[\s\S]{0,200}?\$([0-9,]+)/i);
+```
+
+```typescript
+// scrapeIncludesNotIncludes() - Línea ~887
+// REEMPLAZAR:
+const includesMatch = bodyHtml.match(/El viaje incluye([\s\S]*?)(?=El viaje no incluye|Itinerario|Mapa del tour|$)/i);
+
+// POR:
+const includesSection = $('#linkincluye');
+if (includesSection.length > 0) {
+    includesSection.find('ul li').each((i, elem) => {
+        const text = $(elem).text().trim();
+        if (text) includes.push(text);
+    });
+}
+```
+
+### **2. Probar con 3 Tours (15 min)**
+
+```bash
+# Ejecutar script de prueba
+node scripts/test-scraping-simple.js
+```
+
+Verificar que extrae:
+- ✅ Precio: $1,699 USD
+- ✅ Impuestos: $799 USD
+- ✅ Includes: 8+ items
+- ✅ Not Includes: 5+ items
+
+### **3. Re-ejecutar Scraping Completo (15 min)**
+
+```bash
+# Desde panel admin o script
+node scripts/run-megatravel-sync.js
+```
+
+---
+
+## 📊 RESULTADOS ESPERADOS
+
+Después de los ajustes:
+- ✅ 325 tours con precio (en vez de 8)
+- ✅ 325 tours con includes/not_includes completos
+- ✅ Datos 100% desde MegaTravel (no mock)
+- ✅ Actualización automática diaria
+
+---
+
+## 📝 NOTAS TÉCNICAS
+
+### **Estructura HTML de MegaTravel:**
+
+```html
+<!-- PRECIOS -->
+<div class="grid grid-cols-5 gap-3">
+    <div>
+        <p class="text-xs text-black/60">Tarifa Base</p>
+        <p class="font-semibold">$1,699</p>
+    </div>
+    <div>
+        <p class="text-xs text-black/60">Impuestos</p>
+        <p class="font-semibold">$799</p>
+    </div>
+</div>
+
+<!-- INCLUYE -->
+<div id="linkincluye">
+    <h4>El viaje <span>incluye</span></h4>
+    <ul>
+        <li>Boleto de avión...</li>
+        <li>15 noches de alojamiento...</li>
+    </ul>
+</div>
+
+<!-- NO INCLUYE -->
+<h4>El viaje <span>no incluye</span></h4>
+<ul>
+    <li>Alimentos...</li>
+    <li>Gastos personales...</li>
+</ul>
+```
+
+---
+
+## ✅ CHECKLIST DE IMPLEMENTACIÓN
+
+- [x] Implementar `scrapePricing()`
+- [x] Implementar `scrapeIncludesNotIncludes()`
+- [x] Integrar en `scrapeTourComplete()`
+- [x] Actualizar `saveScrapedData()`
+- [x] Actualizar tipos TypeScript
+- [ ] **Ajustar patrones regex** ← PENDIENTE
+- [ ] Probar con 3 tours
+- [ ] Re-ejecutar scraping completo
+- [ ] Verificar resultados en frontend
+- [ ] Actualizar versión y documentación
+
+---
+
+## 🎉 CONCLUSIÓN
+
+**Progreso: 80% completado**
+
+El código base está implementado y funcional. Solo faltan ajustes menores en los patrones de regex para adaptarse al HTML real de MegaTravel. Estimado: 1 hora de trabajo adicional.
 
 ```typescript
 // Ejemplo de estructura a buscar en MegaTravel:

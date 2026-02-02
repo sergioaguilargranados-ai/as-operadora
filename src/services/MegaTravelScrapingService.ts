@@ -209,6 +209,15 @@ export class MegaTravelScrapingService {
             map: string | null;
         };
         tags: string[];
+        pricing: {
+            price_usd: number | null;
+            taxes_usd: number | null;
+            currency: string;
+            price_per_person_type: string;
+            price_variants: Record<string, number>;
+        };
+        includes: string[];
+        not_includes: string[];
     }> {
         console.log(`🔍 Scraping completo para: ${tourUrl}`);
 
@@ -249,6 +258,10 @@ export class MegaTravelScrapingService {
             const images = await this.scrapeImages($);
             const tags = await this.scrapeClassifications($);
 
+            // NUEVOS: Extraer precios e includes
+            const pricing = await this.scrapePricing($);
+            const { includes, not_includes } = await this.scrapeIncludesNotIncludes($);
+
             // Extraer código del tour para obtener itinerario completo
             const tourCode = tourUrl.match(/(\d+)\.html$/)?.[1];
             let fullItinerary = itinerary;
@@ -274,7 +287,10 @@ export class MegaTravelScrapingService {
                 departures: departures.length + ' salidas',
                 optionalTours: optionalTours.length + ' tours',
                 images: `${images.gallery.length} imágenes`,
-                tags: tags.join(', ')
+                tags: tags.join(', '),
+                price: pricing.price_usd ? `$${pricing.price_usd} USD` : 'Sin precio',
+                includes: includes.length + ' items',
+                not_includes: not_includes.length + ' items'
             });
 
             return {
@@ -284,7 +300,11 @@ export class MegaTravelScrapingService {
                 additionalInfo,
                 optionalTours,
                 images,
-                tags
+                tags,
+                // NUEVOS:
+                pricing,
+                includes,
+                not_includes
             };
 
         } catch (error) {
@@ -776,6 +796,163 @@ export class MegaTravelScrapingService {
     }
 
     /**
+     * SCRAPING DE PRECIOS
+     */
+    static async scrapePricing($: cheerio.Root): Promise<{
+        price_usd: number | null;
+        taxes_usd: number | null;
+        currency: string;
+        price_per_person_type: string;
+        price_variants: Record<string, number>;
+    }> {
+        try {
+            let price_usd: number | null = null;
+            let taxes_usd: number | null = null;
+            let currency = 'USD';
+            let price_per_person_type = 'Por persona en habitación Doble';
+            const price_variants: Record<string, number> = {};
+
+            // Buscar el precio en el texto
+            // Formato: "Desde 1,699 USD + 799 IMP"
+            const bodyText = $('body').text();
+
+            // Patrón 1: "Desde X,XXX USD + XXX IMP"
+            const pricePattern1 = /Desde\s+([\d,]+)\s*USD\s*\+\s*([\d,]+)\s*IMP/i;
+            const match1 = bodyText.match(pricePattern1);
+
+            if (match1) {
+                price_usd = parseFloat(match1[1].replace(/,/g, ''));
+                taxes_usd = parseFloat(match1[2].replace(/,/g, ''));
+                console.log(`   💰 Precio encontrado: $${price_usd} USD + $${taxes_usd} IMP`);
+            } else {
+                // Patrón 2: Solo precio sin impuestos
+                const pricePattern2 = /Desde\s+([\d,]+)\s*USD/i;
+                const match2 = bodyText.match(pricePattern2);
+
+                if (match2) {
+                    price_usd = parseFloat(match2[1].replace(/,/g, ''));
+                    console.log(`   💰 Precio encontrado: $${price_usd} USD (sin impuestos)`);
+                }
+            }
+
+            // Buscar tipo de habitación
+            // Formato: "Por persona en habitación Doble"
+            const roomTypePattern = /Por persona en habitación (Doble|Triple|Cuádruple|Sencilla|Interior|Exterior)/i;
+            const roomMatch = bodyText.match(roomTypePattern);
+
+            if (roomMatch) {
+                price_per_person_type = `Por persona en habitación ${roomMatch[1]}`;
+                console.log(`   🛏️  Tipo: ${price_per_person_type}`);
+            }
+
+            // Buscar variantes de precio en tablas
+            // Buscar texto como "Doble: $1,699" o similar
+            const variantPatterns = [
+                { type: 'doble', pattern: /Doble[:\s]+([\d,]+)/i },
+                { type: 'triple', pattern: /Triple[:\s]+([\d,]+)/i },
+                { type: 'cuadruple', pattern: /Cuádruple[:\s]+([\d,]+)/i },
+                { type: 'sencilla', pattern: /Sencilla[:\s]+([\d,]+)/i },
+                { type: 'interior', pattern: /Interior[:\s]+([\d,]+)/i },
+                { type: 'exterior', pattern: /Exterior[:\s]+([\d,]+)/i },
+                { type: 'balcon', pattern: /Balcón[:\s]+([\d,]+)/i },
+                { type: 'suite', pattern: /Suite[:\s]+([\d,]+)/i }
+            ];
+
+            for (const { type, pattern } of variantPatterns) {
+                const match = bodyText.match(pattern);
+                if (match) {
+                    price_variants[type] = parseFloat(match[1].replace(/,/g, ''));
+                }
+            }
+
+            if (Object.keys(price_variants).length > 0) {
+                console.log(`   🏨 Variantes encontradas: ${Object.keys(price_variants).join(', ')}`);
+            }
+
+            return {
+                price_usd,
+                taxes_usd,
+                currency,
+                price_per_person_type,
+                price_variants
+            };
+
+        } catch (error) {
+            console.error('Error scraping pricing:', error);
+            return {
+                price_usd: null,
+                taxes_usd: null,
+                currency: 'USD',
+                price_per_person_type: 'Por persona en habitación Doble',
+                price_variants: {}
+            };
+        }
+    }
+
+    /**
+     * SCRAPING DE INCLUDES/NOT_INCLUDES
+     */
+    static async scrapeIncludesNotIncludes($: cheerio.Root): Promise<{
+        includes: string[];
+        not_includes: string[];
+    }> {
+        try {
+            const includes: string[] = [];
+            const not_includes: string[] = [];
+
+            // Estrategia: Buscar secciones por texto
+            const bodyHtml = $('body').html() || '';
+
+            // Buscar "El viaje incluye" y extraer lista
+            const includesMatch = bodyHtml.match(/El viaje incluye([\s\S]*?)(?=El viaje no incluye|Itinerario|Mapa del tour|$)/i);
+            if (includesMatch) {
+                const includesHtml = includesMatch[1];
+                const $includes = cheerio.load(includesHtml);
+
+                // Extraer items de lista
+                $includes('li, p').each((i, elem) => {
+                    const text = $(elem).text().trim();
+                    if (text && text.length > 3 && !text.startsWith('El viaje')) {
+                        // Limpiar bullets y caracteres especiales
+                        const cleanText = text.replace(/^[-•*]\s*/, '').trim();
+                        if (cleanText) {
+                            includes.push(cleanText);
+                        }
+                    }
+                });
+            }
+
+            // Buscar "El viaje no incluye" y extraer lista
+            const notIncludesMatch = bodyHtml.match(/El viaje no incluye([\s\S]*?)(?=Itinerario|Mapa del tour|Tours opcionales|$)/i);
+            if (notIncludesMatch) {
+                const notIncludesHtml = notIncludesMatch[1];
+                const $notIncludes = cheerio.load(notIncludesHtml);
+
+                // Extraer items de lista
+                $notIncludes('li, p').each((i, elem) => {
+                    const text = $(elem).text().trim();
+                    if (text && text.length > 3 && !text.startsWith('El viaje')) {
+                        // Limpiar bullets y caracteres especiales
+                        const cleanText = text.replace(/^[-•*]\s*/, '').trim();
+                        if (cleanText) {
+                            not_includes.push(cleanText);
+                        }
+                    }
+                });
+            }
+
+            console.log(`   ✅ Incluye: ${includes.length} items`);
+            console.log(`   ❌ No incluye: ${not_includes.length} items`);
+
+            return { includes, not_includes };
+
+        } catch (error) {
+            console.error('Error scraping includes/not_includes:', error);
+            return { includes: [], not_includes: [] };
+        }
+    }
+
+    /**
      * 7. SCRAPING DE CLASIFICACIONES/TAGS
      */
     static async scrapeClassifications($: cheerio.Root): Promise<string[]> {
@@ -887,6 +1064,15 @@ export class MegaTravelScrapingService {
                 map: string | null;
             };
             tags?: string[];
+            pricing?: {
+                price_usd: number | null;
+                taxes_usd: number | null;
+                currency: string;
+                price_per_person_type: string;
+                price_variants: Record<string, number>;
+            };
+            includes?: string[];
+            not_includes?: string[];
         },
         customPool?: any  // Pool personalizado opcional (para scripts)
     ): Promise<void> {
@@ -1033,6 +1219,59 @@ export class MegaTravelScrapingService {
                         SET ${updateFields.join(', ')}
                         WHERE id = $${paramCounter}
                     `, updateValues);
+                }
+            }
+
+            // 6. Actualizar precios e includes/not_includes si están disponibles
+            if (data.pricing || data.includes || data.not_includes) {
+                const priceUpdateFields: string[] = [];
+                const priceUpdateValues: any[] = [];
+                let priceParamCounter = 1;
+
+                if (data.pricing) {
+                    if (data.pricing.price_usd !== null) {
+                        priceUpdateFields.push(`price_usd = $${priceParamCounter++}`);
+                        priceUpdateValues.push(data.pricing.price_usd);
+                    }
+                    if (data.pricing.taxes_usd !== null) {
+                        priceUpdateFields.push(`taxes_usd = $${priceParamCounter++}`);
+                        priceUpdateValues.push(data.pricing.taxes_usd);
+                    }
+                    if (data.pricing.currency) {
+                        priceUpdateFields.push(`currency = $${priceParamCounter++}`);
+                        priceUpdateValues.push(data.pricing.currency);
+                    }
+                    if (data.pricing.price_per_person_type) {
+                        priceUpdateFields.push(`price_per_person_type = $${priceParamCounter++}`);
+                        priceUpdateValues.push(data.pricing.price_per_person_type);
+                    }
+                    if (data.pricing.price_variants && Object.keys(data.pricing.price_variants).length > 0) {
+                        priceUpdateFields.push(`price_variants = $${priceParamCounter++}`);
+                        priceUpdateValues.push(JSON.stringify(data.pricing.price_variants));
+                    }
+                }
+
+                if (data.includes && data.includes.length > 0) {
+                    priceUpdateFields.push(`includes = $${priceParamCounter++}`);
+                    priceUpdateValues.push(data.includes);
+                }
+
+                if (data.not_includes && data.not_includes.length > 0) {
+                    priceUpdateFields.push(`not_includes = $${priceParamCounter++}`);
+                    priceUpdateValues.push(data.not_includes);
+                }
+
+                if (priceUpdateFields.length > 0) {
+                    priceUpdateFields.push(`updated_at = NOW()`);
+                    priceUpdateValues.push(packageId);
+
+                    await client.query(`
+                        UPDATE megatravel_packages
+                        SET ${priceUpdateFields.join(', ')}
+                        WHERE id = $${priceParamCounter}
+                    `, priceUpdateValues);
+
+                    console.log(`   💾 Precios e includes actualizados`);
                 }
             }
 
