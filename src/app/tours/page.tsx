@@ -1,5 +1,5 @@
 // Catálogo de Tours y Viajes Grupales
-// Build: 31 Ene 2026 - v2.253 - Overlay más blanco para mejor legibilidad
+// Build: 01 Feb 2026 - v2.268 - Paginación 20 tours/página + Scraping imágenes/tags
 
 'use client'
 
@@ -72,6 +72,7 @@ interface TourPackage {
         gallery: string[]
     }
     tags: string[]
+    destination_region?: string  // Región del destino (Europa, Asia, etc.)
     isFeatured: boolean
     isOffer: boolean
 }
@@ -115,6 +116,10 @@ function ToursContent() {
     const [selectedCategory, setSelectedCategory] = useState(searchParams?.get('cat') || 'ofertas')
     const [videoUrl, setVideoUrl] = useState('https://images.unsplash.com/photo-1499856871958-5b9337606a3e?w=1600')
 
+    // Paginación
+    const [currentPage, setCurrentPage] = useState(1)
+    const TOURS_PER_PAGE = 20
+
     useEffect(() => {
         fetchPackages()
         fetchSettings()
@@ -123,12 +128,38 @@ function ToursContent() {
     // Filtrar por región cuando cambia
     useEffect(() => {
         if (selectedRegion) {
-            const filtered = allPackages.filter(p => p.region === selectedRegion)
+            const filtered = allPackages.filter(p => p.destination_region === selectedRegion)
             setPackages(filtered)
         } else {
             setPackages(allPackages)
         }
+        // Reset página al cambiar filtros
+        setCurrentPage(1)
     }, [selectedRegion, allPackages])
+
+    // Calcular tours paginados
+    const indexOfLastTour = currentPage * TOURS_PER_PAGE
+    const indexOfFirstTour = indexOfLastTour - TOURS_PER_PAGE
+    const currentTours = packages.slice(indexOfFirstTour, indexOfLastTour)
+    const totalPages = Math.ceil(packages.length / TOURS_PER_PAGE)
+
+    // Funciones de paginación
+    const goToPage = (page: number) => {
+        setCurrentPage(page)
+        window.scrollTo({ top: 0, behavior: 'smooth' })
+    }
+
+    const goToNextPage = () => {
+        if (currentPage < totalPages) {
+            goToPage(currentPage + 1)
+        }
+    }
+
+    const goToPreviousPage = () => {
+        if (currentPage > 1) {
+            goToPage(currentPage - 1)
+        }
+    }
 
     const fetchSettings = async () => {
         try {
@@ -365,7 +396,7 @@ function ToursContent() {
                             Todos ({allPackages.length})
                         </button>
                         {ALL_REGIONS.map((region) => {
-                            const count = allPackages.filter(p => p.region === region).length;
+                            const count = allPackages.filter(p => p.destination_region === region).length;
                             return (
                                 <button
                                     key={region}
@@ -393,19 +424,38 @@ function ToursContent() {
                         <h3 className="font-semibold text-gray-800">Viajes para Eventos Especiales</h3>
                     </div>
                     <div className="flex flex-wrap gap-2">
-                        {EVENT_CATEGORIES.map((cat) => (
-                            <button
-                                key={cat.code}
-                                onClick={() => {
-                                    // Por ahora solo muestra una búsqueda con el término
-                                    setSearch(cat.name);
-                                    // Trigger búsqueda
-                                }}
-                                className="px-4 py-2 rounded-full text-sm font-medium bg-indigo-50 text-indigo-700 hover:bg-indigo-100 transition-all"
-                            >
-                                {cat.icon} {cat.name}
-                            </button>
-                        ))}
+                        {EVENT_CATEGORIES.map((cat) => {
+                            // Contar tours con este tag
+                            const count = allPackages.filter(p =>
+                                p.tags && p.tags.some(tag =>
+                                    tag.toLowerCase().includes(cat.code.toLowerCase())
+                                )
+                            ).length;
+
+                            return (
+                                <button
+                                    key={cat.code}
+                                    onClick={() => {
+                                        // Filtrar por tag
+                                        const filtered = allPackages.filter(p =>
+                                            p.tags && p.tags.some(tag =>
+                                                tag.toLowerCase().includes(cat.code.toLowerCase())
+                                            )
+                                        );
+                                        setPackages(filtered);
+                                        setSelectedRegion(null); // Reset filtro de región
+                                        setCurrentPage(1);
+                                    }}
+                                    className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${count > 0
+                                        ? 'bg-indigo-50 text-indigo-700 hover:bg-indigo-100'
+                                        : 'bg-gray-50 text-gray-400 cursor-default'
+                                        }`}
+                                    disabled={count === 0}
+                                >
+                                    {cat.icon} {cat.name} ({count})
+                                </button>
+                            );
+                        })}
                     </div>
                 </div>
             </section>
@@ -445,11 +495,16 @@ function ToursContent() {
                                 <div className="flex items-center justify-between mb-6">
                                     <h2 className="text-2xl font-bold text-gray-800">
                                         {packages.length} {packages.length === 1 ? 'Tour disponible' : 'Tours disponibles'}
+                                        {totalPages > 1 && (
+                                            <span className="text-base font-normal text-gray-500 ml-2">
+                                                (Página {currentPage} de {totalPages})
+                                            </span>
+                                        )}
                                     </h2>
                                 </div>
 
                                 <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                                    {packages.map((pkg, index) => (
+                                    {currentTours.map((pkg, index) => (
                                         <motion.div
                                             key={pkg.id}
                                             initial={{ opacity: 0, y: 20 }}
@@ -536,6 +591,59 @@ function ToursContent() {
                                         </motion.div>
                                     ))}
                                 </div>
+
+                                {/* Controles de Paginación */}
+                                {totalPages > 1 && (
+                                    <div className="mt-8 flex items-center justify-center gap-2">
+                                        <Button
+                                            variant="outline"
+                                            onClick={goToPreviousPage}
+                                            disabled={currentPage === 1}
+                                            className="gap-2"
+                                        >
+                                            <ArrowLeft className="w-4 h-4" />
+                                            Anterior
+                                        </Button>
+
+                                        <div className="flex gap-1">
+                                            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
+                                                // Mostrar solo páginas cercanas (máx 7 botones)
+                                                if (
+                                                    page === 1 ||
+                                                    page === totalPages ||
+                                                    (page >= currentPage - 2 && page <= currentPage + 2)
+                                                ) {
+                                                    return (
+                                                        <Button
+                                                            key={page}
+                                                            variant={currentPage === page ? "default" : "outline"}
+                                                            onClick={() => goToPage(page)}
+                                                            className={`w-10 h-10 p-0 ${currentPage === page ? 'bg-blue-600 text-white' : ''}`}
+                                                        >
+                                                            {page}
+                                                        </Button>
+                                                    )
+                                                } else if (
+                                                    page === currentPage - 3 ||
+                                                    page === currentPage + 3
+                                                ) {
+                                                    return <span key={page} className="px-2">...</span>
+                                                }
+                                                return null
+                                            })}
+                                        </div>
+
+                                        <Button
+                                            variant="outline"
+                                            onClick={goToNextPage}
+                                            disabled={currentPage === totalPages}
+                                            className="gap-2"
+                                        >
+                                            Siguiente
+                                            <ArrowRight className="w-4 h-4" />
+                                        </Button>
+                                    </div>
+                                )}
                             </motion.div>
                         )}
                     </AnimatePresence>
@@ -605,7 +713,7 @@ function ToursContent() {
                             © 2026 AS Operadora de Viajes y Eventos. Todos los derechos reservados.
                         </p>
                         <p className="text-sm text-gray-500">
-                            v2.253 | Build: 31 Ene 2026
+                            v2.268 | Build: 01 Feb 2026
                         </p>
                     </div>
                 </div>

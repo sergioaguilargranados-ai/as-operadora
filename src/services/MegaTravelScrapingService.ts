@@ -203,6 +203,12 @@ export class MegaTravelScrapingService {
         policies: Policies;
         additionalInfo: AdditionalInfo;
         optionalTours: OptionalTourExtended[];
+        images: {
+            main: string | null;
+            gallery: string[];
+            map: string | null;
+        };
+        tags: string[];
     }> {
         console.log(`🔍 Scraping completo para: ${tourUrl}`);
 
@@ -240,24 +246,135 @@ export class MegaTravelScrapingService {
             const policies = await this.scrapePolicies($);
             const additionalInfo = await this.scrapeAdditionalInfo($);
             const optionalTours = await this.scrapeOptionalTours($);
+            const images = await this.scrapeImages($);
+            const tags = await this.scrapeClassifications($);
+
+            // Extraer código del tour para obtener itinerario completo
+            const tourCode = tourUrl.match(/(\d+)\.html$/)?.[1];
+            let fullItinerary = itinerary;
+
+            if (tourCode) {
+                try {
+                    console.log(`📄 Obteniendo itinerario completo desde circuito.php...`);
+                    const circuitoItinerary = await this.scrapeItineraryFromCircuito(tourCode);
+
+                    if (circuitoItinerary.length > itinerary.length) {
+                        fullItinerary = circuitoItinerary;
+                        console.log(`✅ Itinerario completo: ${circuitoItinerary.length} días (desde circuito.php)`);
+                    } else {
+                        console.log(`ℹ️  Usando itinerario de página principal: ${itinerary.length} días`);
+                    }
+                } catch (error) {
+                    console.log(`⚠️  No se pudo obtener itinerario desde circuito.php, usando página principal`);
+                }
+            }
 
             console.log(`✅ Scraping completo para ${tourUrl}:`, {
-                itinerary: itinerary.length + ' días',
+                itinerary: fullItinerary.length + ' días',
                 departures: departures.length + ' salidas',
-                optionalTours: optionalTours.length + ' tours'
+                optionalTours: optionalTours.length + ' tours',
+                images: `${images.gallery.length} imágenes`,
+                tags: tags.join(', ')
             });
 
             return {
-                itinerary,
+                itinerary: fullItinerary,
                 departures,
                 policies,
                 additionalInfo,
-                optionalTours
+                optionalTours,
+                images,
+                tags
             };
 
         } catch (error) {
             console.error(`❌ Error en scraping de ${tourUrl}:`, error);
             throw error;
+        }
+    }
+
+    /**
+     * SCRAPING DE ITINERARIO COMPLETO desde circuito.php
+     */
+    static async scrapeItineraryFromCircuito(tourCode: string): Promise<ItineraryDay[]> {
+        const url = `https://megatravel.com.mx/tools/circuito.php?viaje=${tourCode}`;
+
+        try {
+            const browser = await puppeteer.launch({
+                headless: true,
+                args: ['--no-sandbox', '--disable-setuid-sandbox']
+            });
+
+            const page = await browser.newPage();
+            await page.setViewport({ width: 1920, height: 1080 });
+
+            await page.goto(url, {
+                waitUntil: 'networkidle2',
+                timeout: 60000
+            });
+
+            await page.waitForSelector('body', { timeout: 10000 });
+            const html = await page.content();
+            await browser.close();
+
+            const $ = cheerio.load(html);
+
+            // Buscar sección de itinerario
+            const itinerarySection = $('h5:contains("Itinerario")').next('.p-3, .border');
+
+            if (!itinerarySection.length) {
+                console.log('⚠️  No se encontró sección de itinerario en circuito.php');
+                return [];
+            }
+
+            const days: ItineraryDay[] = [];
+            let dayNumber = 1;
+
+            // Parsear días del itinerario
+            // Formato: <p><b>FECHA CIUDAD - PAÍS</b></p><p>Descripción...</p>
+            const paragraphs = itinerarySection.find('p');
+
+            for (let i = 0; i < paragraphs.length; i++) {
+                const p = $(paragraphs[i]);
+                const boldText = p.find('b').text().trim();
+
+                if (boldText && boldText.length > 0) {
+                    // Este es un título de día
+                    const title = boldText;
+
+                    // Buscar descripción en el siguiente <p>
+                    let description = '';
+                    if (i + 1 < paragraphs.length) {
+                        const nextP = $(paragraphs[i + 1]);
+                        // Si el siguiente <p> no tiene <b>, es la descripción
+                        if (nextP.find('b').length === 0) {
+                            description = nextP.text().trim();
+                            i++; // Saltar el siguiente párrafo
+                        }
+                    }
+
+                    // Extraer ciudad del título
+                    const cityMatch = title.match(/([A-ZÁÉÍÓÚÑ][A-ZÁÉÍÓÚÑa-záéíóúñ\s]+)\s*[-–]\s*([A-ZÁÉÍÓÚÑ][A-ZÁÉÍÓÚÑa-záéíóúñ\s]+)/);
+                    const city = cityMatch ? cityMatch[1].trim() : null;
+
+                    days.push({
+                        day_number: dayNumber++,
+                        title: title,
+                        description: description || '',
+                        meals: undefined,
+                        hotel: undefined,
+                        city: city || undefined,
+                        activities: [],
+                        highlights: []
+                    });
+                }
+            }
+
+            return days;
+
+        } catch (error) {
+            console.error(`❌ Error scraping circuito.php para tour ${tourCode}:`, error);
+            return [];
         }
     }
 
@@ -569,6 +686,183 @@ export class MegaTravelScrapingService {
     }
 
     /**
+     * 6. SCRAPING DE IMÁGENES
+     */
+    static async scrapeImages($: cheerio.Root): Promise<{
+        main: string | null;
+        gallery: string[];
+        map: string | null;
+    }> {
+        try {
+            const images = {
+                main: null as string | null,
+                gallery: [] as string[],
+                map: null as string | null
+            };
+
+            // Buscar todas las imágenes del tour (cdnmega.com/images/viajes)
+            const tourImages: string[] = [];
+
+            $('img').each((i, elem) => {
+                const src = $(elem).attr('src');
+                if (src && src.includes('cdnmega.com/images/viajes')) {
+                    // Filtrar logos y otros elementos
+                    if (!src.includes('logo') && !src.includes('icon') && !src.includes('brand')) {
+                        tourImages.push(src);
+                    }
+                }
+            });
+
+            // Extraer código del tour de la URL de la página
+            const pageUrl = $('link[rel="canonical"]').attr('href') || '';
+            const tourCodeMatch = pageUrl.match(/(\d+)\.html$/);
+            const tourCode = tourCodeMatch ? tourCodeMatch[1] : null;
+
+            // Estrategia mejorada para detectar imagen principal:
+            // 1. Buscar imagen que contenga el código del tour en el nombre
+            // 2. Si no, buscar la primera imagen con /covers/ que NO sea de otro tour
+            let mainImage = null;
+
+            if (tourCode) {
+                // Buscar imagen con el código del tour
+                mainImage = tourImages.find(img =>
+                    img.includes('/covers/') &&
+                    (img.includes(tourCode) || img.includes(`-${tourCode}-`))
+                );
+            }
+
+            // Si no encontramos por código, buscar la primera imagen con /covers/
+            // que no tenga otro código de tour en el nombre
+            if (!mainImage) {
+                mainImage = tourImages.find(img => {
+                    if (!img.includes('/covers/')) return false;
+
+                    // Verificar que no sea de otro tour (no tenga otro código de 5 dígitos)
+                    const otherTourCode = img.match(/(\d{5})-/);
+                    if (otherTourCode && tourCode && otherTourCode[1] !== tourCode) {
+                        return false; // Es de otro tour
+                    }
+
+                    return true;
+                });
+            }
+
+            if (mainImage) {
+                images.main = mainImage;
+            }
+
+            // El resto son galería (excluir la principal)
+            images.gallery = tourImages.filter(img => img !== mainImage);
+
+            // Buscar imagen de mapa (si existe)
+            const mapImage = tourImages.find(img => img.includes('map') || img.includes('mapa'));
+            if (mapImage) {
+                images.map = mapImage;
+                // Remover del gallery si está ahí
+                images.gallery = images.gallery.filter(img => img !== mapImage);
+            }
+
+            console.log(`📸 Imágenes extraídas: Main: ${images.main ? 'Sí' : 'No'}, Gallery: ${images.gallery.length}, Map: ${images.map ? 'Sí' : 'No'}`);
+            return images;
+
+        } catch (error) {
+            console.error('Error extrayendo imágenes:', error);
+            return {
+                main: null,
+                gallery: [],
+                map: null
+            };
+        }
+    }
+
+    /**
+     * 7. SCRAPING DE CLASIFICACIONES/TAGS
+     */
+    static async scrapeClassifications($: cheerio.Root): Promise<string[]> {
+        try {
+            const tags: Set<string> = new Set();
+
+            // 1. Extraer de breadcrumbs
+            const breadcrumbText = $('.breadcrumb, [class*="breadcrumb"], nav').text().toLowerCase();
+
+            // Mapeo de breadcrumbs a tags
+            const tagMappings: Record<string, string[]> = {
+                'quinceañeras': ['quinceañeras', 'eventos-especiales', 'grupos'],
+                'quince años': ['quinceañeras', 'eventos-especiales', 'grupos'],
+                'luna de miel': ['bodas', 'luna-de-miel', 'romantico', 'parejas'],
+                'boda': ['bodas', 'luna-de-miel', 'romantico'],
+                'semana santa': ['semana-santa', 'ofertas', 'vacaciones'],
+                'pascua': ['semana-santa', 'ofertas', 'vacaciones'],
+                'oferta': ['ofertas', 'promociones'],
+                'descuento': ['ofertas', 'promociones'],
+                'promoción': ['ofertas', 'promociones'],
+                'preventa': ['ofertas', 'preventa'],
+                'crucero': ['cruceros', 'todo-incluido'],
+                'cruise': ['cruceros', 'todo-incluido'],
+                'graduación': ['graduaciones', 'eventos-especiales', 'grupos'],
+                'corporativo': ['corporativo', 'grupos', 'empresas'],
+                'grupo': ['grupos', 'viajes-grupales'],
+                'fit': ['grupos', 'viajes-grupales'],
+                'evento deportivo': ['deportes', 'eventos-especiales'],
+                'futbol': ['deportes', 'futbol'],
+                'imperdible': ['imperdibles', 'destacados'],
+                'destacado': ['imperdibles', 'destacados'],
+                'familiar': ['familiar', 'niños', 'familia']
+            };
+
+            // Buscar coincidencias en breadcrumbs
+            for (const [keyword, relatedTags] of Object.entries(tagMappings)) {
+                if (breadcrumbText.includes(keyword)) {
+                    relatedTags.forEach(tag => tags.add(tag));
+                }
+            }
+
+            // 2. Extraer de título y descripción
+            const title = $('h1').first().text().toLowerCase();
+            const description = $('meta[name="description"]').attr('content')?.toLowerCase() || '';
+            const fullText = title + ' ' + description;
+
+            // Buscar en título/descripción también
+            for (const [keyword, relatedTags] of Object.entries(tagMappings)) {
+                if (fullText.includes(keyword)) {
+                    relatedTags.forEach(tag => tags.add(tag));
+                }
+            }
+
+            // 3. Detectar región/destino como tag
+            const regionKeywords = {
+                'europa': 'europa',
+                'asia': 'asia',
+                'medio oriente': 'medio-oriente',
+                'sudamerica': 'sudamerica',
+                'norteamerica': 'norteamerica',
+                'norte américa': 'norteamerica',
+                'caribe': 'caribe',
+                'africa': 'africa',
+                'áfrica': 'africa',
+                'oceania': 'oceania',
+                'oceanía': 'oceania',
+                'mexico': 'mexico',
+                'méxico': 'mexico'
+            };
+
+            for (const [keyword, tag] of Object.entries(regionKeywords)) {
+                if (breadcrumbText.includes(keyword) || fullText.includes(keyword)) {
+                    tags.add(tag);
+                }
+            }
+
+            const tagsArray = Array.from(tags);
+            console.log(`🏷️ Tags extraídos: ${tagsArray.join(', ') || 'ninguno'}`);
+            return tagsArray;
+
+        } catch (error) {
+            console.error('Error extrayendo clasificaciones:', error);
+            return [];
+        }
+    }
+
+    /**
      * HELPER: Truncar string a longitud máxima
      */
     private static truncateString(str: string | null | undefined, maxLength: number = 500): string | null {
@@ -587,6 +881,12 @@ export class MegaTravelScrapingService {
             departures: Departure[];
             policies: Policies;
             additionalInfo: AdditionalInfo;
+            images?: {
+                main: string | null;
+                gallery: string[];
+                map: string | null;
+            };
+            tags?: string[];
         },
         customPool?: any  // Pool personalizado opcional (para scripts)
     ): Promise<void> {
@@ -697,6 +997,44 @@ export class MegaTravelScrapingService {
                 data.additionalInfo.voltage || null,
                 data.additionalInfo.emergency_contacts || null
             ]);
+
+            // 5. Actualizar imágenes y tags en megatravel_packages (si se proporcionaron)
+            if (data.images || data.tags) {
+                const updateFields: string[] = [];
+                const updateValues: any[] = [];
+                let paramCounter = 1;
+
+                if (data.images) {
+                    if (data.images.main) {
+                        updateFields.push(`main_image = $${paramCounter++}`);
+                        updateValues.push(data.images.main);
+                    }
+                    if (data.images.gallery && data.images.gallery.length > 0) {
+                        updateFields.push(`gallery_images = $${paramCounter++}`);
+                        updateValues.push(data.images.gallery);
+                    }
+                    if (data.images.map) {
+                        updateFields.push(`map_image = $${paramCounter++}`);
+                        updateValues.push(data.images.map);
+                    }
+                }
+
+                if (data.tags && data.tags.length > 0) {
+                    updateFields.push(`tags = $${paramCounter++}`);
+                    updateValues.push(data.tags);
+                }
+
+                if (updateFields.length > 0) {
+                    updateFields.push(`updated_at = NOW()`);
+                    updateValues.push(packageId);
+
+                    await client.query(`
+                        UPDATE megatravel_packages
+                        SET ${updateFields.join(', ')}
+                        WHERE id = $${paramCounter}
+                    `, updateValues);
+                }
+            }
 
             await client.query('COMMIT');
             console.log(`✅ Datos guardados para package_id ${packageId}`);

@@ -57,8 +57,14 @@ async function getTourByCode(code: string): Promise<TourBasic | null> {
 
 /**
  * Re-sincronizar tour fallido
+ * NOTA: Temporalmente deshabilitado - métodos no existen en MegaTravelScrapingService
  */
 async function resyncTour(mtCode: string): Promise<boolean> {
+    console.log(`\n⚠️  Función resyncTour deshabilitada temporalmente`);
+    console.log(`   Script necesita actualización para usar nuevos métodos de scraping`);
+    return false;
+
+    /* DESHABILITADO TEMPORALMENTE
     try {
         console.log(`\n🔄 Re-sincronizando ${mtCode}...`);
 
@@ -104,6 +110,7 @@ async function resyncTour(mtCode: string): Promise<boolean> {
         console.error(`   ❌ Error en ${mtCode}:`, error.message);
         return false;
     }
+    */
 }
 
 /**
