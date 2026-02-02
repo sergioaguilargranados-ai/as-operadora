@@ -1,7 +1,7 @@
 // execute-scraping-now.js - Ejecutar scraping inmediatamente
 import fetch from 'node-fetch';
 
-const API_URL = process.env.API_URL || 'http://localhost:3001';
+const API_URL = process.env.API_URL || 'http://localhost:3000';
 const ADMIN_SECRET = 'admin-scraping-secret-2026';
 const BATCH_SIZE = 10;
 const TOTAL_TOURS = 325;
