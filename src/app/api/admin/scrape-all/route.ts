@@ -24,9 +24,9 @@ export async function POST(request: NextRequest) {
 
         // Obtener tours a procesar
         const result = await pool.query(`
-            SELECT id, mt_code, title, url
+            SELECT id, mt_code, name, mt_url
             FROM megatravel_packages
-            WHERE url IS NOT NULL
+            WHERE mt_url IS NOT NULL
             ORDER BY id
             LIMIT $1 OFFSET $2
         `, [limit, offset]);
@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
                 console.log(`🔍 Scraping: ${tour.mt_code}`);
 
                 const scrapedData = await MegaTravelScrapingService.scrapeTourComplete(
-                    tour.url,
+                    tour.mt_url,
                     tour.id
                 );
 
