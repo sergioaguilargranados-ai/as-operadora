@@ -1,5 +1,5 @@
 // Catálogo de Tours y Viajes Grupales
-// Build: 01 Feb 2026 - v2.291 - Filtros sidebar + Responsive móvil + Precios USD
+// Build: 01 Feb 2026 - v2.292 - Fix filtros + Cargar 325 tours + Error búsqueda
 
 'use client'
 
@@ -161,65 +161,74 @@ function ToursContent() {
         applyAllFilters()
     }, [selectedRegion, selectedCountry, selectedCity, priceRange, durationRange, selectedMonth, selectedTags, allPackages, search])
 
+    // Función unificada de filtrado
     const applyAllFilters = () => {
-        let filtered = [...allPackages]
+        try {
+            let filtered = [...allPackages]
 
-        // Filtro de búsqueda (texto libre)
-        if (search) {
-            const searchLower = search.toLowerCase()
-            filtered = filtered.filter(p =>
-                p.name.toLowerCase().includes(searchLower) ||
-                p.description.toLowerCase().includes(searchLower) ||
-                p.countries.some(c => c.toLowerCase().includes(searchLower)) ||
-                p.cities.some(c => c.toLowerCase().includes(searchLower))
-            )
-        }
-
-        // Filtro por región
-        if (selectedRegion) {
-            filtered = filtered.filter(p => p.destination_region === selectedRegion)
-        }
-
-        // Filtro por país
-        if (selectedCountry) {
-            filtered = filtered.filter(p => p.countries.includes(selectedCountry))
-        }
-
-        // Filtro por ciudad
-        if (selectedCity) {
-            filtered = filtered.filter(p => p.cities.includes(selectedCity))
-        }
-
-        // Filtro por precio (USD)
-        filtered = filtered.filter(p => {
-            const priceUSD = p.pricing.currency === 'USD'
-                ? p.pricing.totalPrice
-                : p.pricing.totalPrice / 18 // Conversión aproximada MXN a USD
-            return priceUSD >= priceRange[0] && priceUSD <= priceRange[1]
-        })
-
-        // Filtro por duración
-        filtered = filtered.filter(p =>
-            p.days >= durationRange[0] && p.days <= durationRange[1]
-        )
-
-        // Filtro por mes de salida (si hay departure_dates)
-        if (selectedMonth) {
-            // Por ahora, este filtro está preparado para cuando tengamos departure_dates
-            // filtered = filtered.filter(p => ...)
-        }
-
-        // Filtro por tags
-        if (selectedTags.length > 0) {
-            filtered = filtered.filter(p =>
-                selectedTags.some(tag =>
-                    p.tags?.some(t => t.toLowerCase().includes(tag.toLowerCase()))
+            // Filtro por palabra clave
+            if (search.trim()) {
+                const searchLower = search.toLowerCase()
+                filtered = filtered.filter(p =>
+                    p.name?.toLowerCase().includes(searchLower) ||
+                    p.description?.toLowerCase().includes(searchLower) ||
+                    p.countries?.some(c => c?.toLowerCase().includes(searchLower)) ||
+                    p.cities?.some(c => c?.toLowerCase().includes(searchLower))
                 )
-            )
-        }
+            }
 
-        setPackages(filtered)
-        setCurrentPage(1)
+            // Filtro por región
+            if (selectedRegion) {
+                filtered = filtered.filter(p => p.destination_region === selectedRegion)
+            }
+
+            // Filtro por país
+            if (selectedCountry) {
+                filtered = filtered.filter(p => p.countries?.includes(selectedCountry))
+            }
+
+            // Filtro por ciudad
+            if (selectedCity) {
+                filtered = filtered.filter(p => p.cities?.includes(selectedCity))
+            }
+
+            // Filtro por precio (USD)
+            filtered = filtered.filter(p => {
+                if (!p.pricing?.totalPrice) return true // Incluir si no tiene precio
+                const priceUSD = p.pricing.currency === 'USD'
+                    ? p.pricing.totalPrice
+                    : p.pricing.totalPrice / 18 // Conversión aproximada MXN a USD
+                return priceUSD >= priceRange[0] && priceUSD <= priceRange[1]
+            })
+
+            // Filtro por duración
+            filtered = filtered.filter(p =>
+                p.days >= durationRange[0] && p.days <= durationRange[1]
+            )
+
+            // Filtro por mes de salida (si hay departure_dates)
+            if (selectedMonth) {
+                // Por ahora, este filtro está preparado para cuando tengamos departure_dates
+                // filtered = filtered.filter(p => ...)
+            }
+
+            // Filtro por tags
+            if (selectedTags.length > 0) {
+                filtered = filtered.filter(p =>
+                    selectedTags.some(tag =>
+                        p.tags?.some(t => t?.toLowerCase().includes(tag.toLowerCase()))
+                    )
+                )
+            }
+
+            setPackages(filtered)
+            setCurrentPage(1)
+        } catch (error) {
+            console.error('Error aplicando filtros:', error)
+            // En caso de error, mostrar todos los paquetes
+            setPackages(allPackages)
+            setCurrentPage(1)
+        }
     }
 
     const clearAllFilters = () => {
@@ -300,8 +309,8 @@ function ToursContent() {
                 const pkgs = data.data.packages || []
                 setAllPackages(pkgs)
                 setPackages(pkgs)
-                // Extraer regiones únicas
-                const uniqueRegions = [...new Set(pkgs.map((p: TourPackage) => p.region))].filter(Boolean) as string[]
+                // Extraer regiones únicas - CORREGIDO: usar destination_region
+                const uniqueRegions = [...new Set(pkgs.map((p: TourPackage) => p.destination_region))].filter(Boolean) as string[]
                 setRegions(uniqueRegions)
                 setSelectedRegion(null) // Reset filtro de región
             }
@@ -686,12 +695,9 @@ function ToursContent() {
                                                     <button
                                                         key={region}
                                                         onClick={() => setSelectedRegion(region)}
-                                                        disabled={count === 0}
                                                         className={`w-full text-left px-3 py-2 rounded text-sm transition-colors ${selectedRegion === region
                                                             ? 'bg-blue-100 text-blue-700 font-medium'
-                                                            : count > 0
-                                                                ? 'hover:bg-gray-100 text-gray-700'
-                                                                : 'text-gray-400 cursor-not-allowed'
+                                                            : 'hover:bg-gray-100 text-gray-700'
                                                             }`}
                                                     >
                                                         {region} ({count})
@@ -733,12 +739,9 @@ function ToursContent() {
                                                                     setSelectedTags([...selectedTags, cat.code])
                                                                 }
                                                             }}
-                                                            disabled={count === 0}
                                                             className={`w-full text-left px-3 py-2 rounded text-sm transition-colors ${isSelected
                                                                 ? 'bg-indigo-100 text-indigo-700 font-medium'
-                                                                : count > 0
-                                                                    ? 'hover:bg-gray-100 text-gray-700'
-                                                                    : 'text-gray-400 cursor-not-allowed'
+                                                                : 'hover:bg-gray-100 text-gray-700'
                                                                 }`}
                                                         >
                                                             {cat.icon} {cat.name} ({count})

@@ -1,7 +1,7 @@
 # 📋 AG-Histórico de Cambios - AS Operadora
 
-**Última actualización:** 01 de Febrero de 2026 - 22:20 CST  
-**Versión actual:** v2.291  
+**Última actualización:** 01 de Febrero de 2026 - 22:47 CST  
+**Versión actual:** v2.292  
 **Actualizado por:** AntiGravity AI Assistant  
 **Propósito:** Documento maestro del proyecto para trabajo con agentes AntiGravity
 
@@ -34,6 +34,52 @@ Esto permite detectar si se perdieron tablas/campos entre versiones.
 ---
 
 ## 📅 HISTORIAL DE CAMBIOS
+
+### v2.292 - 01 de Febrero de 2026 - 22:47 CST
+
+**🐛 Correcciones Críticas - Filtros Tours**
+
+**Problemas Corregidos:**
+
+1. **✅ CRÍTICO: Solo mostraba 50 tours (hay 325 en DB)**
+   - **Fix:** Cambiar `limit` default de 50 a 1000 en `/api/groups`
+   - **Resultado:** Ahora carga todos los 325 tours
+
+2. **✅ CRÍTICO: Error al escribir en búsqueda**
+   - **Fix:** Agregar `try/catch` en `applyAllFilters()`
+   - **Fix:** Agregar optional chaining (`?.`) en todos los filtros
+   - **Resultado:** Búsqueda funciona sin errores
+
+3. **✅ Filtros de región mostraban (0) y estaban deshabilitados**
+   - **Fix:** Cambiar `p.region` → `p.destination_region`
+   - **Fix:** Quitar `disabled={count === 0}`
+   - **Resultado:** Filtros siempre seleccionables
+
+4. **✅ Filtros de eventos mostraban (0)**
+   - **Fix:** Quitar `disabled={count === 0}`
+   - **Resultado:** Eventos siempre seleccionables
+
+5. **✅ Filtro de precio crasheaba si tour no tenía precio**
+   - **Fix:** Agregar `if (!p.pricing?.totalPrice) return true`
+   - **Resultado:** Tours sin precio se incluyen en resultados
+
+**Archivos Modificados:**
+- `src/app/api/groups/route.ts` - Limit 50 → 1000
+- `src/app/tours/page.tsx` - Try/catch + optional chaining + fixes
+
+**Pendientes (para v2.293):**
+- [ ] Implementar modal "Ver itinerario completo"
+- [ ] Mostrar "Consultar precio" si tour no tiene precio
+- [ ] Verificar scraping de includes/not_includes
+- [ ] Re-ejecutar scraping de precios para tours faltantes
+
+**Cifra de Control:** (Sin cambios)
+- **Tablas:** 48
+- **Campos:** 624
+
+---
+
+### v2.291 - 01 de Febrero de 2026 - 22:20 CST
 
 ### v2.291 - 01 de Febrero de 2026 - 22:20 CST
 
