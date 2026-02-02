@@ -1,6 +1,6 @@
 ﻿"use client"
 
-// Build: 31 Ene 2026 - v2.257 - Buscador de tours + Mapa interactivo
+// Build: 01 Feb 2026 - v2.267 - Integración Cotizaciones Tours + Centro Comunicación
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"

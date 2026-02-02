@@ -1,7 +1,7 @@
 # 📋 AG-Histórico de Cambios - AS Operadora
 
-**Última actualización:** 01 de Febrero de 2026 - 14:16 CST  
-**Versión actual:** v2.263  
+**Última actualización:** 01 de Febrero de 2026 - 20:25 CST  
+**Versión actual:** v2.267  
 **Actualizado por:** AntiGravity AI Assistant  
 **Propósito:** Documento maestro del proyecto para trabajo con agentes AntiGravity
 
@@ -34,6 +34,52 @@ Esto permite detectar si se perdieron tablas/campos entre versiones.
 ---
 
 ## 📅 HISTORIAL DE CAMBIOS
+
+### v2.267 - 01 de Febrero de 2026 - 20:25 CST
+
+**🔗 Integración: Cotizaciones de Tours → Centro de Comunicación**
+
+**Cambios:**
+
+1. **✅ API de Cotizaciones de Tours (`/api/tours/quote/route.ts`)**
+   - Integración automática con Centro de Comunicación
+   - Al crear cotización, ahora crea:
+     - Thread en `communication_threads` con tipo `inquiry`
+     - Mensaje automático de confirmación en `messages`
+     - Vinculación con `reference_type: 'tour_quote'` y `reference_id`
+   - Mensaje incluye: saludo personalizado, detalles de cotización, link de seguimiento
+
+2. **✅ Gestión de Cotizaciones (`/dashboard/quotes/page.tsx`)**
+   - Nueva columna **"Tipo"** con badges distintivos:
+     - 🔵 **Tour** (azul) - cotizaciones desde formulario público
+     - ⚫ **General** (gris) - cotizaciones manuales del admin
+   - Acciones diferenciadas por tipo:
+     - Tours: Botón "Ver" → abre `/cotizacion/[folio]`
+     - Generales: Botones "Editar", "PDF", "Enviar"
+   - Interfaz `Quote` actualizada con campo `source?: 'tour' | 'general'`
+   - Función `loadQuotes()` ahora carga ambas fuentes y las combina
+
+3. **✅ Nuevo Endpoint (`/api/tours/quote/list/route.ts`)**
+   - Lista todas las cotizaciones de tours desde `tour_quotes`
+   - Mapea campos al formato del dashboard
+
+**Flujo Completo:**
+```
+Cliente → /cotizar-tour → Cotización en tour_quotes → Thread en communication_threads → Mensaje en messages → Aparece en /dashboard/quotes + /comunicacion
+```
+
+**Archivos Modificados:**
+- `src/app/api/tours/quote/route.ts`
+- `src/app/dashboard/quotes/page.tsx`
+- `src/app/page.tsx`
+
+**Archivos Creados:**
+- `src/app/api/tours/quote/list/route.ts`
+
+**Cifra de Control:**
+- Tablas: 62 | Campos: ~620
+
+---
 
 ### v2.263 - 01 de Febrero de 2026 - 14:16 CST
 

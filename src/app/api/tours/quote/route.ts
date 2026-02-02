@@ -80,6 +80,82 @@ export async function POST(request: NextRequest) {
         const quoteId = result.rows[0].id
         const quoteFolio = result.rows[0].folio
 
+        // ============================================
+        // CREAR THREAD DE COMUNICACIÓN
+        // ============================================
+        try {
+            // Crear thread de comunicación para esta cotización
+            const threadResult = await query(`
+                INSERT INTO communication_threads (
+                    thread_type,
+                    subject,
+                    reference_type,
+                    reference_id,
+                    status,
+                    priority,
+                    tenant_id,
+                    created_at
+                ) VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())
+                RETURNING id
+            `, [
+                'inquiry',
+                `Cotización de Tour: ${tourName}`,
+                'tour_quote',
+                quoteId,
+                'active',
+                'normal',
+                1 // tenant_id
+            ])
+
+            const threadId = threadResult.rows[0].id
+
+            // Crear mensaje automático de confirmación
+            await query(`
+                INSERT INTO messages (
+                    thread_id,
+                    sender_type,
+                    sender_name,
+                    sender_email,
+                    body,
+                    message_type,
+                    status,
+                    tenant_id,
+                    created_at,
+                    sent_at
+                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), NOW())
+            `, [
+                threadId,
+                'system',
+                'AS Operadora',
+                'viajes@asoperadora.com',
+                `¡Hola ${contactName}!
+
+Hemos recibido tu solicitud de cotización para el tour "${tourName}".
+
+📋 Detalles de tu solicitud:
+• Folio: ${quoteFolio}
+• Tour: ${tourName}
+• Región: ${tourRegion}
+• Duración: ${tourDuration}
+• Personas: ${numPersonas}
+• Precio estimado: $${totalPrice.toLocaleString('es-MX')} USD
+
+Nuestro equipo revisará tu solicitud y te contactaremos pronto con una propuesta personalizada.
+
+Puedes dar seguimiento a tu cotización en: ${process.env.NEXT_PUBLIC_APP_URL || 'https://www.as-ope-viajes.company'}/cotizacion/${quoteFolio}
+
+¡Gracias por tu preferencia!`,
+                'text',
+                'sent',
+                1 // tenant_id
+            ])
+
+            console.log(`✅ Thread de comunicación creado (ID: ${threadId}) para cotización ${quoteFolio}`)
+        } catch (commError) {
+            console.error('⚠️ Error creando thread de comunicación:', commError)
+            // No fallar la cotización si falla la comunicación
+        }
+
         // Generar URL de seguimiento
         const trackingUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://www.as-ope-viajes.company'}/cotizacion/${quoteFolio}`
 

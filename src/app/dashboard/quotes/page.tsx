@@ -32,6 +32,7 @@ interface Quote {
   status: string
   created_at: string
   items?: QuoteItem[]
+  source?: 'tour' | 'general'
 }
 
 interface QuoteItem {
@@ -97,11 +98,38 @@ export default function QuotesPage() {
 
   const loadQuotes = async () => {
     try {
-      const res = await fetch('/api/quotes')
-      const data = await res.json()
-      if (data.success) {
-        setQuotes(data.data)
+      // Cargar cotizaciones generales
+      const resGeneral = await fetch('/api/quotes')
+      const dataGeneral = await resGeneral.json()
+
+      // Cargar cotizaciones de tours
+      const resTours = await fetch('/api/tours/quote/list')
+      const dataTours = await resTours.json()
+
+      const allQuotes = []
+
+      // Agregar cotizaciones generales con source
+      if (dataGeneral.success && dataGeneral.data) {
+        const generalQuotes = dataGeneral.data.map((q: any) => ({
+          ...q,
+          source: 'general'
+        }))
+        allQuotes.push(...generalQuotes)
       }
+
+      // Agregar cotizaciones de tours con source
+      if (dataTours.success && dataTours.data) {
+        const tourQuotes = dataTours.data.map((q: any) => ({
+          ...q,
+          source: 'tour'
+        }))
+        allQuotes.push(...tourQuotes)
+      }
+
+      // Ordenar por fecha de creación (más reciente primero)
+      allQuotes.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+
+      setQuotes(allQuotes)
     } catch (error) {
       console.error('Error loading quotes:', error)
     } finally {
@@ -388,6 +416,7 @@ export default function QuotesPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead>Tipo</TableHead>
                     <TableHead>Número</TableHead>
                     <TableHead>Cliente</TableHead>
                     <TableHead>Título</TableHead>
@@ -400,7 +429,12 @@ export default function QuotesPage() {
                 </TableHeader>
                 <TableBody>
                   {quotes.map((quote) => (
-                    <TableRow key={quote.id}>
+                    <TableRow key={`${quote.source}-${quote.id}`}>
+                      <TableCell>
+                        <Badge className={quote.source === 'tour' ? 'bg-blue-500' : 'bg-gray-500'}>
+                          {quote.source === 'tour' ? 'Tour' : 'General'}
+                        </Badge>
+                      </TableCell>
                       <TableCell className="font-mono font-semibold">{quote.quote_number}</TableCell>
                       <TableCell>
                         <div>
@@ -419,27 +453,41 @@ export default function QuotesPage() {
                       </TableCell>
                       <TableCell>
                         <div className="flex gap-2">
-                          <Button size="sm" variant="outline" onClick={() => handleEdit(quote)}>
-                            <Edit className="w-3 h-3 mr-1" />
-                            Editar
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleDownloadPDF(quote.id, quote.quote_number)}
-                          >
-                            <Download className="w-3 h-3 mr-1" />
-                            PDF
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleSendEmail(quote.id)}
-                            className="text-blue-600 border-blue-600 hover:bg-blue-50"
-                          >
-                            <Send className="w-3 h-3 mr-1" />
-                            Enviar
-                          </Button>
+                          {quote.source === 'general' && (
+                            <>
+                              <Button size="sm" variant="outline" onClick={() => handleEdit(quote)}>
+                                <Edit className="w-3 h-3 mr-1" />
+                                Editar
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleDownloadPDF(quote.id, quote.quote_number)}
+                              >
+                                <Download className="w-3 h-3 mr-1" />
+                                PDF
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleSendEmail(quote.id)}
+                                className="text-blue-600 border-blue-600 hover:bg-blue-50"
+                              >
+                                <Send className="w-3 h-3 mr-1" />
+                                Enviar
+                              </Button>
+                            </>
+                          )}
+                          {quote.source === 'tour' && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => window.open(`/cotizacion/${quote.quote_number}`, '_blank')}
+                            >
+                              <Eye className="w-3 h-3 mr-1" />
+                              Ver
+                            </Button>
+                          )}
                         </div>
                       </TableCell>
                     </TableRow>
@@ -475,7 +523,7 @@ export default function QuotesPage() {
                       <label className="block text-sm font-medium mb-2">Nombre completo *</label>
                       <Input
                         value={formData.customer_name}
-                        onChange={(e) => setFormData({...formData, customer_name: e.target.value})}
+                        onChange={(e) => setFormData({ ...formData, customer_name: e.target.value })}
                         placeholder="Juan Pérez García"
                       />
                     </div>
@@ -483,7 +531,7 @@ export default function QuotesPage() {
                       <label className="block text-sm font-medium mb-2">Empresa</label>
                       <Input
                         value={formData.customer_company}
-                        onChange={(e) => setFormData({...formData, customer_company: e.target.value})}
+                        onChange={(e) => setFormData({ ...formData, customer_company: e.target.value })}
                         placeholder="Empresa SA de CV"
                       />
                     </div>
@@ -492,7 +540,7 @@ export default function QuotesPage() {
                       <Input
                         type="email"
                         value={formData.customer_email}
-                        onChange={(e) => setFormData({...formData, customer_email: e.target.value})}
+                        onChange={(e) => setFormData({ ...formData, customer_email: e.target.value })}
                         placeholder="cliente@email.com"
                       />
                     </div>
@@ -500,7 +548,7 @@ export default function QuotesPage() {
                       <label className="block text-sm font-medium mb-2">Teléfono</label>
                       <Input
                         value={formData.customer_phone}
-                        onChange={(e) => setFormData({...formData, customer_phone: e.target.value})}
+                        onChange={(e) => setFormData({ ...formData, customer_phone: e.target.value })}
                         placeholder="+52 55 1234 5678"
                       />
                     </div>
@@ -518,7 +566,7 @@ export default function QuotesPage() {
                       <label className="block text-sm font-medium mb-2">Título de la cotización *</label>
                       <Input
                         value={formData.title}
-                        onChange={(e) => setFormData({...formData, title: e.target.value})}
+                        onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                         placeholder="Paquete Cancún Todo Incluido"
                       />
                     </div>
@@ -526,7 +574,7 @@ export default function QuotesPage() {
                       <label className="block text-sm font-medium mb-2">Destino</label>
                       <Input
                         value={formData.destination}
-                        onChange={(e) => setFormData({...formData, destination: e.target.value})}
+                        onChange={(e) => setFormData({ ...formData, destination: e.target.value })}
                         placeholder="Cancún, Q.Roo"
                       />
                     </div>
@@ -535,7 +583,7 @@ export default function QuotesPage() {
                       <select
                         className="w-full h-10 px-3 border rounded-md"
                         value={formData.trip_type}
-                        onChange={(e) => setFormData({...formData, trip_type: e.target.value})}
+                        onChange={(e) => setFormData({ ...formData, trip_type: e.target.value })}
                       >
                         <option value="flight">Solo vuelo</option>
                         <option value="hotel">Solo hotel</option>
@@ -549,7 +597,7 @@ export default function QuotesPage() {
                       <Input
                         type="date"
                         value={formData.travel_start_date}
-                        onChange={(e) => setFormData({...formData, travel_start_date: e.target.value})}
+                        onChange={(e) => setFormData({ ...formData, travel_start_date: e.target.value })}
                       />
                     </div>
                     <div>
@@ -557,7 +605,7 @@ export default function QuotesPage() {
                       <Input
                         type="date"
                         value={formData.travel_end_date}
-                        onChange={(e) => setFormData({...formData, travel_end_date: e.target.value})}
+                        onChange={(e) => setFormData({ ...formData, travel_end_date: e.target.value })}
                       />
                     </div>
                   </div>
