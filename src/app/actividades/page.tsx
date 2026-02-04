@@ -84,7 +84,7 @@ export default function ActividadesPage() {
     const router = useRouter()
     const { user, isAuthenticated } = useAuth()
     const [searchQuery, setSearchQuery] = useState("")
-    const [civitatis AgencyId, setCivitatisAgencyId] = useState("67114")
+    const [civitatisAgencyId, setCivitatisAgencyId] = useState("67114")
     const [showUserMenu, setShowUserMenu] = useState(false)
 
     // Cargar configuración de Civitatis
