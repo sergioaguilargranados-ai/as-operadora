@@ -1,6 +1,6 @@
 ﻿"use client"
 
-// Build: 04 Feb 2026 - v2.298 - FIX: Restaurar acentos en destinos (encoding UTF-8)
+// Build: 04 Feb 2026 - v2.299 - Actividades navega a /actividades, ocultar MXN, botones consistentes
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
@@ -612,7 +612,6 @@ export default function Home() {
                   </div>
                   <div className="hidden md:flex flex-col items-start">
                     <span className="text-sm font-medium">{user?.name.split(' ')[0]}</span>
-                    <span className="text-xs text-muted-foreground">MXN</span>
                   </div>
                 </button>
 
@@ -850,13 +849,13 @@ export default function Home() {
                       </TabsTrigger>
                     </FeatureGate>
                     <FeatureGate feature="SEARCH_ACTIVITIES">
-                      <TabsTrigger
-                        value="things"
-                        className="rounded-lg border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-white/80 px-3 md:px-4 py-2 flex items-center gap-1.5 text-sm"
+                      <button
+                        onClick={() => router.push('/actividades')}
+                        className="rounded-lg border-b-2 border-transparent hover:border-primary hover:bg-white/80 px-3 md:px-4 py-2 flex items-center gap-1.5 text-sm transition-colors"
                       >
                         <Activity className="w-4 h-4" />
                         <span>Actividades</span>
-                      </TabsTrigger>
+                      </button>
                     </FeatureGate>
                     <FeatureGate feature="SEARCH_INSURANCE">
                       <TabsTrigger
@@ -1022,7 +1021,7 @@ export default function Home() {
                             className="w-full"
                           >
                             <Button
-                              className="w-full h-12 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
+                              className="w-full h-12 bg-[#0066FF] hover:bg-[#0052CC] text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
                               onClick={handleSearchHotels}
                               disabled={loading}
                             >
@@ -2331,7 +2330,7 @@ export default function Home() {
                         onClick={() => router.push('/viajes-grupales')}
                       >
                         <Users className="w-5 h-5 mr-2" />
-                        Cotización para grupos (+10 personas)
+                        Cotización especial - Grupos Grandes
                       </Button>
                     </div>
                   </div>
@@ -2659,26 +2658,6 @@ export default function Home() {
                 ))}
               </div>
             )}
-            {/* CTA adicional */}
-            <div className="mt-6 flex flex-col sm:flex-row gap-4 justify-center">
-              <Button
-                size="lg"
-                className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-8"
-                onClick={() => router.push('/tours')}
-              >
-                <Globe className="w-5 h-5 mr-2" />
-                Explorar todos los tours
-              </Button>
-              <Button
-                size="lg"
-                variant="outline"
-                className="border-blue-600 text-blue-600 hover:bg-blue-50 px-8"
-                onClick={() => router.push('/viajes-grupales')}
-              >
-                <Users className="w-5 h-5 mr-2" />
-                Cotización para grupos (+10 personas)
-              </Button>
-            </div>
           </div>
 
           {/* Ofertas Especiales y Descuentos - OCULTO POR SETTING */}
@@ -3024,20 +3003,8 @@ export default function Home() {
             <p>© 2024 AS Operadora de Viajes y Eventos. Todos los derechos reservados.</p>
             <p className="text-xs mt-1">AS Viajando</p>
             <p className="text-xs mt-2 opacity-50">
-              v2.257 | Build: 31 Ene 2026, 19:15 CST
+              v2.298 | Build: 04 Feb 2026
             </p>
-            {dbInfo && (
-              <div className="text-xs mt-3 opacity-70 bg-slate-100 p-3 rounded inline-block">
-                <p className="font-mono">
-                  🗄️ BD: <span className="font-bold">{dbInfo.database}</span> |
-                  📍 Endpoint: <span className="font-bold">{dbInfo.endpoint}</span>
-                </p>
-                <p className="font-mono mt-1">
-                  👥 Usuarios: <span className="font-bold">{dbInfo.totalUsers}</span> |
-                  📦 Versión: <span className="font-bold">v2.248</span>
-                </p>
-              </div>
-            )}
           </div>
         </div>
       </footer >
