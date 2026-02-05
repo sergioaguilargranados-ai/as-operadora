@@ -2973,7 +2973,9 @@ export default function Home() {
             </div>
           )}
         </div>
-      </main>{/* Footer */}
+      </main>
+
+      {/* Footer */}
       
       {/* C�rculos flotantes - Chat y WhatsApp */}
       <div className="fixed bottom-6 right-6 flex flex-col gap-3 z-50">
