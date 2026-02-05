@@ -1,7 +1,7 @@
 # 📋 AG-Histórico de Cambios - AS Operadora
 
-**Última actualización:** 03 de Febrero de 2026 - 23:45 CST  
-**Versión actual:** v2.295  
+**Última actualización:** 04 de Febrero de 2026 - 19:50 CST  
+**Versión actual:** v2.296  
 **Actualizado por:** AntiGravity AI Assistant  
 **Propósito:** Documento maestro del proyecto para trabajo con agentes AntiGravity
 
@@ -34,6 +34,67 @@ Esto permite detectar si se perdieron tablas/campos entre versiones.
 ---
 
 ## 📅 HISTORIAL DE CAMBIOS
+
+### v2.296 - 04 de Febrero de 2026 - 19:50 CST
+
+**🎨 MEJORAS DE UI/UX - Look and Feel**
+
+**Objetivo:**
+Refinamiento visual de la página principal para mejorar la experiencia del usuario y ocultar temporalmente funcionalidades en desarrollo.
+
+**Cambios Implementados:**
+
+1. **✅ Header - Cenefa Principal**
+   - Ocultado botón "Obtén la app" (temporal, funcionalidad en desarrollo)
+   - Ocultado indicador "MXN" debajo del nombre de usuario (mostramos precios en USD)
+
+2. **✅ Buscador de Tours**
+   - Botón "Buscar" actualizado a color azul AS Operadora (#0066FF)
+   - Texto del botón en blanco para mejor contraste
+   - Hover state: #0052CC
+
+3. **✅ Botones de Acción - Tours Grupales**
+   - Botón "Ver catálogo completo" actualizado a color azul (#0066FF)
+   - Texto del botón "Cotización para grupos" cambiado a "Cotización especial - Grupos Grandes"
+   - Mantiene diseño outline blanco con letras azules
+
+4. **✅ Eliminación de Duplicados**
+   - Removidos botones duplicados después de la segunda lista de cards de tours
+   - Limpieza de código redundante
+
+5. **✅ Footer Simplificado**
+   - Ocultada información técnica de base de datos (endpoint, usuarios)
+   - Solo se mantienen los primeros 3 renglones esenciales
+   - Versión actualizada a v2.296
+
+6. **✅ Círculos Flotantes de Contacto**
+   - **Chat de Asistencia:** Círculo azul (#0066FF) con ícono de chat en blanco
+   - **WhatsApp:** Círculo verde con ícono de WhatsApp en blanco
+   - Posicionados en esquina inferior derecha
+   - Efectos hover con escala 1.1x
+   - Sombras suaves para mejor visibilidad
+   - Z-index 50 para estar siempre visibles
+
+**Archivos Modificados:**
+- `src/app/page.tsx` - Todos los cambios de UI
+
+**Paleta de Colores AS Operadora:**
+- Azul Principal: #0066FF
+- Azul Hover: #0052CC
+- Verde WhatsApp: #25D366 (green-500)
+- Blanco: #FFFFFF
+
+**Lecciones Aprendidas:**
+- Los círculos flotantes mejoran significativamente la accesibilidad al soporte
+- Ocultar funcionalidades en desarrollo evita confusión del usuario
+- La consistencia en colores refuerza la identidad de marca
+- Los botones flotantes deben tener z-index alto para evitar oclusión
+
+**Cifra de Control:**
+- **Tablas:** 48 (sin cambios)
+- **Campos:** 624 (sin cambios)
+
+---
 
 ### v2.295 - 03 de Febrero de 2026 - 23:45 CST
 
