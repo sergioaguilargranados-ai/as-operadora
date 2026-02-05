@@ -2973,8 +2973,7 @@ export default function Home() {
             </div>
           )}
         </div>
-      </main>
-      <footer className="bg-[#F7F7F7] mt-16 py-12">
+      </main><footer className="bg-[#F7F7F7] mt-16 py-12">
         <div className="container mx-auto px-4 max-w-6xl">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-8">
             <div>
