@@ -2262,7 +2262,7 @@ export default function Home() {
                               router.push(`/tours?search=${encodeURIComponent(tourSearch)}`)
                             }
                           }}
-                          className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full px-8 py-5 bg-blue-600 hover:bg-blue-700"
+                          className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full px-8 py-5 bg-[#0066FF] hover:bg-[#0052CC] text-white"
                         >
                           Buscar
                         </Button>
