@@ -118,29 +118,31 @@ export async function POST(request: NextRequest) {
     if (bookingResult.rows.length > 0) {
       const booking = bookingResult.rows[0]
 
-      // Enviar emails de confirmación
+      // Enviar correo de confirmación de pago con nuevo template
       try {
-        await emailService.sendPaymentConfirmation(
-          bookingId,
-          booking.customer_email,
-          booking.total_price,
-          booking.currency
-        )
-
-        await emailService.sendBookingConfirmation({
+        const { sendPaymentConfirmationEmail } = await import('@/lib/emailHelper');
+        await sendPaymentConfirmationEmail({
+          name: booking.customer_name,
+          email: booking.customer_email,
           bookingId: booking.id,
-          customerName: booking.customer_name,
-          customerEmail: booking.customer_email,
-          serviceName: booking.service_name,
-          totalPrice: booking.total_price,
-          currency: booking.currency,
-          bookingDate: booking.created_at,
-          details: booking.details || {}
-        })
+          amount: parseFloat(txn.amount),
+          currency: txn.currency,
+          paymentDate: new Date().toLocaleDateString('es-MX', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+          }),
+          paymentMethod: 'PayPal',
+          transactionId: orderId,
+          serviceName: booking.destination || booking.service_name,
+          travelDate: booking.details?.fecha_inicio || booking.details?.checkIn || '',
+          invoiceAvailable: true
+        });
 
-        console.log(`📧 Emails sent for booking #${bookingId}`)
+        console.log(`📧 Correo de confirmación de pago enviado para reserva #${bookingId}`);
       } catch (emailError) {
-        console.error('Error sending emails:', emailError)
+        console.error('⚠️ Error enviando correo de confirmación de pago:', emailError);
         // No fallar la transacción si el email falla
       }
     }

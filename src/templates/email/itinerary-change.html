@@ -1,0 +1,132 @@
+<div class="greeting">📢 Cambio en tu Itinerario</div>
+
+<div class="message">
+    Hola <strong>{{CUSTOMER_NAME}}</strong>,
+</div>
+
+<div class="message">
+    Te informamos que ha habido un cambio en tu reserva <strong>#{{BOOKING_ID}}</strong>. A continuación te detallamos
+    los cambios realizados.
+</div>
+
+<div class="highlight-box" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">
+    <div class="highlight-label">Reserva Modificada</div>
+    <div class="highlight-amount">#{{BOOKING_ID}}</div>
+    <div style="font-size: 14px; margin-top: 10px;">{{SERVICE_NAME}}</div>
+</div>
+
+<div class="info-box" style="background-color: #fef3c7; border-left-color: #f59e0b;">
+    <h2 style="color: #92400e;">Cambios Realizados</h2>
+
+    {{#if CHANGE_TYPE_FLIGHT}}
+    <div style="margin: 15px 0; padding: 15px; background: white; border-radius: 4px;">
+        <strong style="color: #92400e;">✈️ Cambio de Vuelo</strong>
+        <div style="margin-top: 10px; color: #78350f;">
+            <div><strong>Antes:</strong> {{OLD_FLIGHT_INFO}}</div>
+            <div><strong>Ahora:</strong> {{NEW_FLIGHT_INFO}}</div>
+        </div>
+    </div>
+    {{/if}}
+
+    {{#if CHANGE_TYPE_HOTEL}}
+    <div style="margin: 15px 0; padding: 15px; background: white; border-radius: 4px;">
+        <strong style="color: #92400e;">🏨 Cambio de Hotel</strong>
+        <div style="margin-top: 10px; color: #78350f;">
+            <div><strong>Antes:</strong> {{OLD_HOTEL_INFO}}</div>
+            <div><strong>Ahora:</strong> {{NEW_HOTEL_INFO}}</div>
+        </div>
+    </div>
+    {{/if}}
+
+    {{#if CHANGE_TYPE_DATE}}
+    <div style="margin: 15px 0; padding: 15px; background: white; border-radius: 4px;">
+        <strong style="color: #92400e;">📅 Cambio de Fecha</strong>
+        <div style="margin-top: 10px; color: #78350f;">
+            <div><strong>Antes:</strong> {{OLD_DATE}}</div>
+            <div><strong>Ahora:</strong> {{NEW_DATE}}</div>
+        </div>
+    </div>
+    {{/if}}
+
+    {{#if CHANGE_DESCRIPTION}}
+    <div style="margin: 15px 0; padding: 15px; background: white; border-radius: 4px;">
+        <strong style="color: #92400e;">📝 Detalles del Cambio</strong>
+        <div style="margin-top: 10px; color: #78350f;">
+            {{CHANGE_DESCRIPTION}}
+        </div>
+    </div>
+    {{/if}}
+</div>
+
+<div class="info-box">
+    <h2>Información Actualizada de tu Reserva</h2>
+
+    <div class="info-row">
+        <span class="info-label">Servicio:</span>
+        <span class="info-value">{{SERVICE_NAME}}</span>
+    </div>
+
+    <div class="info-row">
+        <span class="info-label">Fecha de Viaje:</span>
+        <span class="info-value">{{TRAVEL_DATE}}</span>
+    </div>
+
+    <div class="info-row">
+        <span class="info-label">Pasajeros:</span>
+        <span class="info-value">{{PASSENGERS}}</span>
+    </div>
+
+    <div class="info-row">
+        <span class="info-label">Estado:</span>
+        <span class="info-value" style="color: #10b981; font-weight: 600;">✓ Confirmada</span>
+    </div>
+</div>
+
+{{#if PRICE_CHANGE}}
+<div class="highlight-box" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+    <div class="highlight-label">Nuevo Precio Total</div>
+    <div class="highlight-amount">{{TOTAL_PRICE}} {{CURRENCY}}</div>
+    {{#if PRICE_DIFFERENCE}}
+    <div style="font-size: 14px; margin-top: 10px;">
+        {{#if PRICE_INCREASE}}
+        Diferencia a pagar: +{{PRICE_DIFFERENCE}} {{CURRENCY}}
+        {{/if}}
+        {{#if PRICE_DECREASE}}
+        Reembolso: {{PRICE_DIFFERENCE}} {{CURRENCY}}
+        {{/if}}
+    </div>
+    {{/if}}
+</div>
+{{/if}}
+
+<div class="message">
+    <strong>📋 ¿Qué sigue?</strong>
+</div>
+
+<div class="info-box" style="background-color: #e0f2fe; border-left-color: #0066FF;">
+    <ul style="margin: 0; padding-left: 20px; color: #0c4a6e;">
+        <li style="margin-bottom: 10px;">Recibirás tus documentos actualizados en las próximas 24 horas</li>
+        <li style="margin-bottom: 10px;">No necesitas hacer nada, el cambio ya está confirmado</li>
+        <li style="margin-bottom: 10px;">Si tienes dudas, contáctanos inmediatamente</li>
+        {{#if PRICE_INCREASE}}
+        <li>El cargo adicional se procesará automáticamente</li>
+        {{/if}}
+        {{#if PRICE_DECREASE}}
+        <li>El reembolso se procesará en 5-7 días hábiles</li>
+        {{/if}}
+    </ul>
+</div>
+
+<div style="text-align: center; margin: 30px 0;">
+    <a href="{{APP_URL}}/mis-reservas/{{BOOKING_ID}}" class="button">Ver Reserva Actualizada</a>
+    <br><br>
+    <a href="{{APP_URL}}/contacto" class="button button-secondary">Contactar Soporte</a>
+</div>
+
+<div class="message" style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e2e8f0;">
+    <strong>Motivo del cambio:</strong> {{CHANGE_REASON}}
+</div>
+
+<div class="message" style="font-size: 14px; color: #64748b;">
+    Lamentamos cualquier inconveniente. Nuestro equipo trabajó para minimizar el impacto en tu viaje.
+</div>

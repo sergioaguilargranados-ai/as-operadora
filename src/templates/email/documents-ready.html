@@ -1,0 +1,149 @@
+<div class="greeting">📄 Tus Documentos de Viaje están Listos</div>
+
+<div class="message">
+    Hola <strong>{{CUSTOMER_NAME}}</strong>,
+</div>
+
+<div class="message">
+    ¡Excelentes noticias! Tus documentos de viaje para la reserva <strong>#{{BOOKING_ID}}</strong> ya están disponibles
+    para descargar.
+</div>
+
+<div class="highlight-box">
+    <div class="highlight-label">Reserva</div>
+    <div class="highlight-amount">#{{BOOKING_ID}}</div>
+    <div style="font-size: 14px; margin-top: 10px;">{{SERVICE_NAME}}</div>
+</div>
+
+<div class="info-box">
+    <h2>📋 Documentos Disponibles</h2>
+
+    <div style="margin: 15px 0;">
+        {{#if HAS_FLIGHT_TICKETS}}
+        <div style="padding: 12px; background: #f0f9ff; border-radius: 4px; margin-bottom: 10px;">
+            <strong style="color: #0066FF;">✈️ Boletos de Avión</strong>
+            <div style="font-size: 14px; color: #64748b; margin-top: 5px;">
+                Incluye todos los vuelos de tu itinerario
+            </div>
+        </div>
+        {{/if}}
+
+        {{#if HAS_HOTEL_VOUCHERS}}
+        <div style="padding: 12px; background: #f0f9ff; border-radius: 4px; margin-bottom: 10px;">
+            <strong style="color: #0066FF;">🏨 Vouchers de Hotel</strong>
+            <div style="font-size: 14px; color: #64748b; margin-top: 5px;">
+                Confirmaciones de todas tus reservas de hotel
+            </div>
+        </div>
+        {{/if}}
+
+        {{#if HAS_TOUR_VOUCHERS}}
+        <div style="padding: 12px; background: #f0f9ff; border-radius: 4px; margin-bottom: 10px;">
+            <strong style="color: #0066FF;">🎫 Vouchers de Tours</strong>
+            <div style="font-size: 14px; color: #64748b; margin-top: 5px;">
+                Confirmaciones de actividades y excursiones
+            </div>
+        </div>
+        {{/if}}
+
+        {{#if HAS_TRANSFER_VOUCHERS}}
+        <div style="padding: 12px; background: #f0f9ff; border-radius: 4px; margin-bottom: 10px;">
+            <strong style="color: #0066FF;">🚗 Vouchers de Traslados</strong>
+            <div style="font-size: 14px; color: #64748b; margin-top: 5px;">
+                Confirmaciones de transporte terrestre
+            </div>
+        </div>
+        {{/if}}
+
+        {{#if HAS_INSURANCE}}
+        <div style="padding: 12px; background: #f0f9ff; border-radius: 4px; margin-bottom: 10px;">
+            <strong style="color: #0066FF;">🛡️ Seguro de Viaje</strong>
+            <div style="font-size: 14px; color: #64748b; margin-top: 5px;">
+                Póliza y números de emergencia
+            </div>
+        </div>
+        {{/if}}
+
+        {{#if HAS_ITINERARY}}
+        <div style="padding: 12px; background: #f0f9ff; border-radius: 4px; margin-bottom: 10px;">
+            <strong style="color: #0066FF;">📅 Itinerario Completo</strong>
+            <div style="font-size: 14px; color: #64748b; margin-top: 5px;">
+                Día a día de tu viaje con todos los detalles
+            </div>
+        </div>
+        {{/if}}
+    </div>
+</div>
+
+<div class="info-box">
+    <h2>Detalles de tu Viaje</h2>
+
+    <div class="info-row">
+        <span class="info-label">Destino:</span>
+        <span class="info-value">{{DESTINATION}}</span>
+    </div>
+
+    <div class="info-row">
+        <span class="info-label">Fecha de Salida:</span>
+        <span class="info-value">{{DEPARTURE_DATE}}</span>
+    </div>
+
+    <div class="info-row">
+        <span class="info-label">Fecha de Regreso:</span>
+        <span class="info-value">{{RETURN_DATE}}</span>
+    </div>
+
+    <div class="info-row">
+        <span class="info-label">Pasajeros:</span>
+        <span class="info-value">{{PASSENGERS}}</span>
+    </div>
+</div>
+
+<div style="text-align: center; margin: 30px 0;">
+    <a href="{{APP_URL}}/mis-reservas/{{BOOKING_ID}}/documentos" class="button">Descargar Documentos</a>
+    <br><br>
+    <a href="{{APP_URL}}/mis-reservas/{{BOOKING_ID}}" class="button button-secondary">Ver Reserva Completa</a>
+</div>
+
+<div class="message">
+    <strong>📱 Recomendaciones Importantes:</strong>
+</div>
+
+<div class="info-box" style="background-color: #fef3c7; border-left-color: #f59e0b;">
+    <ol style="margin: 0; padding-left: 20px; color: #92400e;">
+        <li style="margin-bottom: 10px;"><strong>Imprime tus documentos</strong> - Lleva copias físicas como respaldo
+        </li>
+        <li style="margin-bottom: 10px;"><strong>Guarda copias digitales</strong> - Ten los PDFs en tu celular</li>
+        <li style="margin-bottom: 10px;"><strong>Verifica tus datos</strong> - Asegúrate que nombres coincidan con tu ID
+        </li>
+        <li style="margin-bottom: 10px;"><strong>Llega con anticipación</strong> - Al aeropuerto 3 horas antes
+            (internacional)</li>
+        <li><strong>Revisa requisitos</strong> - Visa, pasaporte, vacunas según destino</li>
+    </ol>
+</div>
+
+<div class="message" style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e2e8f0;">
+    <strong>📞 Números de Emergencia 24/7:</strong>
+</div>
+
+<div class="info-box" style="background-color: #e0f2fe; border-left-color: #0066FF;">
+    <div style="text-align: center;">
+        <div style="margin: 10px 0;">
+            <strong>México:</strong> <a href="tel:+527208156804" style="color: #0066FF; text-decoration: none;">+52 720
+                815 6804</a>
+        </div>
+        <div style="margin: 10px 0;">
+            <strong>WhatsApp:</strong> <a href="https://wa.me/527208156804"
+                style="color: #0066FF; text-decoration: none;">720 815 6804</a>
+        </div>
+        <div style="margin: 10px 0;">
+            <strong>Email:</strong> <a href="mailto:emergencias@asoperadora.com"
+                style="color: #0066FF; text-decoration: none;">emergencias@asoperadora.com</a>
+        </div>
+    </div>
+</div>
+
+<div class="message" style="font-size: 14px; color: #64748b; text-align: center; margin-top: 20px;">
+    <strong>¡Buen viaje! 🌍✈️</strong><br>
+    Estamos aquí para ti en cada paso del camino
+</div>

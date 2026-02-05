@@ -1,0 +1,99 @@
+<div class="greeting">Tu Cotización Está Lista 📋</div>
+
+<div class="message">
+    Hola <strong>{{CUSTOMER_NAME}}</strong>,
+</div>
+
+<div class="message">
+    Hemos preparado una cotización personalizada basada en tus preferencias. Aquí están los detalles:
+</div>
+
+<div class="highlight-box">
+    <div class="highlight-label">Cotización</div>
+    <div class="highlight-amount">#{{QUOTE_ID}}</div>
+    <div style="font-size: 14px; margin-top: 10px;">Válida hasta: {{EXPIRY_DATE}}</div>
+</div>
+
+<div class="info-box">
+    <h2>Detalles del Viaje</h2>
+
+    <div class="info-row">
+        <span class="info-label">Destino:</span>
+        <span class="info-value">{{DESTINATION}}</span>
+    </div>
+
+    <div class="info-row">
+        <span class="info-label">Fechas:</span>
+        <span class="info-value">{{TRAVEL_DATES}}</span>
+    </div>
+
+    <div class="info-row">
+        <span class="info-label">Duración:</span>
+        <span class="info-value">{{DURATION}}</span>
+    </div>
+
+    <div class="info-row">
+        <span class="info-label">Pasajeros:</span>
+        <span class="info-value">{{PASSENGERS}}</span>
+    </div>
+
+    {{#if ROOM_TYPE}}
+    <div class="info-row">
+        <span class="info-label">Tipo de Habitación:</span>
+        <span class="info-value">{{ROOM_TYPE}}</span>
+    </div>
+    {{/if}}
+</div>
+
+{{#if INCLUSIONS}}
+<div class="info-box" style="background-color: #f0fdf4; border-left-color: #10b981;">
+    <h2 style="color: #047857;">✅ Incluye</h2>
+    <ul style="margin: 10px 0; padding-left: 20px; color: #065f46;">
+        {{#each INCLUSIONS}}
+        <li style="margin-bottom: 8px;">{{this}}</li>
+        {{/each}}
+    </ul>
+</div>
+{{/if}}
+
+<div class="highlight-box" style="background: linear-gradient(135deg, #0066FF 0%, #0052CC 100%);">
+    <div class="highlight-label">Precio Total</div>
+    <div class="highlight-amount">{{TOTAL_PRICE}} {{CURRENCY}}</div>
+    <div style="font-size: 14px; margin-top: 10px;">{{PRICE_PER_PERSON}} por persona</div>
+</div>
+
+{{#if PAYMENT_PLAN}}
+<div class="info-box">
+    <h2>Plan de Pagos</h2>
+
+    {{#each PAYMENT_PLAN}}
+    <div class="info-row">
+        <span class="info-label">{{this.label}}:</span>
+        <span class="info-value">{{this.amount}} {{../CURRENCY}}</span>
+    </div>
+    {{/each}}
+</div>
+{{/if}}
+
+<div class="info-box" style="background-color: #fef3c7; border-left-color: #f59e0b;">
+    <h2 style="color: #92400e;">⏰ Importante</h2>
+    <div class="message" style="color: #92400e; margin: 0;">
+        Esta cotización es válida hasta el <strong>{{EXPIRY_DATE}}</strong>.<br>
+        Los precios están sujetos a disponibilidad y pueden cambiar.
+    </div>
+</div>
+
+<div style="text-align: center; margin: 30px 0;">
+    <a href="{{APP_URL}}/cotizaciones/{{QUOTE_ID}}/aceptar" class="button">Aceptar Cotización</a>
+    <br><br>
+    <a href="{{APP_URL}}/cotizaciones/{{QUOTE_ID}}" class="button button-secondary">Ver Detalles Completos</a>
+</div>
+
+<div class="message" style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e2e8f0;">
+    <strong>¿Necesitas ajustes?</strong><br>
+    Si deseas modificar algún detalle de esta cotización, contáctanos y con gusto la ajustaremos a tus necesidades.
+</div>
+
+<div class="message" style="font-size: 14px; color: #64748b;">
+    <strong>Tip:</strong> Reserva pronto para asegurar los mejores precios y disponibilidad. Los cupos son limitados.
+</div>

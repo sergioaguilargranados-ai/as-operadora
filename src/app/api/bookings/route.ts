@@ -123,6 +123,34 @@ export async function POST(request: NextRequest) {
       created_at: booking.created_at
     }
 
+    // Enviar correo de confirmación de reserva
+    if (booking.lead_traveler_email) {
+      try {
+        const { sendBookingConfirmationEmail } = await import('@/lib/emailHelper');
+        await sendBookingConfirmationEmail({
+          name: booking.lead_traveler_name,
+          email: booking.lead_traveler_email,
+          bookingId: booking.id,
+          serviceName: booking.destination,
+          bookingDate: new Date().toLocaleDateString('es-MX', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+          }),
+          travelDate: details?.fecha_inicio || details?.checkIn || '',
+          passengers: booking.adults || 1,
+          destination: booking.destination,
+          totalPrice: parseFloat(booking.total_price) || 0,
+          currency: booking.currency
+        });
+        console.log('📧 Correo de confirmación de reserva enviado a:', booking.lead_traveler_email);
+      } catch (emailError) {
+        console.error('⚠️ Error enviando correo de confirmación de reserva:', emailError);
+        // No fallar la reserva si el correo falla
+      }
+    }
+
     return NextResponse.json(
       successResponse({ booking: payload, id: booking.id }),
       { status: 201, headers: { 'X-API-Version': '1.0' } }

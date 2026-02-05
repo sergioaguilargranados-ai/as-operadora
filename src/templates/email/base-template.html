@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>{{SUBJECT}}</title>
+  <!--[if mso]>
+  <style type="text/css">
+    body, table, td {font-family: Arial, sans-serif !important;}
+  </style>
+  <![endif]-->
+  <style>
+    /* Reset */
+    body,
+    table,
+    td,
+    a {
+      -webkit-text-size-adjust: 100%;
+      -ms-text-size-adjust: 100%;
+    }
+
+    table,
+    td {
+      mso-table-lspace: 0pt;
+      mso-table-rspace: 0pt;
+    }
+
+    img {
+      -ms-interpolation-mode: bicubic;
+      border: 0;
+      height: auto;
+      line-height: 100%;
+      outline: none;
+      text-decoration: none;
+    }
+
+    /* Base */
+    body {
+      margin: 0;
+      padding: 0;
+      width: 100% !important;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      background-color: #f8f9fa;
+    }
+
+    /* Container */
+    .email-container {
+      max-width: 600px;
+      margin: 0 auto;
+      background-color: #ffffff;
+    }
+
+    /* Header */
+    .header {
+      background: linear-gradient(to bottom right, #f8f9fa 0%, #ffffff 50%, #f0f9ff 100%);
+      padding: 30px 30px 20px 30px;
+      border-bottom: 1px solid #e5e7eb;
+    }
+
+    /* Logo - Igual que en la página */
+    .logo-container {
+      display: inline-block;
+    }
+
+    .logo-main {
+      font-family: Georgia, serif;
+      font-size: 40px;
+      font-weight: bold;
+      letter-spacing: -0.05em;
+      line-height: 1;
+      color: #000000;
+      margin-bottom: 4px;
+    }
+
+    .logo-subtitle {
+      font-family: Georgia, serif;
+      font-size: 10px;
+      letter-spacing: 0.15em;
+      font-weight: 500;
+      text-transform: uppercase;
+      color: #000000;
+      line-height: 1.2;
+      margin-bottom: 2px;
+    }
+
+    .logo-tagline {
+      font-family: Georgia, serif;
+      font-size: 10px;
+      color: #374151;
+      line-height: 1.2;
+    }
+
+    /* Content */
+    .content {
+      padding: 40px 30px;
+      color: #1f2937;
+      line-height: 1.6;
+    }
+
+    .greeting {
+      font-size: 20px;
+      font-weight: 600;
+      color: #111827;
+      margin-bottom: 20px;
+    }
+
+    .message {
+      font-size: 15px;
+      color: #4b5563;
+      margin-bottom: 20px;
+    }
+
+    /* Info Box */
+    .info-box {
+      background-color: #f9fafb;
+      border-left: 4px solid #0066FF;
+      padding: 20px;
+      margin: 25px 0;
+      border-radius: 4px;
+    }
+
+    .info-box h2 {
+      margin: 0 0 15px 0;
+      color: #0066FF;
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 10px 0;
+      border-bottom: 1px solid #e5e7eb;
+    }
+
+    .info-row:last-child {
+      border-bottom: none;
+    }
+
+    .info-label {
+      font-weight: 600;
+      color: #6b7280;
+      font-size: 14px;
+    }
+
+    .info-value {
+      color: #111827;
+      font-size: 14px;
+      text-align: right;
+    }
+
+    /* Button */
+    .button {
+      display: inline-block;
+      background: linear-gradient(135deg, #0066FF 0%, #0052CC 100%);
+      color: #ffffff !important;
+      padding: 14px 32px;
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 15px;
+      margin: 20px 0;
+      box-shadow: 0 4px 6px rgba(0, 102, 255, 0.2);
+      transition: all 0.3s ease;
+    }
+
+    .button:hover {
+      box-shadow: 0 6px 12px rgba(0, 102, 255, 0.3);
+      transform: translateY(-2px);
+    }
+
+    .button-secondary {
+      background: #ffffff;
+      color: #0066FF !important;
+      border: 2px solid #0066FF;
+      box-shadow: none;
+    }
+
+    /* Highlight Box */
+    .highlight-box {
+      background: linear-gradient(135deg, #0066FF 0%, #0052CC 100%);
+      color: #ffffff;
+      padding: 25px;
+      border-radius: 8px;
+      text-align: center;
+      margin: 25px 0;
+    }
+
+    .highlight-amount {
+      font-size: 36px;
+      font-weight: bold;
+      margin: 10px 0;
+    }
+
+    .highlight-label {
+      font-size: 14px;
+      color: #E3F2FD;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    /* Footer - Compacto y horizontal */
+    .footer {
+      background-color: #f3f4f6;
+      padding: 18px 30px;
+      text-align: center;
+      color: #6b7280;
+      font-size: 12px;
+      border-top: 1px solid #e5e7eb;
+    }
+
+    .footer-main {
+      display: inline-block;
+      margin-bottom: 10px;
+    }
+
+    .footer-brand {
+      font-family: Georgia, serif;
+      color: #111827;
+      font-size: 14px;
+      font-weight: bold;
+      letter-spacing: -0.02em;
+      display: inline;
+    }
+
+    .footer-separator {
+      color: #d1d5db;
+      margin: 0 8px;
+      font-weight: 300;
+    }
+
+    .footer-contact {
+      display: inline;
+    }
+
+    .footer-contact a {
+      color: #374151;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+
+    .footer-contact a:hover {
+      color: #111827;
+      text-decoration: underline;
+    }
+
+    .footer-icon {
+      margin-right: 3px;
+    }
+
+    .footer-legal {
+      font-size: 10px;
+      color: #9ca3af;
+      margin-top: 10px;
+      line-height: 1.4;
+    }
+
+    .footer-legal a {
+      color: #6b7280;
+      text-decoration: none;
+    }
+
+    .footer-legal a:hover {
+      color: #374151;
+      text-decoration: underline;
+    }
+
+    /* Responsive */
+    @media only screen and (max-width: 600px) {
+      .email-container {
+        width: 100% !important;
+      }
+
+      .header,
+      .content,
+      .footer {
+        padding: 25px 20px !important;
+      }
+
+      .logo-main {
+        font-size: 32px;
+      }
+
+      .info-row {
+        flex-direction: column;
+      }
+
+      .info-value {
+        text-align: left;
+        margin-top: 5px;
+      }
+
+      .highlight-amount {
+        font-size: 28px;
+      }
+
+      .button {
+        display: block;
+        text-align: center;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color: #f8f9fa;">
+    <tr>
+      <td style="padding: 20px 0;">
+        <table role="presentation" class="email-container" cellspacing="0" cellpadding="0" border="0" width="600"
+          align="center">
+
+          <!-- HEADER -->
+          <tr>
+            <td class="header">
+              <div class="logo-container">
+                <div class="logo-main">AS</div>
+                <div class="logo-subtitle">AS OPERADORA DE VIAJES Y EVENTOS</div>
+                <div class="logo-tagline">AS Viajando</div>
+              </div>
+            </td>
+          </tr>
+
+          <!-- CONTENT -->
+          <tr>
+            <td class="content">
+              {{CONTENT}}
+            </td>
+          </tr>
+
+          <!-- FOOTER -->
+          <tr>
+            <td class="footer">
+              <div class="footer-main">
+                <span class="footer-brand">AS Operadora</span>
+                <span class="footer-separator">|</span>
+                <div class="footer-contact">
+                  <a href="mailto:contacto@asoperadora.com"><span
+                      class="footer-icon">📧</span>contacto@asoperadora.com</a>
+                  <span class="footer-separator">|</span>
+                  <a href="tel:+527208156804"><span class="footer-icon">📱</span>720 815 6804</a>
+                  <span class="footer-separator">|</span>
+                  <a href="https://wa.me/527208156804" target="_blank"><span class="footer-icon">💬</span>WhatsApp</a>
+                </div>
+              </div>
+
+              <div class="footer-legal">
+                <a href="{{UNSUBSCRIBE_URL}}">Cancelar suscripción</a> |
+                <a href="https://app.asoperadora.com/privacidad">Aviso de Privacidad</a> |
+                © 2026 AS Operadora
+              </div>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+
+</html>

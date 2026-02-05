@@ -1,0 +1,59 @@
+<div class="greeting">⏰ Tu cotización está por expirar</div>
+
+<div class="message">
+    Hola <strong>{{CUSTOMER_NAME}}</strong>,
+</div>
+
+<div class="message">
+    Te recordamos que tu cotización <strong>#{{QUOTE_ID}}</strong> está próxima a expirar. No pierdas esta oportunidad
+    de asegurar tu viaje a <strong>{{DESTINATION}}</strong>.
+</div>
+
+<div class="highlight-box" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">
+    <div class="highlight-label">Cotización</div>
+    <div class="highlight-amount">#{{QUOTE_ID}}</div>
+    <div style="font-size: 14px; margin-top: 10px;">Expira: {{EXPIRY_DATE}}</div>
+</div>
+
+<div class="info-box">
+    <h2>Resumen de tu Cotización</h2>
+
+    <div class="info-row">
+        <span class="info-label">Destino:</span>
+        <span class="info-value">{{DESTINATION}}</span>
+    </div>
+
+    <div class="info-row">
+        <span class="info-label">Fechas:</span>
+        <span class="info-value">{{TRAVEL_DATES}}</span>
+    </div>
+
+    <div class="info-row">
+        <span class="info-label">Pasajeros:</span>
+        <span class="info-value">{{PASSENGERS}}</span>
+    </div>
+
+    <div class="info-row">
+        <span class="info-label">Precio Total:</span>
+        <span class="info-value" style="color: #0066FF; font-weight: 600;">{{TOTAL_PRICE}} {{CURRENCY}}</span>
+    </div>
+</div>
+
+<div class="message">
+    <strong>⚠️ Importante:</strong> Esta cotización expira el <strong>{{EXPIRY_DATE}}</strong>. Después de esta fecha,
+    los precios pueden cambiar según disponibilidad.
+</div>
+
+<div style="text-align: center; margin: 30px 0;">
+    <a href="{{APP_URL}}/cotizaciones/{{QUOTE_ID}}" class="button">Aceptar Cotización</a>
+    <br><br>
+    <a href="{{APP_URL}}/contacto" class="button button-secondary">Tengo Preguntas</a>
+</div>
+
+<div class="message" style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e2e8f0;">
+    ¿Necesitas modificar algo? Nuestro equipo está listo para ayudarte a personalizar tu viaje.
+</div>
+
+<div class="message" style="font-size: 14px; color: #64748b;">
+    <strong>Tip:</strong> Reservar con anticipación te garantiza mejores precios y mayor disponibilidad.
+</div>

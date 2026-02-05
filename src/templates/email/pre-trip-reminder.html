@@ -1,0 +1,184 @@
+<div class="greeting">✈️ ¡Tu viaje está próximo!</div>
+
+<div class="message">
+    Hola <strong>{{CUSTOMER_NAME}}</strong>,
+</div>
+
+<div class="message">
+    ¡Qué emoción! Tu viaje a <strong>{{DESTINATION}}</strong> está a solo <strong>{{DAYS_UNTIL_TRIP}} días</strong>.
+    Aquí te compartimos información importante para que todo salga perfecto.
+</div>
+
+<div class="highlight-box">
+    <div class="highlight-label">Salida en</div>
+    <div class="highlight-amount">{{DAYS_UNTIL_TRIP}} días</div>
+    <div style="font-size: 16px; margin-top: 10px;">{{DEPARTURE_DATE}}</div>
+</div>
+
+<div class="info-box">
+    <h2>📋 Checklist Pre-Viaje</h2>
+
+    <div style="margin: 15px 0;">
+        <div style="padding: 12px; background: #f0fdf4; border-left: 3px solid #10b981; margin-bottom: 10px;">
+            <strong style="color: #065f46;">✓ Documentos</strong>
+            <ul style="margin: 5px 0 0 20px; color: #064e3b;">
+                <li>Pasaporte vigente (mínimo 6 meses)</li>
+                <li>Visa (si aplica para {{DESTINATION}})</li>
+                <li>Boletos de avión impresos</li>
+                <li>Vouchers de hotel y tours</li>
+                <li>Seguro de viaje</li>
+            </ul>
+        </div>
+
+        <div style="padding: 12px; background: #f0fdf4; border-left: 3px solid #10b981; margin-bottom: 10px;">
+            <strong style="color: #065f46;">✓ Salud</strong>
+            <ul style="margin: 5px 0 0 20px; color: #064e3b;">
+                <li>Vacunas requeridas (si aplica)</li>
+                <li>Medicamentos personales</li>
+                <li>Botiquín básico</li>
+                {{#if COVID_REQUIREMENTS}}
+                <li>Certificado COVID-19: {{COVID_REQUIREMENTS}}</li>
+                {{/if}}
+            </ul>
+        </div>
+
+        <div style="padding: 12px; background: #f0fdf4; border-left: 3px solid #10b981; margin-bottom: 10px;">
+            <strong style="color: #065f46;">✓ Dinero</strong>
+            <ul style="margin: 5px 0 0 20px; color: #064e3b;">
+                <li>Tarjetas de crédito/débito</li>
+                <li>Efectivo en moneda local</li>
+                <li>Avisar a tu banco sobre el viaje</li>
+            </ul>
+        </div>
+
+        <div style="padding: 12px; background: #f0fdf4; border-left: 3px solid #10b981; margin-bottom: 10px;">
+            <strong style="color: #065f46;">✓ Equipaje</strong>
+            <ul style="margin: 5px 0 0 20px; color: #064e3b;">
+                <li>Verifica límites de peso: {{BAGGAGE_ALLOWANCE}}</li>
+                <li>Artículos prohibidos en cabina</li>
+                <li>Adaptadores de corriente</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<div class="info-box">
+    <h2>Información de tu Vuelo</h2>
+
+    <div class="info-row">
+        <span class="info-label">Aerolínea:</span>
+        <span class="info-value">{{AIRLINE}}</span>
+    </div>
+
+    <div class="info-row">
+        <span class="info-label">Vuelo:</span>
+        <span class="info-value">{{FLIGHT_NUMBER}}</span>
+    </div>
+
+    <div class="info-row">
+        <span class="info-label">Salida:</span>
+        <span class="info-value">{{DEPARTURE_TIME}} - {{DEPARTURE_AIRPORT}}</span>
+    </div>
+
+    <div class="info-row">
+        <span class="info-label">Llegada:</span>
+        <span class="info-value">{{ARRIVAL_TIME}} - {{ARRIVAL_AIRPORT}}</span>
+    </div>
+
+    <div class="info-row">
+        <span class="info-label">Check-in:</span>
+        <span class="info-value">{{CHECKIN_INFO}}</span>
+    </div>
+</div>
+
+<div class="info-box" style="background-color: #fef3c7; border-left-color: #f59e0b;">
+    <h2 style="color: #92400e;">⚠️ Recomendaciones del Destino</h2>
+
+    {{#if WEATHER_INFO}}
+    <div style="margin: 10px 0;">
+        <strong style="color: #78350f;">🌤️ Clima:</strong> {{WEATHER_INFO}}
+    </div>
+    {{/if}}
+
+    {{#if TIMEZONE_INFO}}
+    <div style="margin: 10px 0;">
+        <strong style="color: #78350f;">🕐 Zona Horaria:</strong> {{TIMEZONE_INFO}}
+    </div>
+    {{/if}}
+
+    {{#if LANGUAGE_INFO}}
+    <div style="margin: 10px 0;">
+        <strong style="color: #78350f;">🗣️ Idioma:</strong> {{LANGUAGE_INFO}}
+    </div>
+    {{/if}}
+
+    {{#if CURRENCY_INFO}}
+    <div style="margin: 10px 0;">
+        <strong style="color: #78350f;">💵 Moneda:</strong> {{CURRENCY_INFO}}
+    </div>
+    {{/if}}
+
+    {{#if SAFETY_TIPS}}
+    <div style="margin: 10px 0;">
+        <strong style="color: #78350f;">🛡️ Seguridad:</strong> {{SAFETY_TIPS}}
+    </div>
+    {{/if}}
+</div>
+
+{{#if HAS_HOTEL}}
+<div class="info-box">
+    <h2>🏨 Tu Hotel</h2>
+
+    <div class="info-row">
+        <span class="info-label">Hotel:</span>
+        <span class="info-value">{{HOTEL_NAME}}</span>
+    </div>
+
+    <div class="info-row">
+        <span class="info-label">Dirección:</span>
+        <span class="info-value">{{HOTEL_ADDRESS}}</span>
+    </div>
+
+    <div class="info-row">
+        <span class="info-label">Check-in:</span>
+        <span class="info-value">{{HOTEL_CHECKIN_DATE}} - {{HOTEL_CHECKIN_TIME}}</span>
+    </div>
+
+    <div class="info-row">
+        <span class="info-label">Check-out:</span>
+        <span class="info-value">{{HOTEL_CHECKOUT_DATE}} - {{HOTEL_CHECKOUT_TIME}}</span>
+    </div>
+</div>
+{{/if}}
+
+<div style="text-align: center; margin: 30px 0;">
+    <a href="{{APP_URL}}/mis-reservas/{{BOOKING_ID}}/itinerario" class="button">Ver Itinerario Completo</a>
+    <br><br>
+    <a href="{{APP_URL}}/mis-reservas/{{BOOKING_ID}}/documentos" class="button button-secondary">Descargar
+        Documentos</a>
+</div>
+
+<div class="message">
+    <strong>📞 Asistencia 24/7 Durante tu Viaje:</strong>
+</div>
+
+<div class="info-box" style="background-color: #e0f2fe; border-left-color: #0066FF;">
+    <div style="text-align: center;">
+        <div style="margin: 10px 0;">
+            <strong>Emergencias:</strong> <a href="tel:+527208156804" style="color: #0066FF; text-decoration: none;">+52
+                720 815 6804</a>
+        </div>
+        <div style="margin: 10px 0;">
+            <strong>WhatsApp:</strong> <a href="https://wa.me/527208156804"
+                style="color: #0066FF; text-decoration: none;">720 815 6804</a>
+        </div>
+        <div style="margin: 10px 0; font-size: 14px; color: #64748b;">
+            Disponible las 24 horas, los 7 días de la semana
+        </div>
+    </div>
+</div>
+
+<div class="message" style="font-size: 14px; color: #64748b; text-align: center; margin-top: 20px;">
+    <strong>¡Disfruta tu viaje! 🌍✈️🎉</strong><br>
+    Nos encantaría ver tus fotos. Etiquétanos en redes sociales: <strong>@asoperadora</strong>
+</div>

@@ -1,0 +1,98 @@
+<div class="greeting">¡Pago Recibido! 💳</div>
+
+<div class="message">
+    Hola <strong>{{CUSTOMER_NAME}}</strong>,
+</div>
+
+<div class="message">
+    Tu pago ha sido procesado exitosamente. Gracias por tu confianza en AS Operadora.
+</div>
+
+<div class="highlight-box">
+    <div class="highlight-label">Monto Pagado</div>
+    <div class="highlight-amount">{{AMOUNT}} {{CURRENCY}}</div>
+    <div style="font-size: 14px; margin-top: 10px;">{{PAYMENT_DATE}}</div>
+</div>
+
+<div class="info-box">
+    <h2>Detalles del Pago</h2>
+
+    <div class="info-row">
+        <span class="info-label">Número de Reserva:</span>
+        <span class="info-value">#{{BOOKING_ID}}</span>
+    </div>
+
+    <div class="info-row">
+        <span class="info-label">Método de Pago:</span>
+        <span class="info-value">{{PAYMENT_METHOD}}</span>
+    </div>
+
+    <div class="info-row">
+        <span class="info-label">ID de Transacción:</span>
+        <span class="info-value">{{TRANSACTION_ID}}</span>
+    </div>
+
+    <div class="info-row">
+        <span class="info-label">Estado:</span>
+        <span class="info-value" style="color: #10b981; font-weight: 600;">✓ Aprobado</span>
+    </div>
+
+    {{#if REMAINING_BALANCE}}
+    <div class="info-row">
+        <span class="info-label">Saldo Pendiente:</span>
+        <span class="info-value" style="color: #f59e0b; font-weight: 600;">{{REMAINING_BALANCE}} {{CURRENCY}}</span>
+    </div>
+    {{/if}}
+</div>
+
+{{#if SERVICE_NAME}}
+<div class="info-box" style="background-color: #f0f9ff; border-left-color: #0ea5e9;">
+    <h2 style="color: #0369a1;">Detalles del Servicio</h2>
+
+    <div class="info-row">
+        <span class="info-label">Servicio:</span>
+        <span class="info-value">{{SERVICE_NAME}}</span>
+    </div>
+
+    {{#if TRAVEL_DATE}}
+    <div class="info-row">
+        <span class="info-label">Fecha de Viaje:</span>
+        <span class="info-value">{{TRAVEL_DATE}}</span>
+    </div>
+    {{/if}}
+</div>
+{{/if}}
+
+{{#if REMAINING_BALANCE}}
+<div class="info-box" style="background-color: #fef3c7; border-left-color: #f59e0b;">
+    <h2 style="color: #92400e;">⚠️ Pago Pendiente</h2>
+    <div class="message" style="color: #92400e; margin: 0;">
+        Aún tienes un saldo pendiente de <strong>{{REMAINING_BALANCE}} {{CURRENCY}}</strong>.<br>
+        Fecha límite de pago: <strong>{{DUE_DATE}}</strong>
+    </div>
+</div>
+{{/if}}
+
+<div style="text-align: center; margin: 30px 0;">
+    <a href="{{APP_URL}}/mis-reservas/{{BOOKING_ID}}" class="button">Ver Mi Reserva</a>
+    <br><br>
+    {{#if INVOICE_AVAILABLE}}
+    <a href="{{APP_URL}}/facturas/{{BOOKING_ID}}" class="button button-secondary">Solicitar Factura</a>
+    {{/if}}
+</div>
+
+<div class="message" style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e2e8f0;">
+    <strong>📄 Comprobante de Pago:</strong><br>
+    Este correo sirve como comprobante de tu pago. Te recomendamos guardarlo para tus registros.
+</div>
+
+{{#if NEXT_PAYMENT_DATE}}
+<div class="message" style="font-size: 14px; color: #64748b;">
+    <strong>Recordatorio:</strong> Tu próximo pago vence el {{NEXT_PAYMENT_DATE}}. Te enviaremos un recordatorio unos
+    días antes.
+</div>
+{{/if}}
+
+<div class="message" style="font-size: 14px; color: #64748b;">
+    Si tienes alguna pregunta sobre tu pago o necesitas un recibo adicional, no dudes en contactarnos.
+</div>

@@ -1,0 +1,143 @@
+<div class="greeting">🎉 ¡Oferta Especial Solo Para Ti!</div>
+
+<div class="message">
+    Hola <strong>{{CUSTOMER_NAME}}</strong>,
+</div>
+
+<div class="message">
+    Tenemos una oferta <strong>exclusiva</strong> que no querrás dejar pasar. ¡Aprovecha ahora!
+</div>
+
+<div class="highlight-box" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">
+    <div class="highlight-label">Oferta Exclusiva</div>
+    <div class="highlight-amount" style="font-size: 32px;">{{DISCOUNT_PERCENTAGE}}% OFF</div>
+    <div style="font-size: 16px; margin-top: 10px;">{{OFFER_TITLE}}</div>
+</div>
+
+{{#if OFFER_IMAGE}}
+<div style="text-align: center; margin: 30px 0;">
+    <img src="{{OFFER_IMAGE}}" alt="Oferta especial" style="max-width: 100%; height: auto; border-radius: 8px;">
+</div>
+{{/if}}
+
+<div class="info-box">
+    <h2>{{DESTINATION}}</h2>
+
+    <div style="font-size: 16px; color: #64748b; margin: 15px 0;">
+        {{DESCRIPTION}}
+    </div>
+
+    <div class="info-row">
+        <span class="info-label">Fechas Disponibles:</span>
+        <span class="info-value">{{AVAILABLE_DATES}}</span>
+    </div>
+
+    <div class="info-row">
+        <span class="info-label">Duración:</span>
+        <span class="info-value">{{DURATION}}</span>
+    </div>
+
+    <div class="info-row">
+        <span class="info-label">Incluye:</span>
+        <span class="info-value">{{INCLUDES_SUMMARY}}</span>
+    </div>
+</div>
+
+<div style="display: flex; justify-content: space-around; margin: 30px 0; text-align: center;">
+    <div>
+        <div style="font-size: 14px; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px;">Precio Normal
+        </div>
+        <div style="font-size: 24px; color: #94a3b8; text-decoration: line-through; margin-top: 5px;">{{ORIGINAL_PRICE}}
+            {{CURRENCY}}</div>
+    </div>
+    <div>
+        <div style="font-size: 14px; color: #0066FF; text-transform: uppercase; letter-spacing: 1px; font-weight: 600;">
+            Precio Especial</div>
+        <div style="font-size: 36px; color: #0066FF; font-weight: bold; margin-top: 5px;">{{SPECIAL_PRICE}} {{CURRENCY}}
+        </div>
+        <div style="font-size: 12px; color: #64748b;">por persona</div>
+    </div>
+</div>
+
+<div class="info-box" style="background-color: #fef3c7; border-left-color: #f59e0b;">
+    <div style="text-align: center;">
+        <div style="font-size: 18px; color: #92400e; margin-bottom: 10px;">
+            <strong>⏰ ¡Oferta por Tiempo Limitado!</strong>
+        </div>
+        <div style="font-size: 24px; font-weight: bold; color: #78350f; margin: 15px 0;">
+            Expira: {{EXPIRY_DATE}}
+        </div>
+        <div style="font-size: 14px; color: #92400e;">
+            Solo quedan <strong>{{SPOTS_LEFT}} lugares</strong> disponibles
+        </div>
+    </div>
+</div>
+
+<div class="message">
+    <strong>✨ Lo que incluye esta oferta:</strong>
+</div>
+
+<div style="margin: 20px 0;">
+    {{#each INCLUSIONS}}
+    <div style="padding: 12px; background: #f0f9ff; border-radius: 4px; margin-bottom: 10px;">
+        <strong style="color: #0066FF;">{{icon}} {{title}}</strong>
+        <div style="font-size: 14px; color: #64748b; margin-top: 5px;">
+            {{description}}
+        </div>
+    </div>
+    {{/each}}
+</div>
+
+<div style="text-align: center; margin: 30px 0;">
+    <a href="{{BOOKING_URL}}" class="button" style="display: inline-block; font-size: 18px; padding: 16px 40px;">
+        Reservar Ahora
+    </a>
+    <div style="font-size: 12px; color: #94a3b8; margin-top: 10px;">
+        Usa el código: <strong
+            style="background: #fef3c7; padding: 4px 12px; border-radius: 4px; font-family: monospace; color: #92400e;">{{PROMO_CODE}}</strong>
+    </div>
+</div>
+
+{{#if TESTIMONIALS}}
+<div class="message">
+    <strong>💬 Lo que dicen nuestros clientes:</strong>
+</div>
+
+{{#each TESTIMONIALS}}
+<div class="info-box" style="background-color: #f0fdf4; border-left-color: #10b981; margin: 15px 0;">
+    <div style="font-style: italic; color: #064e3b; margin-bottom: 10px;">
+        "{{quote}}"
+    </div>
+    <div style="font-size: 14px; color: #065f46;">
+        <strong>{{name}}</strong> - {{location}}
+    </div>
+</div>
+{{/each}}
+{{/if}}
+
+<div class="info-box" style="background-color: #e0f2fe; border-left-color: #0066FF;">
+    <h2>¿Por qué reservar con nosotros?</h2>
+    <ul style="margin: 10px 0 0 20px; color: #0c4a6e;">
+        <li style="margin-bottom: 8px;">✅ Mejor precio garantizado</li>
+        <li style="margin-bottom: 8px;">✅ Cancelación flexible</li>
+        <li style="margin-bottom: 8px;">✅ Atención 24/7 durante tu viaje</li>
+        <li style="margin-bottom: 8px;">✅ Sin cargos ocultos</li>
+        <li>✅ Pago seguro y protegido</li>
+    </ul>
+</div>
+
+<div style="text-align: center; margin: 30px 0;">
+    <a href="{{BOOKING_URL}}" class="button" style="display: inline-block;">
+        Aprovechar Oferta
+    </a>
+    <br><br>
+    <a href="{{APP_URL}}/ofertas" class="button button-secondary" style="display: inline-block;">
+        Ver Más Ofertas
+    </a>
+</div>
+
+<div class="message"
+    style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e2e8f0; font-size: 12px; color: #94a3b8; text-align: center;">
+    Esta oferta es exclusiva para ti. No olvides usar el código <strong>{{PROMO_CODE}}</strong> al reservar.<br>
+    Válido hasta {{EXPIRY_DATE}} o hasta agotar existencias.
+</div>

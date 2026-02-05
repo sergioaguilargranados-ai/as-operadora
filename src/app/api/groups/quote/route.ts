@@ -430,47 +430,51 @@ async function sendQuoteConfirmationEmail(data: {
   quoteType: string
   isEstimate: boolean
 }) {
-  // Por ahora solo log - cuando se configure SMTP se enviará el email real
-  console.log('📧 Email de cotización grupal:', {
-    to: data.to,
-    subject: `Cotización Viaje Grupal ${data.referenceId} - AS Operadora`,
-    body: `
-      Hola ${data.contactName},
+  try {
+    const { sendQuoteEmail } = await import('@/lib/emailHelper');
 
-      Hemos recibido tu solicitud de cotización para viaje grupal.
+    // Calcular duración
+    const duration = data.returnDate
+      ? `${Math.ceil((new Date(data.returnDate).getTime() - new Date(data.departureDate).getTime()) / (1000 * 60 * 60 * 24))} días`
+      : 'Por definir';
 
-      📋 DETALLES DE TU COTIZACIÓN
-      ============================
-      Referencia: ${data.referenceId}
-      Origen: ${data.origin}
-      Destino: ${data.destination}
-      Fecha salida: ${data.departureDate}
-      ${data.returnDate ? `Fecha regreso: ${data.returnDate}` : ''}
-      Pasajeros: ${data.totalPassengers}
+    // Formatear fechas
+    const travelDates = data.returnDate
+      ? `${new Date(data.departureDate).toLocaleDateString('es-MX')} - ${new Date(data.returnDate).toLocaleDateString('es-MX')}`
+      : new Date(data.departureDate).toLocaleDateString('es-MX');
 
-      💰 PRECIO${data.isEstimate ? ' ESTIMADO' : ''}
-      ============================
-      Precio por persona: $${data.pricePerPerson.toLocaleString()} MXN
-      Descuento grupal: ${data.groupDiscount}%
-      Total: $${data.totalPrice.toLocaleString()} MXN
+    // Fecha de expiración (48 horas)
+    const expiryDate = new Date(Date.now() + 48 * 60 * 60 * 1000).toLocaleDateString('es-MX', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
 
-      ${data.quoteType === 'manual'
-        ? '⏳ Un agente especializado te contactará en las próximas 24-48 horas para darte una cotización personalizada.'
-        : '✅ Esta cotización está disponible para reserva. Contáctanos para confirmar.'}
+    await sendQuoteEmail({
+      name: data.contactName,
+      email: data.to,
+      quoteId: data.referenceId,
+      destination: data.destination,
+      travelDates,
+      duration,
+      passengers: data.totalPassengers,
+      inclusions: [
+        'Vuelos redondos',
+        'Asistencia de viaje 24/7',
+        'Descuento grupal aplicado',
+        data.quoteType === 'manual' ? 'Cotización personalizada por agente' : 'Confirmación inmediata disponible'
+      ],
+      totalPrice: data.totalPrice,
+      pricePerPerson: data.pricePerPerson,
+      currency: 'MXN',
+      expiryDate
+    });
 
-      ¿Tienes preguntas? Responde a este correo o llámanos al 800-123-4567.
-
-      ¡Gracias por elegir AS Operadora!
-
-      --
-      AS Operadora de Viajes y Eventos
-      www.asoperadora.com
-    `
-  })
-
-  // TODO: Implementar envío real con SMTP cuando esté configurado
-  // const EmailService = (await import('@/services/EmailService')).default
-  // await EmailService.send({ ... })
-
-  return true
+    console.log(`📧 Correo de cotización enviado a: ${data.to}`);
+    return true;
+  } catch (error) {
+    console.error('⚠️ Error enviando correo de cotización:', error);
+    return false;
+  }
 }

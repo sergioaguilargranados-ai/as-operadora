@@ -1,0 +1,89 @@
+<div class="greeting">¡Tu reserva está confirmada! ✅</div>
+
+<div class="message">
+    Hola <strong>{{CUSTOMER_NAME}}</strong>,
+</div>
+
+<div class="message">
+    Nos complace confirmar que tu reserva ha sido procesada exitosamente. A continuación encontrarás todos los detalles:
+</div>
+
+<div class="highlight-box">
+    <div class="highlight-label">Número de Reserva</div>
+    <div class="highlight-amount">#{{BOOKING_ID}}</div>
+    <div style="font-size: 14px; margin-top: 10px;">Guarda este número para futuras referencias</div>
+</div>
+
+<div class="info-box">
+    <h2>Detalles de tu Reserva</h2>
+
+    <div class="info-row">
+        <span class="info-label">Servicio:</span>
+        <span class="info-value">{{SERVICE_NAME}}</span>
+    </div>
+
+    <div class="info-row">
+        <span class="info-label">Fecha de Reserva:</span>
+        <span class="info-value">{{BOOKING_DATE}}</span>
+    </div>
+
+    {{#if TRAVEL_DATE}}
+    <div class="info-row">
+        <span class="info-label">Fecha de Viaje:</span>
+        <span class="info-value">{{TRAVEL_DATE}}</span>
+    </div>
+    {{/if}}
+
+    {{#if PASSENGERS}}
+    <div class="info-row">
+        <span class="info-label">Pasajeros:</span>
+        <span class="info-value">{{PASSENGERS}}</span>
+    </div>
+    {{/if}}
+
+    {{#if DESTINATION}}
+    <div class="info-row">
+        <span class="info-label">Destino:</span>
+        <span class="info-value">{{DESTINATION}}</span>
+    </div>
+    {{/if}}
+
+    <div class="info-row">
+        <span class="info-label">Estado:</span>
+        <span class="info-value" style="color: #10b981; font-weight: 600;">✓ Confirmada</span>
+    </div>
+</div>
+
+<div class="highlight-box" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+    <div class="highlight-label">Total Pagado</div>
+    <div class="highlight-amount">{{TOTAL_PRICE}} {{CURRENCY}}</div>
+</div>
+
+<div class="message">
+    <strong>📋 Próximos Pasos:</strong>
+</div>
+
+<div class="info-box" style="background-color: #fef3c7; border-left-color: #f59e0b;">
+    <ol style="margin: 0; padding-left: 20px; color: #92400e;">
+        <li style="margin-bottom: 10px;">Recibirás un correo con los documentos de viaje 48 horas antes de tu salida
+        </li>
+        <li style="margin-bottom: 10px;">Revisa los requisitos de viaje para tu destino</li>
+        <li style="margin-bottom: 10px;">Si necesitas factura, solicítala desde tu panel de usuario</li>
+        <li>Mantente atento a tu correo para actualizaciones importantes</li>
+    </ol>
+</div>
+
+<div style="text-align: center; margin: 30px 0;">
+    <a href="{{APP_URL}}/mis-reservas/{{BOOKING_ID}}" class="button">Ver Detalles Completos</a>
+    <br><br>
+    <a href="{{APP_URL}}/mis-reservas" class="button button-secondary">Todas Mis Reservas</a>
+</div>
+
+<div class="message" style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e2e8f0;">
+    ¿Necesitas ayuda? Nuestro equipo está disponible para asistirte en cualquier momento.
+</div>
+
+<div class="message" style="font-size: 14px; color: #64748b;">
+    <strong>Importante:</strong> Guarda este correo como comprobante de tu reserva. Te recomendamos imprimirlo o tenerlo
+    disponible en tu dispositivo móvil.
+</div>

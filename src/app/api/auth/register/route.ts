@@ -46,8 +46,8 @@ export async function POST(request: NextRequest) {
 
     // Obtener IP del usuario
     const ipAddress = request.headers.get('x-forwarded-for') ||
-                      request.headers.get('x-real-ip') ||
-                      '0.0.0.0'
+      request.headers.get('x-real-ip') ||
+      '0.0.0.0'
 
     // Registrar usuario
     console.log('🔵 REGISTRO INICIADO:', { email, name })
@@ -71,6 +71,49 @@ export async function POST(request: NextRequest) {
       userId: result.user?.id,
       email: result.user?.email
     })
+
+    // Enviar correo de verificación
+    if (result.success && result.user) {
+      try {
+        const crypto = await import('crypto');
+        const { query } = await import('@/lib/db');
+        const { sendEmailVerificationEmail } = await import('@/lib/emailHelper');
+
+        // Generar token de verificación
+        const token = crypto.randomBytes(32).toString('hex');
+        const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 horas
+
+        // Guardar token en BD
+        await query(
+          `INSERT INTO email_verification_tokens 
+           (user_id, token, expires_at, ip_address, user_agent)
+           VALUES ($1, $2, $3, $4, $5)`,
+          [
+            result.user.id,
+            token,
+            expiresAt,
+            ipAddress,
+            request.headers.get('user-agent') || 'unknown'
+          ]
+        );
+
+        // Generar URL de verificación
+        const verificationUrl = `${process.env.NEXT_PUBLIC_APP_URL}/verify-email?token=${token}`;
+
+        // Enviar email de verificación
+        await sendEmailVerificationEmail({
+          name: result.user.name,
+          email: result.user.email,
+          verificationUrl,
+          expiryTime: '24 horas'
+        });
+
+        console.log('📧 Email de verificación enviado a:', result.user.email);
+      } catch (emailError) {
+        console.error('⚠️ Error enviando email de verificación:', emailError);
+        // No fallar el registro si el correo falla
+      }
+    }
 
     return NextResponse.json(result, { status: 201 })
   } catch (error) {
