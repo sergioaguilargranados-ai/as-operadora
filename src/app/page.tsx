@@ -2672,307 +2672,307 @@ export default function Home() {
             )}
             {/* CTA adicional - ELIMINADO (duplicado) */}
 
-          {/* Ofertas Especiales y Descuentos - OCULTO POR SETTING */}
-          {homeSettings.HOME_OFFERS_SECTION === 'true' && (
-            <div className="mb-12">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-3xl font-bold">Ofertas especiales para ti</h2>
-                <Button variant="link" className="text-[#0066FF] font-semibold">
-                  Ver todas las ofertas
-                  <ChevronRight className="w-5 h-5 ml-1" />
-                </Button>
-              </div>
+            {/* Ofertas Especiales y Descuentos - OCULTO POR SETTING */}
+            {homeSettings.HOME_OFFERS_SECTION === 'true' && (
+              <div className="mb-12">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-3xl font-bold">Ofertas especiales para ti</h2>
+                  <Button variant="link" className="text-[#0066FF] font-semibold">
+                    Ver todas las ofertas
+                    <ChevronRight className="w-5 h-5 ml-1" />
+                  </Button>
+                </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {promotions.map((promo) => (
-                  <motion.div
-                    key={promo.id}
-                    whileHover={{ y: -8, transition: { duration: 0.2 } }}
-                  >
-                    <Card
-                      className="overflow-hidden group cursor-pointer border-none shadow-soft hover:shadow-hard transition-all duration-300 rounded-3xl"
-                      onClick={() => router.push(`/oferta/${promo.id}`)}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {promotions.map((promo) => (
+                    <motion.div
+                      key={promo.id}
+                      whileHover={{ y: -8, transition: { duration: 0.2 } }}
                     >
-                      <div className="relative h-48 overflow-hidden">
-                        <motion.img
-                          whileHover={{ scale: 1.1 }}
-                          transition={{ duration: 0.3 }}
-                          src={promo.image_url}
-                          alt={promo.title}
-                          className="w-full h-full object-cover"
-                        />
-                        {promo.discount_percentage && (
-                          <div className="absolute top-3 right-3 bg-red-500 text-white px-3 py-1 rounded-full text-sm font-bold flex items-center gap-1">
-                            <Percent className="w-4 h-4" />
-                            {promo.discount_percentage}% OFF
-                          </div>
-                        )}
-                      </div>
-                      <div className="p-4">
-                        {promo.badge_text && (
-                          <div className="flex items-center gap-2 mb-2">
-                            <Tag className="w-4 h-4 text-[#0066FF]" />
-                            <span className="text-sm font-semibold text-[#0066FF]">{promo.badge_text}</span>
-                          </div>
-                        )}
-                        <h3 className="font-semibold text-lg mb-1">{promo.title}</h3>
-                        <p className="text-sm text-muted-foreground mb-2">
-                          {promo.description}
-                        </p>
-                        {promo.valid_until && (
-                          <p className="text-xs text-muted-foreground">
-                            V�lido hasta {new Date(promo.valid_until).toLocaleDateString()}
+                      <Card
+                        className="overflow-hidden group cursor-pointer border-none shadow-soft hover:shadow-hard transition-all duration-300 rounded-3xl"
+                        onClick={() => router.push(`/oferta/${promo.id}`)}
+                      >
+                        <div className="relative h-48 overflow-hidden">
+                          <motion.img
+                            whileHover={{ scale: 1.1 }}
+                            transition={{ duration: 0.3 }}
+                            src={promo.image_url}
+                            alt={promo.title}
+                            className="w-full h-full object-cover"
+                          />
+                          {promo.discount_percentage && (
+                            <div className="absolute top-3 right-3 bg-red-500 text-white px-3 py-1 rounded-full text-sm font-bold flex items-center gap-1">
+                              <Percent className="w-4 h-4" />
+                              {promo.discount_percentage}% OFF
+                            </div>
+                          )}
+                        </div>
+                        <div className="p-4">
+                          {promo.badge_text && (
+                            <div className="flex items-center gap-2 mb-2">
+                              <Tag className="w-4 h-4 text-[#0066FF]" />
+                              <span className="text-sm font-semibold text-[#0066FF]">{promo.badge_text}</span>
+                            </div>
+                          )}
+                          <h3 className="font-semibold text-lg mb-1">{promo.title}</h3>
+                          <p className="text-sm text-muted-foreground mb-2">
+                            {promo.description}
                           </p>
-                        )}
+                          {promo.valid_until && (
+                            <p className="text-xs text-muted-foreground">
+                              V�lido hasta {new Date(promo.valid_until).toLocaleDateString()}
+                            </p>
+                          )}
+                        </div>
+                      </Card>
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Descubre vuelos a destinos favoritos - OCULTO POR SETTING */}
+            {homeSettings.HOME_FLIGHTS_SECTION === 'true' && (
+              <div className="mb-12">
+                <h2 className="text-3xl font-bold mb-6">Descubre vuelos a destinos favoritos</h2>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {flightDestinations.map((dest) => (
+                    <Card
+                      key={dest.id}
+                      className="overflow-hidden group cursor-pointer border-none shadow-md hover:shadow-xl transition-all rounded-3xl"
+                      onClick={() => {
+                        // Guardar par�metros de b�squeda y redirigir a resultados unificados
+                        const searchData = {
+                          success: true,
+                          data: [],
+                          searchParams: {
+                            type: 'flight',
+                            origin: 'MEX',
+                            destination: dest.airport_code || dest.city.substring(0, 3).toUpperCase(),
+                            destinationCity: dest.city,
+                            departureDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+                            returnDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+                            adults: 1,
+                            children: 0
+                          }
+                        }
+                        localStorage.setItem('searchResults', JSON.stringify(searchData))
+                        router.push(`/vuelos/${encodeURIComponent(dest.city)}`)
+                      }}
+                    >
+                      <div className="relative h-32 overflow-hidden">
+                        <img
+                          src={dest.image_url}
+                          alt={dest.city}
+                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                        />
+                      </div>
+                      <div className="p-3">
+                        <h3 className="font-semibold mb-1">{dest.city}</h3>
+                        <p className="text-sm text-[#0066FF] font-semibold">
+                          ${Number(dest.price_from).toLocaleString()} {dest.currency}
+                        </p>
+                        <p className="text-xs text-muted-foreground">por persona, ida y vuelta</p>
                       </div>
                     </Card>
-                  </motion.div>
-                ))}
+                  ))}
+                </div>
               </div>
-            </div>
-          )}
+            )}
 
-          {/* Descubre vuelos a destinos favoritos - OCULTO POR SETTING */}
-          {homeSettings.HOME_FLIGHTS_SECTION === 'true' && (
-            <div className="mb-12">
-              <h2 className="text-3xl font-bold mb-6">Descubre vuelos a destinos favoritos</h2>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {flightDestinations.map((dest) => (
-                  <Card
-                    key={dest.id}
-                    className="overflow-hidden group cursor-pointer border-none shadow-md hover:shadow-xl transition-all rounded-3xl"
-                    onClick={() => {
-                      // Guardar par�metros de b�squeda y redirigir a resultados unificados
-                      const searchData = {
-                        success: true,
-                        data: [],
-                        searchParams: {
-                          type: 'flight',
-                          origin: 'MEX',
-                          destination: dest.airport_code || dest.city.substring(0, 3).toUpperCase(),
-                          destinationCity: dest.city,
-                          departureDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-                          returnDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-                          adults: 1,
-                          children: 0
-                        }
-                      }
-                      localStorage.setItem('searchResults', JSON.stringify(searchData))
-                      router.push(`/vuelos/${encodeURIComponent(dest.city)}`)
-                    }}
-                  >
-                    <div className="relative h-32 overflow-hidden">
-                      <img
-                        src={dest.image_url}
-                        alt={dest.city}
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                      />
-                    </div>
-                    <div className="p-3">
-                      <h3 className="font-semibold mb-1">{dest.city}</h3>
-                      <p className="text-sm text-[#0066FF] font-semibold">
-                        ${Number(dest.price_from).toLocaleString()} {dest.currency}
-                      </p>
-                      <p className="text-xs text-muted-foreground">por persona, ida y vuelta</p>
-                    </div>
-                  </Card>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Descubre tu nuevo hospedaje favorito - OCULTO POR SETTING */}
-          {homeSettings.HOME_ACCOMMODATION_SECTION === 'true' && (
-            <div className="mb-12">
-              <h2 className="text-3xl font-bold mb-6">Descubre tu nuevo hospedaje favorito</h2>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {accommodationFavorites.map((item) => (
-                  <Card
-                    key={item.id}
-                    className="overflow-hidden group cursor-pointer border-none shadow-md hover:shadow-xl transition-all rounded-3xl"
-                    onClick={() => router.push(`/hospedaje/${item.id}`)}
-                  >
-                    <div className="relative h-48 overflow-hidden">
-                      <img
-                        src={item.image_url}
-                        alt={item.title || item.name}
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                      />
-                    </div>
-                    <div className="p-4">
-                      <h3 className="font-semibold text-lg mb-1">{item.title || item.name}</h3>
-                      <p className="text-xs text-muted-foreground mb-2">{item.location}</p>
-                      <p className="text-muted-foreground text-sm">
-                        Desde ${Number(item.price_from || item.price_per_night || 0).toLocaleString()} {item.currency || 'MXN'}
-                      </p>
-                    </div>
-                  </Card>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Ofertas de �ltima hora para el fin de semana - OCULTO POR SETTING */}
-          {homeSettings.HOME_WEEKEND_SECTION === 'true' && (
-            <div className="mb-12">
-              <h2 className="text-3xl font-bold mb-6">Ofertas de �ltima hora para el fin de semana</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                {weekendDeals.map((deal) => (
-                  <Card
-                    key={deal.id}
-                    className="overflow-hidden group cursor-pointer border-none shadow-md hover:shadow-xl transition-all rounded-3xl"
-                    onClick={() => router.push(`/hospedaje/${deal.id}`)}
-                  >
-                    <div className="relative h-36 overflow-hidden">
-                      <img
-                        src={deal.image_url}
-                        alt={deal.title}
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                      />
-                      {deal.discount_percentage && (
-                        <div className="absolute top-2 left-2 bg-red-500 text-white px-2 py-1 rounded text-xs font-bold">
-                          -{deal.discount_percentage}%
-                        </div>
-                      )}
-                    </div>
-                    <div className="p-3">
-                      <p className="text-xs text-[#0066FF] font-semibold mb-1">{deal.dates_label}</p>
-                      <h3 className="font-semibold text-sm mb-1">{deal.title}</h3>
-                      <p className="text-xs text-muted-foreground mb-2">{deal.location}</p>
-                      <p className="text-sm font-bold text-[#0066FF]">
-                        ${Number(deal.price_per_night).toLocaleString()} {deal.currency}
-                      </p>
-                      <p className="text-xs text-muted-foreground">por noche</p>
-                    </div>
-                  </Card>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Descubre paquetes vacacionales - OCULTO POR SETTING */}
-          {homeSettings.HOME_VACATION_PACKAGES === 'true' && (
-            <div className="mb-12">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-3xl font-bold">Descubre paquetes vacacionales a los destinos m�s buscados</h2>
-                <Button variant="link" className="text-[#0066FF] font-semibold" onClick={() => router.push('/paquetes')}>
-                  Ver todos los paquetes
-                  <ChevronRight className="w-5 h-5 ml-1" />
-                </Button>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {vacationPackages.map((pkg) => (
-                  <Card
-                    key={pkg.id}
-                    className="overflow-hidden group cursor-pointer border-none shadow-md hover:shadow-xl transition-all rounded-3xl"
-                    onClick={() => router.push(`/paquete/${pkg.id}`)}
-                  >
-                    <div className="relative h-52 overflow-hidden">
-                      <img
-                        src={pkg.image_url}
-                        alt={pkg.destination}
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                      />
-                      {pkg.nights && (
-                        <div className="absolute top-3 left-3 bg-white/90 px-3 py-1 rounded-full">
-                          <p className="text-xs font-semibold">{pkg.nights} noches</p>
-                        </div>
-                      )}
-                    </div>
-                    <div className="p-5">
-                      <h3 className="font-bold text-xl mb-2">{pkg.destination}</h3>
-                      <p className="text-sm font-semibold text-muted-foreground mb-2">
-                        {pkg.includes || pkg.package_name}
-                      </p>
-                      <p className="text-sm text-muted-foreground mb-3">{pkg.description}</p>
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-xs text-muted-foreground">Desde</p>
-                          <p className="text-xl font-bold text-[#0066FF]">
-                            ${Number(pkg.price).toLocaleString()} {pkg.currency}
-                          </p>
-                        </div>
-                        <Button size="sm" className="bg-[#0066FF] hover:bg-[#0052CC] text-white">
-                          Ver paquete
-                        </Button>
+            {/* Descubre tu nuevo hospedaje favorito - OCULTO POR SETTING */}
+            {homeSettings.HOME_ACCOMMODATION_SECTION === 'true' && (
+              <div className="mb-12">
+                <h2 className="text-3xl font-bold mb-6">Descubre tu nuevo hospedaje favorito</h2>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {accommodationFavorites.map((item) => (
+                    <Card
+                      key={item.id}
+                      className="overflow-hidden group cursor-pointer border-none shadow-md hover:shadow-xl transition-all rounded-3xl"
+                      onClick={() => router.push(`/hospedaje/${item.id}`)}
+                    >
+                      <div className="relative h-48 overflow-hidden">
+                        <img
+                          src={item.image_url}
+                          alt={item.title || item.name}
+                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                        />
                       </div>
-                    </div>
-                  </Card>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Echa un vistazo a estos hospedajes �nicos - OCULTO POR SETTING */}
-          {homeSettings.HOME_UNIQUE_STAYS === 'true' && (
-            <div className="mb-12">
-              <h2 className="text-3xl font-bold mb-6">Echa un vistazo a estos hospedajes �nicos</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {uniqueStays.map((unique) => (
-                  <Card
-                    key={unique.id}
-                    className="overflow-hidden group cursor-pointer border-none shadow-md hover:shadow-xl transition-shadow rounded-3xl"
-                    onClick={() => router.push(`/hospedaje/${unique.id}`)}
-                  >
-                    <div className="relative h-44 overflow-hidden">
-                      <img
-                        src={unique.image_url}
-                        alt={unique.property_name}
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                      />
-                    </div>
-                    <div className="p-4">
-                      {unique.rating && (
-                        <div className="flex items-center gap-1 mb-2">
-                          <span className="text-yellow-500">?</span>
-                          <span className="font-semibold text-sm">{Number(unique.rating).toFixed(1)}</span>
-                          <span className="text-xs text-muted-foreground">
-                            ({unique.total_reviews || 0})
-                          </span>
-                        </div>
-                      )}
-                      <h3 className="font-semibold text-base mb-1">{unique.property_name}</h3>
-                      <p className="text-xs text-muted-foreground mb-2">{unique.location}</p>
-                      <p className="text-sm font-semibold text-[#0066FF]">
-                        ${Number(unique.price_per_night).toLocaleString()} {unique.currency}
-                      </p>
-                      <p className="text-xs text-muted-foreground">por noche</p>
-                    </div>
-                  </Card>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Explora el mundo con AS Operadora - OCULTO POR SETTING */}
-          {homeSettings.HOME_EXPLORE_WORLD === 'true' && (
-            <div className="mb-12">
-              <h2 className="text-3xl font-bold mb-6">Explora el mundo con AS Operadora</h2>
-              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-                {exploreDestinations.map((dest) => (
-                  <Card
-                    key={dest.id}
-                    className="overflow-hidden group cursor-pointer border-none shadow-md hover:shadow-xl transition-all rounded-3xl"
-                    onClick={() => router.push(`/resultados/activities?city=${encodeURIComponent(dest.destination || dest.destination_name || '')}&radius=20`)}
-                  >
-                    <div className="relative h-24 overflow-hidden">
-                      <img
-                        src={dest.image_url}
-                        alt={dest.destination || dest.destination_name}
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                      <div className="absolute bottom-2 left-2 text-white">
-                        <h3 className="font-bold text-sm">{dest.destination || dest.destination_name}</h3>
-                        <p className="text-xs">{(dest.hotels_count || dest.total_hotels || 250).toLocaleString()} hoteles</p>
+                      <div className="p-4">
+                        <h3 className="font-semibold text-lg mb-1">{item.title || item.name}</h3>
+                        <p className="text-xs text-muted-foreground mb-2">{item.location}</p>
+                        <p className="text-muted-foreground text-sm">
+                          Desde ${Number(item.price_from || item.price_per_night || 0).toLocaleString()} {item.currency || 'MXN'}
+                        </p>
                       </div>
-                    </div>
-                  </Card>
-                ))}
+                    </Card>
+                  ))}
+                </div>
               </div>
-            </div>
-          )}
-        </div>
+            )}
+
+            {/* Ofertas de �ltima hora para el fin de semana - OCULTO POR SETTING */}
+            {homeSettings.HOME_WEEKEND_SECTION === 'true' && (
+              <div className="mb-12">
+                <h2 className="text-3xl font-bold mb-6">Ofertas de �ltima hora para el fin de semana</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  {weekendDeals.map((deal) => (
+                    <Card
+                      key={deal.id}
+                      className="overflow-hidden group cursor-pointer border-none shadow-md hover:shadow-xl transition-all rounded-3xl"
+                      onClick={() => router.push(`/hospedaje/${deal.id}`)}
+                    >
+                      <div className="relative h-36 overflow-hidden">
+                        <img
+                          src={deal.image_url}
+                          alt={deal.title}
+                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                        />
+                        {deal.discount_percentage && (
+                          <div className="absolute top-2 left-2 bg-red-500 text-white px-2 py-1 rounded text-xs font-bold">
+                            -{deal.discount_percentage}%
+                          </div>
+                        )}
+                      </div>
+                      <div className="p-3">
+                        <p className="text-xs text-[#0066FF] font-semibold mb-1">{deal.dates_label}</p>
+                        <h3 className="font-semibold text-sm mb-1">{deal.title}</h3>
+                        <p className="text-xs text-muted-foreground mb-2">{deal.location}</p>
+                        <p className="text-sm font-bold text-[#0066FF]">
+                          ${Number(deal.price_per_night).toLocaleString()} {deal.currency}
+                        </p>
+                        <p className="text-xs text-muted-foreground">por noche</p>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Descubre paquetes vacacionales - OCULTO POR SETTING */}
+            {homeSettings.HOME_VACATION_PACKAGES === 'true' && (
+              <div className="mb-12">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-3xl font-bold">Descubre paquetes vacacionales a los destinos m�s buscados</h2>
+                  <Button variant="link" className="text-[#0066FF] font-semibold" onClick={() => router.push('/paquetes')}>
+                    Ver todos los paquetes
+                    <ChevronRight className="w-5 h-5 ml-1" />
+                  </Button>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {vacationPackages.map((pkg) => (
+                    <Card
+                      key={pkg.id}
+                      className="overflow-hidden group cursor-pointer border-none shadow-md hover:shadow-xl transition-all rounded-3xl"
+                      onClick={() => router.push(`/paquete/${pkg.id}`)}
+                    >
+                      <div className="relative h-52 overflow-hidden">
+                        <img
+                          src={pkg.image_url}
+                          alt={pkg.destination}
+                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                        />
+                        {pkg.nights && (
+                          <div className="absolute top-3 left-3 bg-white/90 px-3 py-1 rounded-full">
+                            <p className="text-xs font-semibold">{pkg.nights} noches</p>
+                          </div>
+                        )}
+                      </div>
+                      <div className="p-5">
+                        <h3 className="font-bold text-xl mb-2">{pkg.destination}</h3>
+                        <p className="text-sm font-semibold text-muted-foreground mb-2">
+                          {pkg.includes || pkg.package_name}
+                        </p>
+                        <p className="text-sm text-muted-foreground mb-3">{pkg.description}</p>
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-xs text-muted-foreground">Desde</p>
+                            <p className="text-xl font-bold text-[#0066FF]">
+                              ${Number(pkg.price).toLocaleString()} {pkg.currency}
+                            </p>
+                          </div>
+                          <Button size="sm" className="bg-[#0066FF] hover:bg-[#0052CC] text-white">
+                            Ver paquete
+                          </Button>
+                        </div>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Echa un vistazo a estos hospedajes �nicos - OCULTO POR SETTING */}
+            {homeSettings.HOME_UNIQUE_STAYS === 'true' && (
+              <div className="mb-12">
+                <h2 className="text-3xl font-bold mb-6">Echa un vistazo a estos hospedajes �nicos</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {uniqueStays.map((unique) => (
+                    <Card
+                      key={unique.id}
+                      className="overflow-hidden group cursor-pointer border-none shadow-md hover:shadow-xl transition-shadow rounded-3xl"
+                      onClick={() => router.push(`/hospedaje/${unique.id}`)}
+                    >
+                      <div className="relative h-44 overflow-hidden">
+                        <img
+                          src={unique.image_url}
+                          alt={unique.property_name}
+                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                        />
+                      </div>
+                      <div className="p-4">
+                        {unique.rating && (
+                          <div className="flex items-center gap-1 mb-2">
+                            <span className="text-yellow-500">?</span>
+                            <span className="font-semibold text-sm">{Number(unique.rating).toFixed(1)}</span>
+                            <span className="text-xs text-muted-foreground">
+                              ({unique.total_reviews || 0})
+                            </span>
+                          </div>
+                        )}
+                        <h3 className="font-semibold text-base mb-1">{unique.property_name}</h3>
+                        <p className="text-xs text-muted-foreground mb-2">{unique.location}</p>
+                        <p className="text-sm font-semibold text-[#0066FF]">
+                          ${Number(unique.price_per_night).toLocaleString()} {unique.currency}
+                        </p>
+                        <p className="text-xs text-muted-foreground">por noche</p>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Explora el mundo con AS Operadora - OCULTO POR SETTING */}
+            {homeSettings.HOME_EXPLORE_WORLD === 'true' && (
+              <div className="mb-12">
+                <h2 className="text-3xl font-bold mb-6">Explora el mundo con AS Operadora</h2>
+                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                  {exploreDestinations.map((dest) => (
+                    <Card
+                      key={dest.id}
+                      className="overflow-hidden group cursor-pointer border-none shadow-md hover:shadow-xl transition-all rounded-3xl"
+                      onClick={() => router.push(`/resultados/activities?city=${encodeURIComponent(dest.destination || dest.destination_name || '')}&radius=20`)}
+                    >
+                      <div className="relative h-24 overflow-hidden">
+                        <img
+                          src={dest.image_url}
+                          alt={dest.destination || dest.destination_name}
+                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                        <div className="absolute bottom-2 left-2 text-white">
+                          <h3 className="font-bold text-sm">{dest.destination || dest.destination_name}</h3>
+                          <p className="text-xs">{(dest.hotels_count || dest.total_hotels || 250).toLocaleString()} hoteles</p>
+                        </div>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
       </main>
       <footer className="bg-[#F7F7F7] mt-16 py-12">
         <div className="container mx-auto px-4 max-w-6xl">
