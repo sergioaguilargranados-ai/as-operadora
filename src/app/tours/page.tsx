@@ -38,6 +38,7 @@ import {
     Menu
 } from 'lucide-react'
 import { Logo } from '@/components/Logo'
+import { UserMenu } from '@/components/UserMenu'
 
 interface TourPackage {
     id: string
@@ -398,6 +399,7 @@ function ToursContent() {
                                 <Users className="w-4 h-4 mr-2" />
                                 <span className="hidden sm:inline">Cotizar Grupo</span>
                             </Button>
+                            <UserMenu />
                         </div>
                     </div>
 

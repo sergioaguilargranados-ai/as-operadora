@@ -24,6 +24,7 @@ import {
     Loader2
 } from 'lucide-react';
 import { Logo } from '@/components/Logo';
+import { UserMenu } from '@/components/UserMenu';
 
 interface Feature {
     id: number;
@@ -233,9 +234,6 @@ export default function AdminFeaturesPage() {
                         <Logo className="py-1" />
                     </div>
                     <div className="flex items-center gap-4">
-                        <span className="text-sm text-gray-600">
-                            {user?.name} ({user?.role})
-                        </span>
                         <Button
                             variant="outline"
                             size="sm"
@@ -245,6 +243,7 @@ export default function AdminFeaturesPage() {
                             <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
                             Actualizar
                         </Button>
+                        <UserMenu />
                     </div>
                 </div>
             </header>

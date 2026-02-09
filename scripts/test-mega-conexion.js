@@ -1,148 +1,74 @@
-/**
- * Script de prueba: Investigar URLs de Mega Conexión
- * Validar si tienen itinerario completo
- */
+// test-mega-conexion.js
+// Script de prueba para verificar extracción desde Mega Conexión
+// Uso: npx tsx scripts/test-mega-conexion.js
 
-require('dotenv').config({ path: '.env.local' })
-const puppeteer = require('puppeteer')
-const cheerio = require('cheerio')
+import { MegaConexionService } from '../src/services/MegaConexionService.ts';
 
-async function testMegaConexion() {
-    console.log('\n🔍 INVESTIGACIÓN: URLs de Mega Conexión')
-    console.log('========================================\n')
+async function main() {
+    console.log('\n🧪 PRUEBA: Extracción desde Mega Conexión\n');
+    console.log('='.repeat(60));
 
-    try {
-        const browser = await puppeteer.launch({
-            headless: true,
-            args: ['--no-sandbox', '--disable-setuid-sandbox']
-        })
+    // Probar con un tour conocido
+    const testCodes = ['MT-12534', 'MT-20043', 'MT-12117'];
 
-        const page = await browser.newPage()
-        await page.setViewport({ width: 1920, height: 1080 })
+    for (const mtCode of testCodes) {
+        console.log(`\n📦 Probando: ${mtCode}`);
+        console.log('-'.repeat(60));
 
-        // 1. Probar URL de listado (Europa)
-        console.log('📋 PASO 1: Probando URL de listado de Europa')
-        console.log('URL: https://www.megatravel.com.mx/tools/vi.php?Dest=1\n')
+        try {
+            const data = await MegaConexionService.scrapeFromMegaConexion(mtCode);
 
-        await page.goto('https://www.megatravel.com.mx/tools/vi.php?Dest=1', {
-            waitUntil: 'networkidle2',
-            timeout: 60000
-        })
+            if (data) {
+                console.log(`\n✅ Datos extraídos:`);
+                console.log(`   Itinerario: ${data.itinerary?.length || 0} días`);
+                console.log(`   Ciudades: ${data.cities?.length || 0}`);
+                console.log(`   Países: ${data.countries?.length || 0}`);
+                console.log(`   Precio: ${data.price_usd ? '$' + data.price_usd : 'No encontrado'}`);
+                console.log(`   Impuestos: ${data.taxes_usd ? '$' + data.taxes_usd : 'No encontrado'}`);
+                console.log(`   Incluye: ${data.includes?.length || 0} items`);
+                console.log(`   No Incluye: ${data.not_includes?.length || 0} items`);
 
-        await new Promise(resolve => setTimeout(resolve, 3000)) // Esperar carga de JS
-
-        const listHtml = await page.content()
-        const $list = cheerio.load(listHtml)
-
-        // Buscar enlaces a tours
-        const tourLinks = []
-        $list('a[href*="viaje"]').each((i, elem) => {
-            const href = $list(elem).attr('href')
-            if (href && !tourLinks.includes(href)) {
-                tourLinks.push(href)
-            }
-        })
-
-        console.log(`✅ Tours encontrados: ${tourLinks.length}`)
-        if (tourLinks.length > 0) {
-            console.log('   Ejemplos:')
-            tourLinks.slice(0, 3).forEach((link, i) => {
-                console.log(`   ${i + 1}. ${link}`)
-            })
-        }
-
-        // 2. Buscar si hay un patrón de URL para detalles
-        console.log('\n📄 PASO 2: Buscando patrón de URL para detalles de tour\n')
-
-        // Buscar iframes o enlaces especiales
-        const iframes = []
-        $list('iframe').each((i, elem) => {
-            const src = $list(elem).attr('src')
-            if (src) iframes.push(src)
-        })
-
-        if (iframes.length > 0) {
-            console.log(`✅ iframes encontrados: ${iframes.length}`)
-            iframes.forEach((src, i) => {
-                console.log(`   ${i + 1}. ${src}`)
-            })
-        }
-
-        // 3. Probar URL de tour individual con código
-        console.log('\n🎯 PASO 3: Probando URL de tour individual\n')
-
-        // Intentar diferentes patrones de URL
-        const tourCode = '60968' // Código de ejemplo
-        const urlPatterns = [
-            `https://www.megatravel.com.mx/tools/viaje.php?code=${tourCode}`,
-            `https://www.megatravel.com.mx/tools/vi-detalle.php?code=${tourCode}`,
-            `https://www.megatravel.com.mx/tools/itinerario.php?code=${tourCode}`,
-            `https://www.megatravel.com.mx/tools/paquete.php?id=${tourCode}`
-        ]
-
-        for (const testUrl of urlPatterns) {
-            try {
-                console.log(`   Probando: ${testUrl}`)
-                const response = await page.goto(testUrl, {
-                    waitUntil: 'networkidle2',
-                    timeout: 10000
-                })
-
-                if (response.status() === 200) {
-                    const html = await page.content()
-                    const $ = cheerio.load(html)
-
-                    // Buscar itinerario
-                    const itineraryText = $('body').text().toLowerCase()
-                    const hasItinerary = itineraryText.includes('itinerario') ||
-                        itineraryText.includes('día 1') ||
-                        itineraryText.includes('day 1')
-
-                    if (hasItinerary) {
-                        console.log(`   ✅ ENCONTRADO! Esta URL tiene itinerario`)
-                        console.log(`   Guardando HTML para análisis...\n`)
-
-                        // Guardar HTML para inspección
-                        const fs = require('fs')
-                        fs.writeFileSync('debug-mega-conexion.html', html)
-                        console.log(`   📄 HTML guardado en: debug-mega-conexion.html\n`)
-
-                        // Mostrar estructura
-                        console.log('   📊 Estructura encontrada:')
-
-                        // Buscar días del itinerario
-                        const days = []
-                        $('[class*="day"], [class*="dia"], [id*="day"], [id*="dia"]').each((i, elem) => {
-                            const text = $(elem).text().trim().substring(0, 100)
-                            if (text) days.push(text)
-                        })
-
-                        if (days.length > 0) {
-                            console.log(`   ✅ Días de itinerario: ${days.length}`)
-                            days.slice(0, 3).forEach((day, i) => {
-                                console.log(`      Día ${i + 1}: ${day}...`)
-                            })
-                        }
-
-                        break
-                    } else {
-                        console.log(`   ❌ No tiene itinerario`)
-                    }
-                } else {
-                    console.log(`   ❌ Error ${response.status()}`)
+                if (data.itinerary && data.itinerary.length > 0) {
+                    console.log(`\n   📅 Primeros 3 días del itinerario:`);
+                    data.itinerary.slice(0, 3).forEach(day => {
+                        console.log(`      Día ${day.day_number}: ${day.title}`);
+                        console.log(`         ${day.description.substring(0, 100)}...`);
+                        if (day.meals) console.log(`         Comidas: ${day.meals}`);
+                    });
                 }
-            } catch (error) {
-                console.log(`   ❌ Error: ${error.message}`)
+
+                if (data.cities && data.cities.length > 0) {
+                    console.log(`\n   🏙️ Ciudades: ${data.cities.slice(0, 10).join(', ')}`);
+                }
+
+                if (data.not_includes && data.not_includes.length > 0) {
+                    console.log(`\n   ❌ No Incluye (primeros 3):`);
+                    data.not_includes.slice(0, 3).forEach(item => {
+                        console.log(`      - ${item.substring(0, 80)}`);
+                    });
+                }
+            } else {
+                console.log(`\n❌ No se pudo extraer datos`);
             }
+
+        } catch (error) {
+            console.error(`\n❌ Error:`, error.message);
         }
 
-        await browser.close()
+        console.log('\n' + '='.repeat(60));
 
-        console.log('\n\n✅ INVESTIGACIÓN COMPLETADA!\n')
-
-    } catch (error) {
-        console.error('\n❌ Error:', error.message)
+        // Esperar entre tours
+        if (testCodes.indexOf(mtCode) < testCodes.length - 1) {
+            console.log('\n⏳ Esperando 3 segundos antes del siguiente...\n');
+            await new Promise(resolve => setTimeout(resolve, 3000));
+        }
     }
+
+    console.log('\n✅ Prueba completada\n');
+    process.exit(0);
 }
 
-testMegaConexion()
+main().catch(error => {
+    console.error('Error fatal:', error);
+    process.exit(1);
+});

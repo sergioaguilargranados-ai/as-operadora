@@ -44,6 +44,7 @@ import {
     Bell
 } from 'lucide-react'
 import { Logo } from '@/components/Logo'
+import { UserMenu } from '@/components/UserMenu'
 import { TourMap } from '@/components/TourMap'
 
 
@@ -252,24 +253,7 @@ export default function TourDetailPage({ params }: { params: Promise<{ code: str
                         >
                             Tus Reservas
                         </button>
-                        <button
-                            onClick={() => window.location.href = '/ayuda'}
-                            className="hover:text-primary flex items-center gap-1"
-                        >
-                            <HelpCircle className="w-4 h-4" />
-                            <span className="hidden md:inline">Ayuda</span>
-                        </button>
-                        <button
-                            onClick={() => window.location.href = '/notificaciones'}
-                            className="hover:text-primary relative"
-                            title="Notificaciones"
-                        >
-                            <Bell className="w-5 h-5" />
-                            <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-                        </button>
-                        <div className="w-8 h-8 bg-[#0066FF] rounded-full flex items-center justify-center text-white font-semibold cursor-pointer" onClick={() => window.location.href = '/mi-cuenta'}>
-                            S
-                        </div>
+                        <UserMenu />
                     </div>
                 </div>
             </header>

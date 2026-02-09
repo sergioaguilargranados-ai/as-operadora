@@ -30,6 +30,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Textarea } from "@/components/ui/textarea"
+import { UserMenu } from '@/components/UserMenu'
 import { motion } from 'framer-motion'
 
 interface Approval {
@@ -183,22 +184,24 @@ export default function ApprovalsPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/30 py-8">
       <div className="container mx-auto px-4 max-w-6xl">
-        {/* Botón Volver */}
-        <Button
-          variant="ghost"
-          onClick={() => router.push('/')}
-          className="mb-6"
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Volver
-        </Button>
-
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-2">Aprobaciones de Viajes</h1>
-          <p className="text-muted-foreground">
-            Gestiona las solicitudes de viaje de tu equipo
-          </p>
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center gap-4">
+            <Button
+              variant="ghost"
+              onClick={() => router.push('/')}
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Volver
+            </Button>
+            <div>
+              <h1 className="text-4xl font-bold">Aprobaciones de Viajes</h1>
+              <p className="text-muted-foreground">
+                Gestiona las solicitudes de viaje de tu equipo
+              </p>
+            </div>
+          </div>
+          <UserMenu />
         </div>
 
         {/* Tabs */}

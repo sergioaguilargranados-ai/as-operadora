@@ -3003,7 +3003,7 @@ export default function Home() {
             <p>© 2024 AS Operadora de Viajes y Eventos. Todos los derechos reservados.</p>
             <p className="text-xs mt-1">AS Viajando</p>
             <p className="text-xs mt-2 opacity-50">
-              v2.301 | Build: 05 Feb 2026
+              v2.302 | Build: 09 Feb 2026
             </p>
           </div>
         </div>

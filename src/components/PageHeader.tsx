@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { Logo } from './Logo'
+import { UserMenu } from './UserMenu'
 import { Button } from './ui/button'
 import { ArrowLeft } from 'lucide-react'
 import { useRouter } from 'next/navigation'
@@ -10,6 +11,7 @@ interface PageHeaderProps {
   showBackButton?: boolean
   backButtonText?: string
   backButtonHref?: string
+  showUserMenu?: boolean
   children?: React.ReactNode
 }
 
@@ -17,6 +19,7 @@ export function PageHeader({
   showBackButton = true,
   backButtonText = 'Volver',
   backButtonHref,
+  showUserMenu = true,
   children
 }: PageHeaderProps) {
   const router = useRouter()
@@ -48,7 +51,10 @@ export function PageHeader({
               <Logo className="py-2" />
             </Link>
           </div>
-          {children}
+          <div className="flex items-center gap-3 md:gap-6 text-sm">
+            {children}
+            {showUserMenu && <UserMenu />}
+          </div>
         </div>
       </div>
     </header>
