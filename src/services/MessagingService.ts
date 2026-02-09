@@ -4,7 +4,7 @@
  */
 
 import twilio from 'twilio';
-import { query, queryOne } from '@/lib/db';
+import { query, queryOne, queryMany } from '@/lib/db';
 
 // Cliente de Twilio
 const twilioClient = twilio(
