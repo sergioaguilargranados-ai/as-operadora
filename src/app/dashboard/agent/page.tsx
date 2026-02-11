@@ -10,7 +10,8 @@ import { PageHeader } from '@/components/PageHeader'
 import {
     Wallet, DollarSign, TrendingUp, Link2, Users, Briefcase,
     Loader2, Copy, ExternalLink, MousePointerClick, UserCheck,
-    Clock, CheckCircle, ArrowRight, Eye, Share2, QrCode
+    Clock, CheckCircle, ArrowRight, Eye, Share2, QrCode,
+    Bell, Star, MessageCircle, X
 } from 'lucide-react'
 import {
     AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
@@ -82,6 +83,13 @@ function AgentDashboardContent() {
 
     const [data, setData] = useState<AgentDashboard | null>(null)
     const [loading, setLoading] = useState(true)
+    const [qrCode, setQrCode] = useState<string | null>(null)
+    const [showQR, setShowQR] = useState(false)
+    const [notifications, setNotifications] = useState<any[]>([])
+    const [unreadCount, setUnreadCount] = useState(0)
+    const [showNotifs, setShowNotifs] = useState(false)
+    const [reviews, setReviews] = useState<any[]>([])
+    const [reviewStats, setReviewStats] = useState<any>(null)
 
     // TODO: Obtener del contexto de autenticación
     const agentId = searchParams.get('agent_id') || '1'
@@ -102,12 +110,65 @@ function AgentDashboardContent() {
 
             if (json.success) {
                 setData(json.data)
+                // Fetch QR code
+                fetchQRCode()
+                // Fetch notifications
+                fetchNotifications(json.data.user_id)
+                // Fetch reviews
+                fetchReviews()
             }
         } catch (error) {
             console.error('Error fetching agent dashboard:', error)
         } finally {
             setLoading(false)
         }
+    }
+
+    const fetchQRCode = async () => {
+        try {
+            const res = await fetch(`/api/agent/qr-code?agent_id=${agentId}`)
+            const json = await res.json()
+            if (json.success) setQrCode(json.data.qr_code)
+        } catch (err) {
+            console.error('Error fetching QR:', err)
+        }
+    }
+
+    const fetchNotifications = async (userId: number) => {
+        try {
+            const res = await fetch(`/api/agent/notifications?user_id=${userId}&limit=10`)
+            const json = await res.json()
+            if (json.success) {
+                setNotifications(json.data.notifications)
+                setUnreadCount(json.data.unread_count)
+            }
+        } catch (err) {
+            console.error('Error fetching notifications:', err)
+        }
+    }
+
+    const fetchReviews = async () => {
+        try {
+            const res = await fetch(`/api/agent/reviews?agent_id=${agentId}`)
+            const json = await res.json()
+            if (json.success) {
+                setReviews(json.data.reviews)
+                setReviewStats(json.data.stats)
+            }
+        } catch (err) {
+            console.error('Error fetching reviews:', err)
+        }
+    }
+
+    const markAllAsRead = async () => {
+        if (!data?.user_id) return
+        await fetch('/api/agent/notifications', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ mark_all: true, user_id: data.user_id })
+        })
+        setUnreadCount(0)
+        setNotifications(prev => prev.map(n => ({ ...n, is_read: true })))
     }
 
     const formatCurrency = (amount: number) => {
@@ -171,12 +232,69 @@ function AgentDashboardContent() {
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/20">
             <PageHeader showBackButton={true} backButtonHref="/dashboard/agency">
-                <div>
+                <div className="flex-1">
                     <h1 className="text-xl font-bold flex items-center gap-2">
                         <Wallet className="w-5 h-5" />
                         Mi Panel de Agente
                     </h1>
                     <p className="text-sm text-muted-foreground">{data.agent_name} · {data.agency_name}</p>
+                </div>
+                {/* Bell de notificaciones */}
+                <div className="relative">
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        className="relative"
+                        onClick={() => setShowNotifs(!showNotifs)}
+                    >
+                        <Bell className="w-5 h-5" />
+                        {unreadCount > 0 && (
+                            <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold animate-pulse">
+                                {unreadCount}
+                            </span>
+                        )}
+                    </Button>
+
+                    {/* Dropdown de notificaciones */}
+                    {showNotifs && (
+                        <div className="absolute right-0 top-12 w-80 max-h-96 bg-white rounded-xl shadow-2xl border z-50 overflow-hidden">
+                            <div className="p-3 border-b flex items-center justify-between bg-gradient-to-r from-blue-50 to-indigo-50">
+                                <h4 className="font-semibold text-sm">Notificaciones</h4>
+                                <div className="flex gap-2">
+                                    {unreadCount > 0 && (
+                                        <Button variant="ghost" size="sm" className="text-xs h-7" onClick={markAllAsRead}>Leer todas</Button>
+                                    )}
+                                    <Button variant="ghost" size="sm" className="h-7" onClick={() => setShowNotifs(false)}>
+                                        <X className="w-4 h-4" />
+                                    </Button>
+                                </div>
+                            </div>
+                            <div className="overflow-y-auto max-h-72">
+                                {notifications.length > 0 ? notifications.map(n => (
+                                    <div
+                                        key={n.id}
+                                        className={`p-3 border-b last:border-b-0 hover:bg-blue-50/50 transition cursor-pointer ${!n.is_read ? 'bg-blue-50/30 border-l-4 border-l-blue-500' : ''}`}
+                                    >
+                                        <div className="flex items-start gap-2">
+                                            <span className="text-lg">{n.icon || '📌'}</span>
+                                            <div className="flex-1 min-w-0">
+                                                <p className={`text-sm ${!n.is_read ? 'font-semibold' : 'font-medium'}`}>{n.title}</p>
+                                                <p className="text-xs text-muted-foreground truncate">{n.message}</p>
+                                                <p className="text-xs text-muted-foreground mt-1">
+                                                    {new Date(n.created_at).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )) : (
+                                    <div className="p-6 text-center text-muted-foreground">
+                                        <Bell className="w-8 h-8 mx-auto mb-2 opacity-20" />
+                                        <p className="text-sm">Sin notificaciones</p>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
                 </div>
             </PageHeader>
 
@@ -272,8 +390,35 @@ function AgentDashboardContent() {
                                 <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white" onClick={shareReferralLink}>
                                     <Share2 className="w-4 h-4 mr-1" /> Compartir
                                 </Button>
+                                <Button variant="outline" size="sm" onClick={() => setShowQR(!showQR)}>
+                                    <QrCode className="w-4 h-4" />
+                                </Button>
                             </div>
                         </div>
+                        {/* QR Code expandable */}
+                        {showQR && qrCode && (
+                            <motion.div
+                                initial={{ height: 0, opacity: 0 }}
+                                animate={{ height: 'auto', opacity: 1 }}
+                                className="mt-4 pt-4 border-t border-blue-200 flex flex-col items-center"
+                            >
+                                <img src={qrCode} alt="QR Code de referido" className="w-48 h-48 rounded-lg shadow-md" />
+                                <p className="text-xs text-muted-foreground mt-2">Escanea para ir a tu liga de referido</p>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="mt-2"
+                                    onClick={() => {
+                                        const link = document.createElement('a')
+                                        link.href = qrCode
+                                        link.download = `qr-${data.referral_code}.png`
+                                        link.click()
+                                    }}
+                                >
+                                    Descargar QR
+                                </Button>
+                            </motion.div>
+                        )}
                     </Card>
                 </motion.div>
 
@@ -446,6 +591,67 @@ function AgentDashboardContent() {
                         </Card>
                     </motion.div>
                 </div>
+
+                {/* ═══ REVIEWS / CALIFICACIONES ═══ */}
+                {reviewStats && reviewStats.total_reviews > 0 && (
+                    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.65 }}>
+                        <Card className="p-6 mb-6">
+                            <h3 className="font-semibold mb-4 flex items-center gap-2">
+                                <Star className="w-5 h-5 text-yellow-500 fill-yellow-500" />
+                                Mis Calificaciones
+                                <Badge variant="secondary">{reviewStats.total_reviews} reviews</Badge>
+                            </h3>
+
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                {/* Rating promedio */}
+                                <div className="text-center">
+                                    <p className="text-5xl font-bold text-yellow-500">{reviewStats.avg_rating.toFixed(1)}</p>
+                                    <div className="flex justify-center gap-0.5 mt-1">
+                                        {[1, 2, 3, 4, 5].map(s => (
+                                            <Star key={s} className={`w-5 h-5 ${s <= Math.round(reviewStats.avg_rating) ? 'text-yellow-500 fill-yellow-500' : 'text-gray-200'}`} />
+                                        ))}
+                                    </div>
+                                    <p className="text-sm text-muted-foreground mt-1">{reviewStats.total_reviews} calificaciones</p>
+                                </div>
+
+                                {/* Distribución */}
+                                <div className="space-y-1.5">
+                                    {[5, 4, 3, 2, 1].map(star => {
+                                        const count = reviewStats.distribution[star] || 0
+                                        const pct = reviewStats.total_reviews > 0 ? (count / reviewStats.total_reviews) * 100 : 0
+                                        return (
+                                            <div key={star} className="flex items-center gap-2">
+                                                <span className="text-xs w-3 text-right">{star}</span>
+                                                <Star className="w-3 h-3 text-yellow-500 fill-yellow-500" />
+                                                <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
+                                                    <div className="h-full bg-yellow-400 rounded-full transition-all" style={{ width: `${pct}%` }} />
+                                                </div>
+                                                <span className="text-xs text-muted-foreground w-6">{count}</span>
+                                            </div>
+                                        )
+                                    })}
+                                </div>
+
+                                {/* Últimas reviews */}
+                                <div className="space-y-3">
+                                    {reviews.slice(0, 2).map(r => (
+                                        <div key={r.id} className="bg-gray-50 rounded-lg p-3">
+                                            <div className="flex items-center gap-1 mb-1">
+                                                {[1, 2, 3, 4, 5].map(s => (
+                                                    <Star key={s} className={`w-3 h-3 ${s <= r.rating ? 'text-yellow-500 fill-yellow-500' : 'text-gray-200'}`} />
+                                                ))}
+                                                {r.is_verified && <Badge className="ml-2 text-[10px] bg-green-100 text-green-700">✓ Verificada</Badge>}
+                                            </div>
+                                            <p className="text-sm font-medium">{r.title}</p>
+                                            <p className="text-xs text-muted-foreground line-clamp-2">{r.comment}</p>
+                                            <p className="text-[10px] text-muted-foreground mt-1">— {r.client_name || r.reviewer_name || 'Anónimo'}</p>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </Card>
+                    </motion.div>
+                )}
 
                 {/* ═══ TIPS / CTA ═══ */}
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }}>
