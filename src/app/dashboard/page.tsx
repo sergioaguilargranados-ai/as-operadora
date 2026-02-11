@@ -164,6 +164,22 @@ export default function DashboardPage() {
               <Button
                 variant="outline"
                 className="w-full justify-start"
+                onClick={() => router.push('/dashboard/agency')}
+              >
+                <DollarSign className="w-4 h-4 mr-2" />
+                Dashboard de Agencia
+              </Button>
+              <Button
+                variant="outline"
+                className="w-full justify-start"
+                onClick={() => router.push('/dashboard/agent')}
+              >
+                <CreditCard className="w-4 h-4 mr-2" />
+                Mi Panel de Agente
+              </Button>
+              <Button
+                variant="outline"
+                className="w-full justify-start"
                 onClick={() => router.push('/dashboard/corporate')}
               >
                 <Users className="w-4 h-4 mr-2" />
