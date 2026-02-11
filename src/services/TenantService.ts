@@ -101,20 +101,51 @@ class TenantService {
 
   /**
    * Detectar tenant desde request (dominio o subdomain)
+   * Soporta: mmta.app.asoperadora.com, mmta.app-asoperadora.com,
+   *          agencia1.asoperadora.com, y dominios personalizados
    */
   async detectTenant(host: string): Promise<Tenant | null> {
-    // Si es dominio personalizado (no contiene asoperadora.com)
-    if (!host.includes('asoperadora.com') && !host.includes('localhost')) {
-      return this.getTenantByDomain(host)
+    // Limpiar puerto si existe
+    const hostname = host.split(':')[0].toLowerCase()
+
+    // Si es localhost, no hay tenant
+    if (hostname === 'localhost' || hostname === '127.0.0.1') {
+      return null
     }
 
-    // Si es subdomain (agencia.asoperadora.com)
-    const subdomain = host.split('.')[0]
-    if (subdomain && subdomain !== 'www' && subdomain !== 'asoperadora') {
-      return this.getTenantBySubdomain(subdomain)
+    // Dominios principales sin tenant
+    const mainDomains = [
+      'asoperadora.com', 'www.asoperadora.com', 'app.asoperadora.com',
+      'as-ope-viajes.company', 'www.as-ope-viajes.company'
+    ]
+    if (mainDomains.includes(hostname)) {
+      return null
     }
 
-    // Si es dominio principal o localhost, sin tenant específico
+    // Extraer subdomain de las diferentes bases soportadas
+    const baseDomains = [
+      '.app.asoperadora.com',    // mmta.app.asoperadora.com
+      '.app-asoperadora.com',    // mmta.app-asoperadora.com
+      '.asoperadora.com',        // agencia1.asoperadora.com
+    ]
+
+    for (const baseDomain of baseDomains) {
+      if (hostname.endsWith(baseDomain)) {
+        const subdomain = hostname.replace(baseDomain, '')
+        if (subdomain && !subdomain.includes('.')) {
+          console.log(`[TenantService] Detected subdomain: "${subdomain}" from host: "${hostname}"`)
+          return this.getTenantBySubdomain(subdomain)
+        }
+      }
+    }
+
+    // Si no es ningún dominio conocido, podría ser dominio personalizado de agencia
+    if (!hostname.includes('asoperadora') && !hostname.includes('vercel')) {
+      console.log(`[TenantService] Detected custom domain: "${hostname}"`)
+      return this.getTenantByDomain(hostname)
+    }
+
+    // Sin tenant
     return null
   }
 

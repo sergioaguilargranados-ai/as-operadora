@@ -1,65 +1,109 @@
 import { NextRequest, NextResponse } from 'next/server'
 
+/**
+ * Middleware de Next.js para Multi-Empresa / Marca Blanca
+ * 
+ * NOTA: Este middleware corre en Edge Runtime, NO puede importar pg/TenantService.
+ * La detección real se hace vía /api/tenant/detect (Node.js runtime).
+ * Aquí solo extraemos subdomain/host y lo pasamos como header para que
+ * el frontend o las APIs lo usen.
+ */
 export async function middleware(request: NextRequest) {
   const host = request.headers.get('host') || ''
   const pathname = request.nextUrl.pathname
-
-  // Detectar tenant desde el host
-  const tenant = await detectTenantFromHost(host)
+  const url = request.nextUrl
 
   // Crear response
   const response = NextResponse.next()
 
-  // Agregar headers personalizados para usar en las APIs
-  if (tenant) {
-    response.headers.set('x-tenant-id', tenant.id.toString())
-    response.headers.set('x-tenant-type', tenant.type)
-    response.headers.set('x-tenant-name', tenant.name)
+  // ─────────────────────────────────────────────
+  // 1. Detectar subdomain o dominio personalizado
+  // ─────────────────────────────────────────────
+  const tenantInfo = extractTenantFromHost(host)
+
+  if (tenantInfo) {
+    // Pasar info al frontend/APIs vía headers
+    response.headers.set('x-tenant-host', host)
+    response.headers.set('x-tenant-subdomain', tenantInfo.subdomain || '')
+    response.headers.set('x-tenant-custom-domain', tenantInfo.customDomain || '')
+    response.headers.set('x-white-label', 'true')
   }
 
-  // Manejar white-label para agencias
-  if (tenant?.type === 'agency') {
-    // Aquí podrías agregar lógica adicional para white-label
-    response.headers.set('x-white-label', 'true')
+  // ─────────────────────────────────────────────
+  // 2. Detectar referral code (?r=CODIGO)
+  // ─────────────────────────────────────────────
+  const referralCode = url.searchParams.get('r')
+  if (referralCode) {
+    // Guardar referral en cookie (30 días)
+    response.cookies.set('as_referral', referralCode, {
+      maxAge: 30 * 24 * 60 * 60, // 30 días
+      path: '/',
+      httpOnly: false, // Frontend necesita leerla
+      sameSite: 'lax',
+    })
+    response.headers.set('x-referral-code', referralCode)
+  } else {
+    // Verificar si ya existe cookie de referral
+    const existingReferral = request.cookies.get('as_referral')?.value
+    if (existingReferral) {
+      response.headers.set('x-referral-code', existingReferral)
+    }
   }
 
   return response
 }
 
 /**
- * Detectar tenant desde el host
+ * Extrae información de tenant desde el hostname
  */
-async function detectTenantFromHost(host: string): Promise<{
-  id: number
-  type: string
-  name: string
-} | null> {
+function extractTenantFromHost(host: string): {
+  subdomain: string | null
+  customDomain: string | null
+} | null {
   // Remover puerto si existe
   const hostname = host.split(':')[0]
 
-  // Si es localhost, retornar null (sin tenant específico)
+  // Si es localhost, no hay tenant
   if (hostname === 'localhost' || hostname === '127.0.0.1') {
     return null
   }
 
-  // Si es dominio principal (asoperadora.com o www.asoperadora.com)
-  if (hostname === 'asoperadora.com' || hostname === 'www.asoperadora.com') {
+  // Dominios principales de AS Operadora (sin tenant)
+  const mainDomains = [
+    'asoperadora.com',
+    'www.asoperadora.com',
+    'app.asoperadora.com',
+    'as-ope-viajes.company',
+    'www.as-ope-viajes.company',
+  ]
+
+  if (mainDomains.includes(hostname)) {
     return null
   }
 
-  // Si es subdomain (ej: agencia1.asoperadora.com)
-  if (hostname.endsWith('.asoperadora.com')) {
-    const subdomain = hostname.split('.')[0]
+  // Verificar si es subdominio de asoperadora.com o app.asoperadora.com
+  // Ejemplos: mmta.app.asoperadora.com, agencia1.asoperadora.com
+  const baseDomains = [
+    '.app.asoperadora.com',    // mmta.app.asoperadora.com
+    '.app-asoperadora.com',    // mmta.app-asoperadora.com  
+    '.asoperadora.com',        // agencia1.asoperadora.com
+  ]
 
-    // TODO: Aquí harías la consulta a la BD para obtener el tenant
-    // Por ahora retornamos null, se implementará cuando conectemos la BD
-    console.log('Detected subdomain:', subdomain)
-    return null
+  for (const baseDomain of baseDomains) {
+    if (hostname.endsWith(baseDomain)) {
+      const subdomain = hostname.replace(baseDomain, '')
+      if (subdomain && !subdomain.includes('.')) {
+        return { subdomain, customDomain: null }
+      }
+    }
   }
 
-  // Si es dominio personalizado (ej: agenciaviajes.com)
-  // TODO: Consultar en la BD si existe un tenant con este custom_domain
-  console.log('Detected custom domain:', hostname)
+  // Si no es ningún dominio conocido de AS Operadora, 
+  // podría ser un dominio personalizado de agencia
+  if (!hostname.includes('asoperadora') && !hostname.includes('vercel')) {
+    return { subdomain: null, customDomain: hostname }
+  }
+
   return null
 }
 

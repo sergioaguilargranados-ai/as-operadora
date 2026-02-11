@@ -5,9 +5,11 @@ import ClientBody from "./ClientBody";
 import Script from "next/script";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { FeaturesProvider } from "@/contexts/FeaturesContext";
+import { WhiteLabelProvider } from "@/contexts/WhiteLabelContext";
 import { CookieConsent } from "@/components/CookieConsent";
 import { ChatWidget } from "@/components/ChatWidget";
 import { WhatsAppWidget } from "@/components/WhatsAppWidget";
+import { BrandStyles } from "@/components/BrandStyles";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -30,7 +32,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${geistSans.variable} ${geistMono.variable}`}>
+    <html lang="es" className={`${geistSans.variable} ${geistMono.variable}`}>
       <head>
         <Script
           crossOrigin="anonymous"
@@ -39,12 +41,15 @@ export default function RootLayout({
       </head>
       <body suppressHydrationWarning className="antialiased">
         <AuthProvider>
-          <FeaturesProvider>
-            <ClientBody>{children}</ClientBody>
-            <CookieConsent />
-            <WhatsAppWidget />
-            <ChatWidget />
-          </FeaturesProvider>
+          <WhiteLabelProvider>
+            <BrandStyles />
+            <FeaturesProvider>
+              <ClientBody>{children}</ClientBody>
+              <CookieConsent />
+              <WhatsAppWidget />
+              <ChatWidget />
+            </FeaturesProvider>
+          </WhiteLabelProvider>
         </AuthProvider>
       </body>
     </html>
