@@ -151,6 +151,51 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Calcular comisiones automáticamente si el booking tiene agente/referral
+    if (details?.referral_code || details?.agent_id) {
+      try {
+        const { commissionService } = await import('@/services/CommissionService');
+        const { agencyService } = await import('@/services/AgencyService');
+
+        let agentTenantUserId = details.agent_id;
+
+        // Si viene por referral_code, buscar el agente
+        if (!agentTenantUserId && details.referral_code) {
+          const agent = await agencyService.getAgentByReferralCode(details.referral_code);
+          if (agent) {
+            agentTenantUserId = agent.id;
+
+            // Registrar conversión de referido
+            try {
+              const { referralService } = await import('@/services/ReferralService');
+              await referralService.trackConversion({
+                agentId: agent.id,
+                userId: booking.user_id,
+                conversionType: 'booking',
+                bookingId: booking.id,
+                revenueAmount: parseFloat(booking.total_price) || 0,
+                currency: booking.currency
+              });
+              console.log(`🔗 Conversión de referido registrada: agente ${agent.id}, booking ${booking.id}`);
+            } catch (refErr) {
+              console.error('⚠️ Error registrando conversión de referido:', refErr);
+            }
+          }
+        }
+
+        // Calcular comisión
+        if (agentTenantUserId) {
+          const commission = await commissionService.calculateCommission(booking.id, agentTenantUserId);
+          if (commission) {
+            console.log(`💰 Comisión auto-calculada: $${commission.commission_amount} para booking #${booking.id}`);
+          }
+        }
+      } catch (commErr) {
+        console.error('⚠️ Error calculando comisión:', commErr);
+        // No fallar la reserva si la comisión falla
+      }
+    }
+
     return NextResponse.json(
       successResponse({ booking: payload, id: booking.id }),
       { status: 201, headers: { 'X-API-Version': '1.0' } }
