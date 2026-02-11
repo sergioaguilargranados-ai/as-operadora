@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { commissionService } from '@/services/CommissionService'
+import { AgentNotificationService } from '@/services/AgentNotificationService'
+import { queryOne } from '@/lib/db'
 
 export const runtime = 'nodejs'
 
@@ -48,6 +50,17 @@ export async function POST(request: NextRequest) {
                     result = await commissionService.calculateCommission(booking_id, agent_id)
                     if (result) {
                         console.log(`[Webhook] Comisión calculada: $${result.commission_amount} para booking #${booking_id}`)
+                        // Auto-notificación al agente
+                        try {
+                            const booking = await queryOne('SELECT booking_reference, booking_type FROM bookings WHERE id = $1', [booking_id])
+                            await AgentNotificationService.notifyCommissionCreated(agent_id, {
+                                amount: result.commission_amount || result.total_commission_amount || 0,
+                                bookingReference: booking?.booking_reference || `#${booking_id}`,
+                                bookingType: booking?.booking_type || 'Reserva'
+                            })
+                            // Verificar logros
+                            await AgentNotificationService.checkAchievements(agent_id)
+                        } catch (e) { console.error('[Webhook] Error sending notification:', e) }
                     }
                 }
                 break
@@ -58,6 +71,20 @@ export async function POST(request: NextRequest) {
                 await commissionService.processBookingStatusChange(booking_id, new_status)
                 result = { action: 'commission_available', booking_id }
                 console.log(`[Webhook] Comisión #${booking_id} marcada como disponible`)
+                // Notificar al agente que su comisión está disponible
+                try {
+                    const commission = await queryOne(
+                        'SELECT agent_id, agent_commission_amount FROM agency_commissions WHERE booking_id = $1 AND is_active = true',
+                        [booking_id]
+                    )
+                    if (commission?.agent_id) {
+                        const booking = await queryOne('SELECT booking_reference FROM bookings WHERE id = $1', [booking_id])
+                        await AgentNotificationService.notifyCommissionAvailable(commission.agent_id, {
+                            amount: parseFloat(commission.agent_commission_amount) || 0,
+                            bookingReference: booking?.booking_reference || `#${booking_id}`
+                        })
+                    }
+                } catch (e) { console.error('[Webhook] Error sending availability notification:', e) }
                 break
 
             case 'cancelled':

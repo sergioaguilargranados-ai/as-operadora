@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { query, queryOne, insertOne } from '@/lib/db'
+import { AgentNotificationService } from '@/services/AgentNotificationService'
 
 export const runtime = 'nodejs'
 
@@ -100,6 +101,21 @@ export async function POST(request: NextRequest) {
             is_public: true,
             is_active: true
         })
+
+        // Notificar al agente
+        try {
+            const clientName = client_id
+                ? (await queryOne('SELECT client_name FROM agency_clients WHERE id = $1', [client_id]))?.client_name || 'Un cliente'
+                : 'Un cliente'
+            await AgentNotificationService.notifyNewReview(agent_id, {
+                rating,
+                title: title || `Calificación de ${rating} estrellas`,
+                clientName
+            })
+            await AgentNotificationService.checkAchievements(agent_id)
+        } catch (notifErr) {
+            console.error('Error sending review notification:', notifErr)
+        }
 
         return NextResponse.json({
             success: true,

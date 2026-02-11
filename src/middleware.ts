@@ -1,20 +1,49 @@
 import { NextRequest, NextResponse } from 'next/server'
 
 /**
- * Middleware de Next.js para Multi-Empresa / Marca Blanca
+ * Middleware de Next.js para Multi-Empresa / Marca Blanca + Protección de Rutas
  * 
  * NOTA: Este middleware corre en Edge Runtime, NO puede importar pg/TenantService.
  * La detección real se hace vía /api/tenant/detect (Node.js runtime).
  * Aquí solo extraemos subdomain/host y lo pasamos como header para que
  * el frontend o las APIs lo usen.
+ * 
+ * Sprint 6: Añade protección server-side de rutas por rol.
  */
+
+// ═══════════════════════════════════════
+// Rutas protegidas por rol
+// ═══════════════════════════════════════
+interface RouteRule {
+  path: string
+  roles: string[]      // roles permitidos
+  requireAuth: boolean
+}
+
+const PROTECTED_ROUTES: RouteRule[] = [
+  // Super Admin
+  { path: '/dashboard/admin', roles: ['SUPER_ADMIN'], requireAuth: true },
+  // Agency Admin
+  { path: '/dashboard/agency', roles: ['SUPER_ADMIN', 'AGENCY_ADMIN'], requireAuth: true },
+  // Agent
+  { path: '/dashboard/agent', roles: ['SUPER_ADMIN', 'AGENCY_ADMIN', 'AGENT'], requireAuth: true },
+  // Dashboard general - cualquier usuario autenticado
+  { path: '/dashboard/payments', roles: ['SUPER_ADMIN', 'AGENCY_ADMIN', 'AGENT', 'CLIENT', 'admin', 'user'], requireAuth: true },
+  { path: '/dashboard/corporate', roles: ['SUPER_ADMIN', 'AGENCY_ADMIN', 'AGENT', 'CLIENT', 'admin', 'user'], requireAuth: true },
+  { path: '/dashboard', roles: ['SUPER_ADMIN', 'AGENCY_ADMIN', 'AGENT', 'CLIENT', 'admin', 'user'], requireAuth: true },
+  // Mis reservas
+  { path: '/mis-reservas', roles: ['SUPER_ADMIN', 'AGENCY_ADMIN', 'AGENT', 'CLIENT', 'admin', 'user'], requireAuth: true },
+  // Aprobaciones
+  { path: '/approvals', roles: ['SUPER_ADMIN', 'AGENCY_ADMIN', 'admin'], requireAuth: true },
+]
+
 export async function middleware(request: NextRequest) {
   const host = request.headers.get('host') || ''
   const pathname = request.nextUrl.pathname
   const url = request.nextUrl
 
   // Crear response
-  const response = NextResponse.next()
+  let response = NextResponse.next()
 
   // ─────────────────────────────────────────────
   // 1. Detectar subdomain o dominio personalizado
@@ -50,7 +79,100 @@ export async function middleware(request: NextRequest) {
     }
   }
 
+  // ─────────────────────────────────────────────
+  // 3. Protección de rutas por rol (Sprint 6)
+  // ─────────────────────────────────────────────
+  const matchedRoute = PROTECTED_ROUTES.find(r => pathname.startsWith(r.path))
+
+  if (matchedRoute && matchedRoute.requireAuth) {
+    const userPayload = extractUserFromToken(request)
+
+    if (!userPayload) {
+      // No autenticado → redirigir a login con returnUrl
+      const loginUrl = new URL('/login', request.url)
+      loginUrl.searchParams.set('returnUrl', pathname)
+      return NextResponse.redirect(loginUrl)
+    }
+
+    // Verificar rol
+    const userRole = (userPayload.role || 'CLIENT').toUpperCase()
+    const hasAccess = matchedRoute.roles.some(r =>
+      r.toUpperCase() === userRole ||
+      // user_id = 1 siempre es super admin
+      userPayload.id === 1
+    )
+
+    if (!hasAccess) {
+      // Sin permisos → redirigir a dashboard base con mensaje
+      const dashUrl = new URL('/dashboard', request.url)
+      dashUrl.searchParams.set('access_denied', '1')
+      dashUrl.searchParams.set('required_role', matchedRoute.roles.join(','))
+      return NextResponse.redirect(dashUrl)
+    }
+
+    // Pasar info de usuario a la respuesta
+    response.headers.set('x-user-id', String(userPayload.id))
+    response.headers.set('x-user-role', userPayload.role || 'CLIENT')
+    response.headers.set('x-user-email', userPayload.email || '')
+  }
+
   return response
+}
+
+/**
+ * Intenta extraer el payload del JWT desde cookies o localStorage backup.
+ * Edge Runtime NO puede usar jsonwebtoken, así que solo decodificamos el payload base64.
+ * La verificación real de firma se hace en las APIs (Node.js runtime).
+ */
+function extractUserFromToken(request: NextRequest): { id: number; email: string; role: string } | null {
+  // Intentar obtener token de cookie
+  const token = request.cookies.get('as_token')?.value
+
+  // También buscar en header Authorization
+  const authHeader = request.headers.get('authorization')
+  const bearerToken = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null
+
+  const jwt = token || bearerToken
+
+  if (!jwt) {
+    // Intentar ver si hay cookie as_user (fallback para nuestro sistema basado en localStorage)
+    const userCookie = request.cookies.get('as_user')?.value
+    if (userCookie) {
+      try {
+        const user = JSON.parse(userCookie)
+        return {
+          id: parseInt(user.id) || 0,
+          email: user.email || '',
+          role: user.role || 'CLIENT'
+        }
+      } catch { return null }
+    }
+    return null
+  }
+
+  try {
+    // Decodificar JWT payload (sin verificar firma, eso se hace en APIs)
+    const parts = jwt.split('.')
+    if (parts.length !== 3) return null
+
+    // Base64url decode del payload
+    const payload = parts[1]
+    const decoded = atob(payload.replace(/-/g, '+').replace(/_/g, '/'))
+    const data = JSON.parse(decoded)
+
+    // Verificar expiración
+    if (data.exp && Date.now() / 1000 > data.exp) {
+      return null // Token expirado
+    }
+
+    return {
+      id: data.id || data.userId || 0,
+      email: data.email || '',
+      role: data.role || data.user_type || 'CLIENT'
+    }
+  } catch {
+    return null
+  }
 }
 
 /**

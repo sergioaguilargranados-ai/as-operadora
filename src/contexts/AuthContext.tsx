@@ -50,6 +50,18 @@ const removeFromStorage = (key: string): void => {
   }
 }
 
+// Cookie helpers para que el middleware pueda leer el estado de auth
+const setCookie = (name: string, value: string, days: number = 7): void => {
+  if (typeof document === 'undefined') return
+  const expires = new Date(Date.now() + days * 24 * 60 * 60 * 1000).toUTCString()
+  document.cookie = `${name}=${encodeURIComponent(value)};expires=${expires};path=/;samesite=lax`
+}
+
+const removeCookie = (name: string): void => {
+  if (typeof document === 'undefined') return
+  document.cookie = `${name}=;expires=Thu,01 Jan 1970 00:00:00 GMT;path=/`
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [mounted, setMounted] = useState(false)
@@ -87,9 +99,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (data.success && data.user) {
         setUser(data.user)
         setToStorage('as_user', JSON.stringify(data.user))
+        setCookie('as_user', JSON.stringify({ id: data.user.id, email: data.user.email, role: data.user.role || 'CLIENT' }))
         const accessToken = data.accessToken || data.token
         if (accessToken) {
           setToStorage('as_token', accessToken)
+          setCookie('as_token', accessToken)
         }
         if (data.refreshToken) {
           setToStorage('as_refresh', data.refreshToken)
@@ -135,8 +149,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // Auto-login después del registro
         setUser(data.user)
         setToStorage('as_user', JSON.stringify(data.user))
+        setCookie('as_user', JSON.stringify({ id: data.user.id, email: data.user.email, role: data.user.role || 'CLIENT' }))
         if (data.token) {
           setToStorage('as_token', data.token)
+          setCookie('as_token', data.token)
         }
         console.log('✅ REGISTRO EXITOSO EN BD:', data.user.email)
         alert(`✅ Usuario registrado exitosamente en BD!\nID: ${data.user.id}\nEmail: ${data.user.email}`)
@@ -158,6 +174,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     removeFromStorage('as_user')
     removeFromStorage('as_token')
     removeFromStorage('as_refresh')
+    removeCookie('as_user')
+    removeCookie('as_token')
   }
 
   return (

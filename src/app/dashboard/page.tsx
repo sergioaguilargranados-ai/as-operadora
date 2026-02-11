@@ -1,12 +1,13 @@
 "use client"
 
-import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect, Suspense } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { PageHeader } from '@/components/PageHeader'
+import { useToast } from '@/hooks/use-toast'
 import {
   FileText,
   DollarSign,
@@ -31,9 +32,11 @@ interface DashboardStats {
   totalCommissions: number
 }
 
-export default function DashboardPage() {
+function DashboardContent() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { user, isAuthenticated } = useAuth()
+  const { toast } = useToast()
   const [stats, setStats] = useState<DashboardStats | null>(null)
   const [loading, setLoading] = useState(true)
 
@@ -41,6 +44,16 @@ export default function DashboardPage() {
     if (!isAuthenticated) {
       router.push('/login')
       return
+    }
+
+    // Verificar si hubo access denied
+    if (searchParams.get('access_denied') === '1') {
+      const requiredRole = searchParams.get('required_role') || 'Admin'
+      toast({
+        title: '🔒 Acceso denegado',
+        description: `No tienes permisos para acceder a esa sección. Se requiere rol: ${requiredRole}`,
+        variant: 'destructive'
+      })
     }
 
     fetchDashboardStats()
@@ -215,5 +228,13 @@ export default function DashboardPage() {
         </div>
       </main>
     </div>
+  )
+}
+
+export default function DashboardPage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center h-screen"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" /></div>}>
+      <DashboardContent />
+    </Suspense>
   )
 }
