@@ -1,7 +1,7 @@
 # 📋 AG-Histórico de Cambios - AS Operadora
 
-**Última actualización:** 11 de Febrero de 2026 - 19:30 CST  
-**Versión actual:** v2.312  
+**Última actualización:** 11 de Febrero de 2026 - 22:00 CST  
+**Versión actual:** v2.313  
 **Actualizado por:** AntiGravity AI Assistant  
 **Propósito:** Documento maestro del proyecto para trabajo con agentes AntiGravity
 
@@ -34,6 +34,44 @@ Esto permite detectar si se perdieron tablas/campos entre versiones.
 ---
 
 ## 📅 HISTORIAL DE CAMBIOS
+
+### v2.313 - 11 de Febrero de 2026 - 22:00 CST
+
+**🏢 Sprint 7b: White-Label — Markup, Referidos, Emails Branded y Onboarding**
+
+**OBS-006: Markup de precios por agencia:**
+- ✅ Migración `032_add_markup_to_wl_config.sql` — `markup_percentage`, `markup_fixed`, `markup_type` en `white_label_config`
+- ✅ `TenantService.ts` — Interface `WhiteLabelConfig` con campos de markup
+- ✅ `WhiteLabelContext.tsx` — Expone `markupPercentage`, `markupFixed`, `markupType` + función `applyMarkup(basePrice)`
+- ✅ Hook `applyMarkup()` soporta tipos: `percentage`, `fixed`, `both`
+
+**Referral Auto-Vinculación:**
+- ✅ `register/route.ts` — Al registrarse, si hay cookie `as_referral` o `body.referral_code`, se busca agente, se crea `referral_conversion`, se vincula usuario al tenant como `client`
+- ✅ Inserciones a `tenant_users` y `agency_clients` (graceful fallback si tabla no existe)
+- ✅ Flow completo: `?r=CODIGO` → cookie → registro → auto-link
+
+**OBS-007: Emails con branding del tenant:**
+- ✅ `NotificationService.ts` — Interface `TenantBranding` con logo/colores/contacto
+- ✅ Método `getTenantBranding(tenantId)` — Carga branding desde BD (join tenants + white_label_config)
+- ✅ Método `brandedEmailWrapper()` — Template HTML reutilizable con colores/logo/footer dinámicos
+- ✅ `sendBookingConfirmation` — Acepta `tenantId`, usa wrapper branded
+- ✅ `sendInvoiceEmail` — Acepta `tenantId`, usa wrapper branded
+- ✅ `sendPaymentReminder` — Acepta `tenantId`, usa wrapper branded
+- ✅ `sendCancellationEmail` — Acepta `tenantId`, usa wrapper branded
+- ✅ `sendEmail` — Acepta `fromName` dinámico por tenant
+
+**OBS-010: Onboarding para nuevas agencias:**
+- ✅ Migración `033_agency_applications_table.sql` — Tabla con datos de empresa, contacto, ubicación, estado de solicitud
+- ✅ API `POST /api/agency-onboarding` — Formulario público, validación, notificación a admin
+- ✅ API `GET /api/agency-onboarding` — Listado de solicitudes (admin)
+- ✅ Página `/agencia/registro` — Formulario público con beneficios, validación, respuesta exitosa
+- ✅ Estados: `pending` → `reviewing` → `approved` / `rejected`
+
+**Edge Middleware Optimization:**
+- ✅ `middleware.ts` — Pre-fetch tenant config desde `/api/tenant/detect` con cache in-memory (5 min TTL)
+- ✅ Config se pasa vía cookie `x-tenant-config` para que `WhiteLabelContext` la lea sin fetch client-side
+- ✅ `WhiteLabelContext.tsx` — Lee cookie `x-tenant-config` antes de hacer fetch (optimización de carga)
+- ✅ `tenantConfigCache` Map con TTL — Se recicla con el Edge Worker de Vercel
 
 ### v2.312 - 11 de Febrero de 2026 - 19:30 CST
 

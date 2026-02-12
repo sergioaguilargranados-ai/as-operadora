@@ -50,6 +50,9 @@ export interface WhiteLabelConfig {
   facebook_url?: string
   twitter_url?: string
   instagram_url?: string
+  markup_percentage?: number
+  markup_fixed?: number
+  markup_type?: 'percentage' | 'fixed' | 'both'
   created_at: Date
   updated_at: Date
 }

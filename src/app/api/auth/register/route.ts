@@ -113,6 +113,65 @@ export async function POST(request: NextRequest) {
         console.error('⚠️ Error enviando email de verificación:', emailError);
         // No fallar el registro si el correo falla
       }
+
+      // ─── Auto-vinculación de referido ───
+      try {
+        const referralCode = request.cookies.get('as_referral')?.value
+          || body.referral_code
+          || request.headers.get('x-referral-code')
+
+        if (referralCode) {
+          const { queryOne, query: dbQuery } = await import('@/lib/db');
+
+          // Buscar al agente que tiene este referral_code
+          const agent = await queryOne<{ user_id: number; tenant_id: number }>(
+            `SELECT tu.user_id, tu.tenant_id
+             FROM tenant_users tu
+             WHERE tu.referral_code = $1 AND tu.is_active = true
+             LIMIT 1`,
+            [referralCode]
+          );
+
+          if (agent) {
+            // Registrar la conversión en referral_conversions
+            await dbQuery(
+              `INSERT INTO referral_conversions
+               (referral_code, agent_user_id, converted_user_id, tenant_id, conversion_type, ip_address)
+               VALUES ($1, $2, $3, $4, 'registration', $5)
+               ON CONFLICT DO NOTHING`,
+              [referralCode, agent.user_id, result.user.id, agent.tenant_id, ipAddress]
+            );
+
+            // Vincular al nuevo usuario con el tenant del agente como cliente
+            await dbQuery(
+              `INSERT INTO tenant_users (user_id, tenant_id, role, is_active)
+               VALUES ($1, $2, 'client', true)
+               ON CONFLICT (user_id, tenant_id) DO NOTHING`,
+              [result.user.id, agent.tenant_id]
+            );
+
+            // Registrar en agency_clients si existe la tabla
+            try {
+              await dbQuery(
+                `INSERT INTO agency_clients (tenant_id, user_id, referred_by_agent_id, referral_code, status)
+                 VALUES ($1, $2, $3, $4, 'active')
+                 ON CONFLICT DO NOTHING`,
+                [agent.tenant_id, result.user.id, agent.user_id, referralCode]
+              );
+            } catch { /* tabla puede no existir aún */ }
+
+            console.log('🔗 Referido vinculado:', {
+              newUserId: result.user.id,
+              agentUserId: agent.user_id,
+              tenantId: agent.tenant_id,
+              referralCode
+            });
+          }
+        }
+      } catch (referralError) {
+        console.error('⚠️ Error vinculando referido:', referralError);
+        // No fallar el registro si la vinculación falla
+      }
     }
 
     return NextResponse.json(result, { status: 201 })

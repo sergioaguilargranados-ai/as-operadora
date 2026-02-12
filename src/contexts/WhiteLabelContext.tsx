@@ -34,6 +34,9 @@ export interface WhiteLabelConfigData {
     meta_description: string | null
     facebook_url: string | null
     instagram_url: string | null
+    markup_percentage: number | null
+    markup_fixed: number | null
+    markup_type: 'percentage' | 'fixed' | 'both' | null
 }
 
 export interface WhiteLabelState {
@@ -67,6 +70,11 @@ export interface WhiteLabelState {
     metaTitle: string
     metaDescription: string
 
+    // Markup pricing
+    markupPercentage: number
+    markupFixed: number
+    markupType: 'percentage' | 'fixed' | 'both'
+
     // State flags
     isWhiteLabel: boolean
     isLoading: boolean
@@ -75,6 +83,7 @@ export interface WhiteLabelState {
 
 interface WhiteLabelContextType extends WhiteLabelState {
     refresh: () => Promise<void>
+    applyMarkup: (basePrice: number) => number
 }
 
 // ─────────────────────────────────────────────────
@@ -105,6 +114,10 @@ const AS_OPERADORA_DEFAULTS: WhiteLabelState = {
 
     metaTitle: 'AS Operadora de Viajes y Eventos | AS Viajando',
     metaDescription: 'Descubre experiencias únicas con AS Operadora de Viajes y Eventos.',
+
+    markupPercentage: 0,
+    markupFixed: 0,
+    markupType: 'percentage',
 
     isWhiteLabel: false,
     isLoading: true,
@@ -156,7 +169,24 @@ export function WhiteLabelProvider({ children }: { children: ReactNode }) {
                 return
             }
 
-            // Producción: detectar por host completo
+            // ── Optimización: leer config pre-fetched por middleware (cookie) ──
+            if (typeof document !== 'undefined') {
+                const cookieMatch = document.cookie.match(/x-tenant-config=([^;]+)/)
+                if (cookieMatch) {
+                    try {
+                        const cachedData = JSON.parse(decodeURIComponent(cookieMatch[1]))
+                        if (cachedData?.tenant && cachedData?.whiteLabelConfig !== undefined) {
+                            applyTenantConfig(cachedData.tenant, cachedData.whiteLabelConfig)
+                            console.log('WhiteLabel: Config loaded from middleware cache')
+                            return
+                        }
+                    } catch {
+                        // cookie inválida, seguir con fetch normal
+                    }
+                }
+            }
+
+            // Producción: detectar por host completo (fallback si no hay cookie)
             const res = await fetch(`/api/tenant/detect?host=${encodeURIComponent(currentHost)}`)
             const data = await res.json()
 
@@ -205,6 +235,10 @@ export function WhiteLabelProvider({ children }: { children: ReactNode }) {
             metaTitle: wlConfig?.meta_title || tenant.company_name,
             metaDescription: wlConfig?.meta_description || `Bienvenido a ${tenant.company_name}`,
 
+            markupPercentage: Number(wlConfig?.markup_percentage) || 0,
+            markupFixed: Number(wlConfig?.markup_fixed) || 0,
+            markupType: wlConfig?.markup_type || 'percentage',
+
             isWhiteLabel: true,
             isLoading: false,
             error: null,
@@ -216,9 +250,25 @@ export function WhiteLabelProvider({ children }: { children: ReactNode }) {
         detectTenant()
     }, [detectTenant])
 
+    // Función para aplicar markup a un precio base
+    const applyMarkup = useCallback((basePrice: number): number => {
+        if (!state.isWhiteLabel) return basePrice
+        const { markupPercentage, markupFixed, markupType } = state
+
+        let finalPrice = basePrice
+        if (markupType === 'percentage' || markupType === 'both') {
+            finalPrice += basePrice * (markupPercentage / 100)
+        }
+        if (markupType === 'fixed' || markupType === 'both') {
+            finalPrice += markupFixed
+        }
+        return Math.round(finalPrice * 100) / 100 // Redondear a 2 decimales
+    }, [state.isWhiteLabel, state.markupPercentage, state.markupFixed, state.markupType])
+
     const contextValue: WhiteLabelContextType = {
         ...state,
         refresh: detectTenant,
+        applyMarkup,
     }
 
     return (

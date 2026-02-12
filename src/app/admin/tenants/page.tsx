@@ -17,6 +17,8 @@ import {
     Edit,
     Trash2,
     Users,
+    UserPlus,
+    UserMinus,
     BarChart3,
     Palette,
     Globe,
@@ -126,6 +128,32 @@ const EMPTY_FORM: TenantFormData = {
 };
 
 // ─────────────────────────────────────────────
+// Types para gestión de usuarios
+// ─────────────────────────────────────────────
+interface TenantUserData {
+    tenant_user_id: number;
+    user_id: number;
+    role: string;
+    department: string | null;
+    cost_center: string | null;
+    tenant_active: boolean;
+    joined_at: string;
+    name: string;
+    email: string;
+    phone: string | null;
+    user_role: string;
+    user_active: boolean;
+}
+
+interface SearchedUser {
+    id: number;
+    name: string;
+    email: string;
+    phone: string | null;
+    role: string;
+}
+
+// ─────────────────────────────────────────────
 // Component
 // ─────────────────────────────────────────────
 
@@ -147,6 +175,17 @@ export default function AdminTenantsPage() {
     const [editingTenant, setEditingTenant] = useState<TenantData | null>(null);
     const [formData, setFormData] = useState<TenantFormData>(EMPTY_FORM);
     const [activeTab, setActiveTab] = useState<'general' | 'branding' | 'whitelabel'>('general');
+
+    // Users modal state
+    const [showUsersModal, setShowUsersModal] = useState(false);
+    const [usersTenant, setUsersTenant] = useState<TenantData | null>(null);
+    const [tenantUsers, setTenantUsers] = useState<TenantUserData[]>([]);
+    const [loadingUsers, setLoadingUsers] = useState(false);
+    const [userSearchTerm, setUserSearchTerm] = useState('');
+    const [searchResults, setSearchResults] = useState<SearchedUser[]>([]);
+    const [searchingUsers, setSearchingUsers] = useState(false);
+    const [addingUser, setAddingUser] = useState(false);
+    const [newUserRole, setNewUserRole] = useState('AGENT');
 
     // Token
     useEffect(() => {
@@ -299,6 +338,117 @@ export default function AdminTenantsPage() {
                 setTimeout(() => setSuccess(null), 3000);
             } else {
                 setError(data.error || 'Error al eliminar');
+            }
+        } catch {
+            setError('Error de conexión');
+        }
+    };
+
+    // ─────────────────────────────────────────
+    // Gestión de usuarios del tenant
+    // ─────────────────────────────────────────
+
+    const openUsersModal = async (tenant: TenantData) => {
+        setUsersTenant(tenant);
+        setShowUsersModal(true);
+        setTenantUsers([]);
+        setUserSearchTerm('');
+        setSearchResults([]);
+        setNewUserRole('AGENT');
+        await fetchTenantUsers(tenant.id);
+    };
+
+    const fetchTenantUsers = async (tenantId: number) => {
+        if (!accessToken) return;
+        setLoadingUsers(true);
+        try {
+            const res = await fetch(`/api/tenants/${tenantId}/users`, {
+                headers: { 'Authorization': `Bearer ${accessToken}` },
+            });
+            const data = await res.json();
+            if (data.success) {
+                setTenantUsers(data.data || []);
+            } else {
+                setError(data.error || 'Error al cargar usuarios');
+            }
+        } catch {
+            setError('Error de conexión al cargar usuarios');
+        } finally {
+            setLoadingUsers(false);
+        }
+    };
+
+    const searchAvailableUsers = async (term: string) => {
+        setUserSearchTerm(term);
+        if (term.length < 2) {
+            setSearchResults([]);
+            return;
+        }
+        setSearchingUsers(true);
+        try {
+            const res = await fetch(
+                `/api/users/search?q=${encodeURIComponent(term)}&exclude_tenant=${usersTenant?.id}&limit=8`
+            );
+            const data = await res.json();
+            if (data.success) {
+                setSearchResults(data.data || []);
+            }
+        } catch {
+            // silenciar errores de búsqueda
+        } finally {
+            setSearchingUsers(false);
+        }
+    };
+
+    const addUserToTenant = async (userId: number) => {
+        if (!accessToken || !usersTenant) return;
+        setAddingUser(true);
+        try {
+            const res = await fetch(`/api/tenants/${usersTenant.id}/users`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${accessToken}`,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ user_id: userId, role: newUserRole }),
+            });
+            const data = await res.json();
+            if (data.success) {
+                setSuccess('Usuario agregado ✅');
+                setUserSearchTerm('');
+                setSearchResults([]);
+                await fetchTenantUsers(usersTenant.id);
+                setTimeout(() => setSuccess(null), 3000);
+            } else {
+                setError(data.error || 'Error al agregar usuario');
+            }
+        } catch {
+            setError('Error de conexión');
+        } finally {
+            setAddingUser(false);
+        }
+    };
+
+    const removeUserFromTenant = async (userId: number, userName: string) => {
+        if (!accessToken || !usersTenant) return;
+        if (!confirm(`¿Quitar a ${userName} de ${usersTenant.company_name}?`)) return;
+
+        try {
+            const res = await fetch(`/api/tenants/${usersTenant.id}/users`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${accessToken}`,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ user_id: userId }),
+            });
+            const data = await res.json();
+            if (data.success) {
+                setSuccess('Usuario removido ✅');
+                await fetchTenantUsers(usersTenant.id);
+                setTimeout(() => setSuccess(null), 3000);
+            } else {
+                setError(data.error || 'Error al remover usuario');
             }
         } catch {
             setError('Error de conexión');
@@ -525,8 +675,8 @@ export default function AdminTenantsPage() {
                                                 <h3 className="text-lg font-semibold">{tenant.company_name}</h3>
                                                 <span
                                                     className={`text-xs px-2 py-0.5 rounded-full font-medium ${tenant.tenant_type === 'agency'
-                                                            ? 'bg-purple-100 text-purple-700'
-                                                            : 'bg-indigo-100 text-indigo-700'
+                                                        ? 'bg-purple-100 text-purple-700'
+                                                        : 'bg-indigo-100 text-indigo-700'
                                                         }`}
                                                 >
                                                     {tenant.tenant_type === 'agency' ? '🏪 Agencia' : '🏢 Corporativo'}
@@ -592,6 +742,14 @@ export default function AdminTenantsPage() {
                                         <Button
                                             variant="outline"
                                             size="sm"
+                                            onClick={() => openUsersModal(tenant)}
+                                            className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                                        >
+                                            <Users className="w-4 h-4 mr-1" /> Usuarios
+                                        </Button>
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
                                             onClick={() => openEditModal(tenant)}
                                         >
                                             <Edit className="w-4 h-4 mr-1" /> Editar
@@ -649,8 +807,8 @@ export default function AdminTenantsPage() {
                                     key={tab}
                                     onClick={() => setActiveTab(tab)}
                                     className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === tab
-                                            ? 'border-blue-600 text-blue-600'
-                                            : 'border-transparent text-gray-500 hover:text-gray-700'
+                                        ? 'border-blue-600 text-blue-600'
+                                        : 'border-transparent text-gray-500 hover:text-gray-700'
                                         }`}
                                 >
                                     {tab === 'general' && '📋 General'}
@@ -985,10 +1143,162 @@ export default function AdminTenantsPage() {
                 </div>
             )}
 
+            {/* ─────────────────────────────────────────── */}
+            {/* USERS MODAL */}
+            {/* ─────────────────────────────────────────── */}
+            {showUsersModal && usersTenant && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+                    <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto mx-4">
+                        {/* Modal Header */}
+                        <div className="sticky top-0 bg-white border-b px-6 py-4 flex items-center justify-between rounded-t-xl">
+                            <div>
+                                <h2 className="text-xl font-bold flex items-center gap-2">
+                                    <Users className="w-5 h-5 text-blue-600" />
+                                    Usuarios de {usersTenant.company_name}
+                                </h2>
+                                <p className="text-sm text-gray-500 mt-1">
+                                    {tenantUsers.length} usuario{tenantUsers.length !== 1 ? 's' : ''} vinculado{tenantUsers.length !== 1 ? 's' : ''}
+                                </p>
+                            </div>
+                            <Button variant="ghost" size="icon" onClick={() => setShowUsersModal(false)}>
+                                <X className="w-5 h-5" />
+                            </Button>
+                        </div>
+
+                        {/* Agregar usuario */}
+                        <div className="px-6 py-4 bg-blue-50/50 border-b">
+                            <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                                <UserPlus className="w-4 h-4" /> Agregar usuario
+                            </h3>
+                            <div className="flex gap-2">
+                                <div className="flex-1 relative">
+                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                    <Input
+                                        placeholder="Buscar por nombre o email..."
+                                        value={userSearchTerm}
+                                        onChange={(e) => searchAvailableUsers(e.target.value)}
+                                        className="pl-9 bg-white"
+                                    />
+                                </div>
+                                <select
+                                    value={newUserRole}
+                                    onChange={(e) => setNewUserRole(e.target.value)}
+                                    className="border rounded-lg px-3 py-2 text-sm bg-white"
+                                >
+                                    <option value="AGENT">Agente</option>
+                                    <option value="AGENCY_ADMIN">Admin Agencia</option>
+                                    <option value="CLIENT">Cliente</option>
+                                </select>
+                            </div>
+
+                            {/* Resultados de búsqueda */}
+                            {searchResults.length > 0 && (
+                                <div className="mt-2 bg-white border rounded-lg shadow-sm max-h-48 overflow-y-auto">
+                                    {searchResults.map((u) => (
+                                        <div
+                                            key={u.id}
+                                            className="flex items-center justify-between px-4 py-2 hover:bg-gray-50 border-b last:border-b-0"
+                                        >
+                                            <div>
+                                                <p className="text-sm font-medium">{u.name || 'Sin nombre'}</p>
+                                                <p className="text-xs text-gray-500">{u.email}</p>
+                                            </div>
+                                            <Button
+                                                size="sm"
+                                                disabled={addingUser}
+                                                onClick={() => addUserToTenant(u.id)}
+                                                className="bg-[#0066FF] hover:bg-[#0052CC] text-white text-xs"
+                                            >
+                                                <Plus className="w-3 h-3 mr-1" /> Agregar
+                                            </Button>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                            {userSearchTerm.length >= 2 && searchResults.length === 0 && !searchingUsers && (
+                                <p className="mt-2 text-sm text-gray-500 text-center py-2">
+                                    No se encontraron usuarios con "{userSearchTerm}"
+                                </p>
+                            )}
+                            {searchingUsers && (
+                                <p className="mt-2 text-sm text-gray-500 text-center py-2">
+                                    <Loader2 className="w-4 h-4 animate-spin inline mr-1" /> Buscando...
+                                </p>
+                            )}
+                        </div>
+
+                        {/* Lista de usuarios actuales */}
+                        <div className="px-6 py-4">
+                            <h3 className="text-sm font-semibold text-gray-700 mb-3">Usuarios vinculados</h3>
+                            {loadingUsers ? (
+                                <div className="text-center py-8">
+                                    <Loader2 className="w-6 h-6 animate-spin mx-auto text-blue-600" />
+                                    <p className="text-sm text-gray-500 mt-2">Cargando usuarios...</p>
+                                </div>
+                            ) : tenantUsers.length === 0 ? (
+                                <div className="text-center py-8 text-gray-500">
+                                    <Users className="w-10 h-10 mx-auto mb-2 text-gray-300" />
+                                    <p className="text-sm">No hay usuarios vinculados a este tenant</p>
+                                    <p className="text-xs mt-1">Usa el buscador de arriba para agregar</p>
+                                </div>
+                            ) : (
+                                <div className="space-y-2">
+                                    {tenantUsers.map((tu) => (
+                                        <div
+                                            key={tu.tenant_user_id}
+                                            className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                                        >
+                                            <div className="flex items-center gap-3">
+                                                <div
+                                                    className="w-9 h-9 rounded-full flex items-center justify-center text-white font-medium text-sm"
+                                                    style={{ backgroundColor: usersTenant.primary_color || '#0066FF' }}
+                                                >
+                                                    {(tu.name || tu.email || '?').substring(0, 2).toUpperCase()}
+                                                </div>
+                                                <div>
+                                                    <p className="text-sm font-medium">{tu.name || 'Sin nombre'}</p>
+                                                    <p className="text-xs text-gray-500">{tu.email}</p>
+                                                </div>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${tu.role === 'AGENCY_ADMIN' ? 'bg-purple-100 text-purple-700'
+                                                    : tu.role === 'AGENT' ? 'bg-blue-100 text-blue-700'
+                                                        : 'bg-gray-100 text-gray-700'
+                                                    }`}>
+                                                    {tu.role === 'AGENCY_ADMIN' ? 'Admin'
+                                                        : tu.role === 'AGENT' ? 'Agente'
+                                                            : tu.role}
+                                                </span>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    onClick={() => removeUserFromTenant(tu.user_id, tu.name || tu.email)}
+                                                    className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                                                    title="Quitar del tenant"
+                                                >
+                                                    <UserMinus className="w-4 h-4" />
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Modal Footer */}
+                        <div className="sticky bottom-0 bg-white border-t px-6 py-4 flex justify-end rounded-b-xl">
+                            <Button variant="outline" onClick={() => setShowUsersModal(false)}>
+                                Cerrar
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Footer */}
             <footer className="bg-gray-100 py-4 mt-8">
                 <div className="container mx-auto px-4 text-center text-sm text-gray-500">
-                    <p>v2.304 | Gestión Multi-Empresa &amp; Marca Blanca</p>
+                    <p>v2.313 | Gestión Multi-Empresa &amp; Marca Blanca</p>
                 </div>
             </footer>
         </div>

@@ -56,6 +56,57 @@ export async function middleware(request: NextRequest) {
     response.headers.set('x-tenant-subdomain', tenantInfo.subdomain || '')
     response.headers.set('x-tenant-custom-domain', tenantInfo.customDomain || '')
     response.headers.set('x-white-label', 'true')
+
+    // ── Pre-fetch tenant config con cache ──
+    // Solo en páginas (no en assets estáticos)
+    if (!pathname.includes('.') && !pathname.startsWith('/_next')) {
+      const cachedConfig = tenantConfigCache.get(tenantInfo.subdomain || tenantInfo.customDomain || '')
+
+      if (cachedConfig && cachedConfig.expiresAt > Date.now()) {
+        // Usar config cacheada → pasar via cookie para que WhiteLabelContext la lea
+        response.cookies.set('x-tenant-config', JSON.stringify(cachedConfig.data), {
+          maxAge: 300, // 5 min
+          path: '/',
+          httpOnly: false,
+          sameSite: 'lax',
+        })
+      } else {
+        // Fetch desde API interna al detect endpoint
+        try {
+          const detectParam = tenantInfo.subdomain
+            ? `subdomain=${tenantInfo.subdomain}`
+            : `host=${encodeURIComponent(tenantInfo.customDomain || host)}`
+
+          const origin = url.origin
+          const detectRes = await fetch(`${origin}/api/tenant/detect?${detectParam}`, {
+            headers: { 'x-internal-middleware': '1' },
+          })
+
+          if (detectRes.ok) {
+            const detectData = await detectRes.json()
+            if (detectData.success && detectData.data) {
+              // Cachear en Edge por 5 minutos
+              const cacheKey = tenantInfo.subdomain || tenantInfo.customDomain || ''
+              tenantConfigCache.set(cacheKey, {
+                data: detectData.data,
+                expiresAt: Date.now() + 5 * 60 * 1000, // 5 min
+              })
+
+              // Pasar config via cookie
+              response.cookies.set('x-tenant-config', JSON.stringify(detectData.data), {
+                maxAge: 300,
+                path: '/',
+                httpOnly: false,
+                sameSite: 'lax',
+              })
+            }
+          }
+        } catch (fetchErr) {
+          // Si falla el fetch, el WhiteLabelContext hará su propio fetch client-side
+          console.warn('⚠️ Middleware: Failed to pre-fetch tenant config:', fetchErr)
+        }
+      }
+    }
   }
 
   // ─────────────────────────────────────────────
@@ -118,6 +169,12 @@ export async function middleware(request: NextRequest) {
 
   return response
 }
+
+// ═══════════════════════════════════════
+// Cache en-Edge para config de tenants
+// Se limpia cada vez que el Edge Worker se recicla (cada pocos minutos en Vercel)
+// ═══════════════════════════════════════
+const tenantConfigCache = new Map<string, { data: any; expiresAt: number }>()
 
 /**
  * Intenta extraer el payload del JWT desde cookies o localStorage backup.
