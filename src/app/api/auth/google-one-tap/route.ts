@@ -7,6 +7,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { OAuth2Client } from 'google-auth-library';
 import { queryOne, query } from '@/lib/db';
 import { sign } from 'jsonwebtoken';
+import bcrypt from 'bcryptjs';
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
@@ -47,16 +48,19 @@ export async function POST(request: NextRequest) {
         if (!user) {
             // Crear nuevo usuario
             console.log('✅ Creando nuevo usuario desde One Tap');
+            const randomPassword = Math.random().toString(36).slice(-12) + 'A1!';
+            const hashedPassword = await bcrypt.hash(randomPassword, 10);
+
             user = await queryOne<any>(
                 `INSERT INTO users 
-         (name, email, email_verified, email_verified_at, avatar_url, oauth_provider, oauth_id, user_type, tenant_id)
-         VALUES ($1, $2, true, NOW(), $3, 'google', $4, 'cliente', 1)
-         RETURNING *`,
+                 (name, email, password_hash, email_verified, email_verified_at, avatar_url, role)
+                 VALUES ($1, $2, $3, true, NOW(), $4, 'EMPLOYEE')
+                 RETURNING *`,
                 [
                     payload.name || 'Usuario',
                     payload.email,
-                    payload.picture,
-                    payload.sub
+                    hashedPassword,
+                    payload.picture
                 ]
             );
         } else {
@@ -64,35 +68,37 @@ export async function POST(request: NextRequest) {
             console.log('✅ Actualizando usuario existente');
             await query(
                 `UPDATE users 
-         SET avatar_url = COALESCE($1, avatar_url),
-             oauth_provider = 'google',
-             oauth_id = $2,
-             email_verified = true,
-             email_verified_at = COALESCE(email_verified_at, NOW()),
-             updated_at = NOW()
-         WHERE id = $3`,
-                [payload.picture, payload.sub, user.id]
+                 SET avatar_url = COALESCE($1, avatar_url),
+                     email_verified = true,
+                     email_verified_at = COALESCE(email_verified_at, NOW()),
+                     updated_at = NOW()
+                 WHERE id = $2`,
+                [payload.picture, user.id]
             );
         }
 
-        // Generar JWT para la sesión
+        // Generar JWT para la sesión (usando JWT_SECRET del proyecto)
         const token = sign(
             {
                 id: user.id,
                 email: user.email,
-                name: user.name
+                name: user.name,
+                role: user.role || 'EMPLOYEE'
             },
-            process.env.NEXTAUTH_SECRET!,
+            process.env.JWT_SECRET!,
             { expiresIn: '30d' }
         );
 
         return NextResponse.json({
             success: true,
             user: {
-                id: user.id,
+                id: user.id.toString(),
                 email: user.email,
                 name: user.name,
-                image: user.avatar_url
+                role: user.role || 'EMPLOYEE',
+                phone: user.phone || '',
+                memberSince: user.created_at || new Date().toISOString(),
+                avatar_url: user.avatar_url || payload.picture
             },
             token
         });

@@ -1,59 +1,80 @@
 /**
  * GOOGLE ONE TAP
  * Componente que muestra la burbuja flotante de Google One Tap
- * Esta es la funcionalidad que viste en Civitatis
+ * para registro/login rápido con Google.
+ * 
+ * Usa el AuthContext personalizado del proyecto (NO next-auth).
+ * 
+ * @version v2.317
+ * @date 15 Feb 2026
  */
 
 'use client';
 
-import { useEffect } from 'react';
-import { useSession } from 'next-auth/react';
+import { useEffect, useRef } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
 import Script from 'next/script';
 
 export default function GoogleOneTap() {
-    const { data: session, status } = useSession();
+    const { isAuthenticated } = useAuth();
+    const initializedRef = useRef(false);
 
     useEffect(() => {
         // Solo mostrar si no está autenticado
-        if (status === 'authenticated') return;
+        if (isAuthenticated) return;
+        // Evitar doble inicialización
+        if (initializedRef.current) return;
 
-        // Esperar a que el script de Google esté cargado
         const initializeOneTap = () => {
             // @ts-ignore
-            if (!window.google) return;
+            if (!window.google?.accounts?.id) return;
+
+            const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+            if (!clientId) {
+                console.warn('⚠️ NEXT_PUBLIC_GOOGLE_CLIENT_ID no configurado');
+                return;
+            }
+
+            initializedRef.current = true;
 
             // @ts-ignore
             window.google.accounts.id.initialize({
-                client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
+                client_id: clientId,
                 callback: handleCredentialResponse,
-                auto_select: false, // No auto-seleccionar
-                cancel_on_tap_outside: true, // Cerrar al hacer click fuera
-                context: 'signin', // Contexto: signin, signup, use
+                auto_select: false,
+                cancel_on_tap_outside: true,
+                context: 'signin',
+                use_fedcm_for_prompt: false, // Usar modo clásico (iframe), FedCM causa errores en localhost
             });
 
             // Mostrar la burbuja One Tap
             // @ts-ignore
             window.google.accounts.id.prompt((notification: any) => {
-                if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
-                    console.log('One Tap no se mostró:', notification.getNotDisplayedReason());
+                if (notification.isNotDisplayed()) {
+                    console.log('ℹ️ One Tap no se mostró:', notification.getNotDisplayedReason());
+                } else if (notification.isSkippedMoment()) {
+                    console.log('ℹ️ One Tap saltado:', notification.getSkippedReason());
                 }
             });
         };
 
-        // Intentar inicializar cada 100ms hasta que esté disponible
+        // Intentar inicializar cada 200ms hasta que el script esté disponible
         const interval = setInterval(() => {
             // @ts-ignore
-            if (window.google) {
+            if (window.google?.accounts?.id) {
                 initializeOneTap();
                 clearInterval(interval);
             }
-        }, 100);
+        }, 200);
 
-        // Limpiar después de 5 segundos
-        setTimeout(() => clearInterval(interval), 5000);
+        // Limpiar después de 8 segundos si no se carga
+        const timeout = setTimeout(() => clearInterval(interval), 8000);
 
-        return () => clearInterval(interval);
-    }, [status]);
+        return () => {
+            clearInterval(interval);
+            clearTimeout(timeout);
+        };
+    }, [isAuthenticated]);
 
     const handleCredentialResponse = async (response: any) => {
         try {
@@ -68,17 +89,27 @@ export default function GoogleOneTap() {
 
             const data = await res.json();
 
-            if (data.success) {
-                console.log('✅ Autenticación exitosa');
-                // Recargar para actualizar sesión
-                window.location.href = '/dashboard';
+            if (data.success && data.token && data.user) {
+                console.log('✅ Google One Tap: autenticación exitosa');
+                // Guardar en localStorage (mismo formato que AuthContext)
+                localStorage.setItem('as_user', JSON.stringify(data.user));
+                localStorage.setItem('as_token', data.token);
+                // Guardar cookies para el middleware
+                const expires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toUTCString();
+                document.cookie = `as_user=${encodeURIComponent(JSON.stringify({ id: data.user.id, email: data.user.email, role: data.user.role || 'CLIENT' }))};expires=${expires};path=/;samesite=lax`;
+                document.cookie = `as_token=${encodeURIComponent(data.token)};expires=${expires};path=/;samesite=lax`;
+                // Recargar para que AuthContext tome la sesión
+                window.location.href = '/';
             } else {
-                console.error('❌ Error en autenticación:', data.error);
+                console.error('❌ Error en autenticación One Tap:', data.error);
             }
         } catch (error) {
             console.error('❌ Error procesando One Tap:', error);
         }
     };
+
+    // No renderizar nada si ya está autenticado
+    if (isAuthenticated) return null;
 
     return (
         <>

@@ -1,10 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { insertOne } from '@/lib/db'
 import bcrypt from 'bcryptjs'
+import { sign } from 'jsonwebtoken'
 
 /**
  * Google OAuth Callback
  * GET /api/auth/google/callback
+ * 
+ * Recibe el código de autorización de Google, intercambia por token,
+ * obtiene info del usuario, crea/actualiza en BD, genera JWT y
+ * redirige con sesión activa (compatible con AuthContext).
+ * 
+ * @version v2.317
+ * @date 15 Feb 2026
  */
 export async function GET(request: NextRequest) {
   try {
@@ -53,7 +60,7 @@ export async function GET(request: NextRequest) {
     const tokens = await tokenResponse.json()
     const accessToken = tokens.access_token
 
-    // Obtener información del usuario
+    // Obtener información del usuario de Google
     const userInfoResponse = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
       headers: {
         Authorization: `Bearer ${accessToken}`,
@@ -66,56 +73,77 @@ export async function GET(request: NextRequest) {
     }
 
     const googleUser = await userInfoResponse.json()
+    console.log('🔵 Google OAuth user:', googleUser.email)
 
     // Verificar si el usuario ya existe
     const { query, queryOne } = await import('@/lib/db')
-    const existingUser = await queryOne(
+    let user = await queryOne<any>(
       'SELECT * FROM users WHERE email = $1',
       [googleUser.email]
     )
 
-    let userId: number
-
-    if (existingUser) {
-      userId = existingUser.id
-
-      // Actualizar información si es necesario
+    if (user) {
+      // Actualizar información de Google
+      console.log('✅ Actualizando usuario existente:', user.email)
       await query(
         `UPDATE users SET
-          name = $1,
-          google_id = $2,
+          avatar_url = COALESCE($1, avatar_url),
+          email_verified = true,
+          email_verified_at = COALESCE(email_verified_at, NOW()),
           updated_at = NOW()
-        WHERE id = $3`,
-        [googleUser.name, googleUser.id, userId]
+        WHERE id = $2`,
+        [googleUser.picture, user.id]
       )
     } else {
       // Crear nuevo usuario
-      const randomPassword = Math.random().toString(36).slice(-8)
+      console.log('✅ Creando nuevo usuario desde Google OAuth:', googleUser.email)
+      const randomPassword = Math.random().toString(36).slice(-12) + 'A1!'
       const hashedPassword = await bcrypt.hash(randomPassword, 10)
 
-      const newUser = await insertOne('users', {
-        email: googleUser.email,
-        name: googleUser.name,
-        password_hash: hashedPassword,
-        google_id: googleUser.id,
-        profile_image: googleUser.picture,
-        email_verified: true,
-        role: 'CLIENT'
-      })
-
-      userId = newUser.id
+      user = await queryOne<any>(
+        `INSERT INTO users 
+         (name, email, password_hash, email_verified, email_verified_at, avatar_url, role)
+         VALUES ($1, $2, $3, true, NOW(), $4, 'EMPLOYEE')
+         RETURNING *`,
+        [
+          googleUser.name || 'Usuario',
+          googleUser.email,
+          hashedPassword,
+          googleUser.picture
+        ]
+      )
     }
 
-    // Crear sesión (simplificado - en producción usar JWT)
-    const response = NextResponse.redirect(new URL('/', request.url))
-    response.cookies.set('user_id', userId.toString(), {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 60 * 60 * 24 * 7 // 7 días
-    })
+    // Generar JWT compatible con AuthContext
+    const jwtToken = sign(
+      {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        role: user.role || 'EMPLOYEE'
+      },
+      process.env.JWT_SECRET!,
+      { expiresIn: '30d' }
+    )
 
-    return response
+    // Preparar datos de usuario para AuthContext
+    const userData = {
+      id: user.id.toString(),
+      email: user.email,
+      name: user.name,
+      role: user.role || 'EMPLOYEE',
+      phone: user.phone || '',
+      memberSince: user.created_at || new Date().toISOString()
+    }
+
+    // Redirigir a una página intermedia que guarde la sesión en localStorage
+    // (porque no podemos escribir localStorage desde un redirect del servidor)
+    const encodedUser = encodeURIComponent(JSON.stringify(userData))
+    const encodedToken = encodeURIComponent(jwtToken)
+
+    return NextResponse.redirect(
+      new URL(`/auth/callback?user=${encodedUser}&token=${encodedToken}`, request.url)
+    )
 
   } catch (error) {
     console.error('❌ Google OAuth callback error:', error)

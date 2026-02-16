@@ -1,11 +1,10 @@
 # 🎯 AG-Contexto-Proyecto - AS Operadora
 
 **Última actualización:** 15 de Febrero de 2026 - 14:16 CST  
-**Versión actual:** v2.316d  
+**Versión actual:** v2.316  
 **Actualizado por:** AntiGravity AI Assistant  
-**Propósito:** Documento maestro del proyecto para trabajo con agentes AntiGravity
+**Propósito:** Documento maestro del proyecto para trabajo con agentes AntiGravity, trabajar de esta manera es para tener un mejor control de los cambios que se hacen en el proyecto y asegurar que todo funcione correctamente. 
 
----
 
 ## 📌 INFORMACIÓN DEL PROYECTO
 
@@ -23,8 +22,12 @@ Sergio Aguilar Granados
 ### Objetivo
 Sistema completo de gestión de viajes corporativos con búsqueda, reservas, aprobaciones, pagos, reportes y dashboard ejecutivo. Competir con plataformas como Expedia con funcionalidades superiores.
 
-### Estado Actual
-- **Versión:** v2.316d
+### AL VERSIONAR CONSERVAR V0.000 CON FECHA Y HORA
+- **Versión:** V2.316 2026-02-15 14:27:53 CST 
+La fecha y hora tiempo del CDMX
+
+
+### ESTADO DEL PROYECTO
 - **Progreso:** 99% completo (White-Label: ~96%)
 - **Ambiente:** Desarrollo activo con usuarios en UAT
 - **Deploy:** Automático vía Git → Vercel
@@ -41,7 +44,7 @@ Sistema completo de gestión de viajes corporativos con búsqueda, reservas, apr
 - **Animaciones:** Framer Motion
 - **Gráficas:** Recharts
 
-### Backend
+### Backend  este sirve para la APP Movil
 - **Runtime:** Next.js API Routes (Serverless)
 - **Servidor:** Estándar Next.js (NO `server.js` personalizado)
 - **Base de Datos:** PostgreSQL (Neon Cloud)
@@ -69,11 +72,11 @@ Sistema completo de gestión de viajes corporativos con búsqueda, reservas, apr
 
 | Repositorio | Propósito | URL | Estado |
 |-------------|-----------|-----|--------|
-| **as-operadora** | Producción | https://github.com/sergioaguilargranados-ai/as-operadora | ✅ PRODUCCIÓN |
-| **operadora-dev** | Desarrollo/Backup | https://github.com/sergioaguilargranados-ai/operadora-dev | ⚠️ NO USAR PARA PROD |
+| **operadora-dev** | Desarrollo/Backup | https://github.com/sergioaguilargranados-ai/operadora-dev | USAR ESTE REPOSITORIO 
+| **as-operadora** | Producción | https://github.com/sergioaguilargranados-ai/as-operadora | no usar |
 
 **Estrategia Actual Correcta:**
-- **as-operadora** → www.as-ope-viajes.company (ÚNICO SITIO DE PRODUCCIÓN)
+- **as-operadora** → www.as-ope-viajes.company (actual) cambiará a www.asoperadora.com  
 - Todos los cambios deben ir dirigidos a este repositorio (`as-operadora`).
 - El repositorio `operadora-dev` queda como respaldo o entorno de desarrollo secundario.
 
@@ -107,8 +110,8 @@ git push as-operadora main
 
 | Proyecto | Repo | URL | Ambiente |
 |----------|------|-----|----------|
-| **AS Operadora** | as-operadora | www.as-ope-viajes.company | ✅ PRODUCCIÓN |
-| **Operadora Dev** | operadora-dev | app.asoperadora.com | ⚠️ OBSOLETO / DEV |
+| **AS Operadora** | as-operadora | www.as-ope-viajes.company | ✅ PRODUCCIÓN | no usar
+| **Operadora Dev** | operadora-dev | app.asoperadora.com | desarrollo | usar este 
 
 ---
 
@@ -116,7 +119,7 @@ git push as-operadora main
 
 ### Base de Datos NEON
 
-**CRÍTICO:** Solo existe UNA base de datos para todos los ambientes
+**CRÍTICO:** Solo existe UNA base de datos por ahora para pruebas 
 
 ```
 Host: ep-bold-hill-afbis0wk-pooler.c-2.us-west-2.aws.neon.tech

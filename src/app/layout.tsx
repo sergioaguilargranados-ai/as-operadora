@@ -11,6 +11,7 @@ import { ChatWidget } from "@/components/ChatWidget";
 import { WhatsAppWidget } from "@/components/WhatsAppWidget";
 import { BrandStyles } from "@/components/BrandStyles";
 import { BrandMeta } from "@/components/BrandMeta";
+import GoogleOneTap from "@/components/auth/GoogleOneTap";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -50,6 +51,7 @@ export default function RootLayout({
               <CookieConsent />
               <WhatsAppWidget />
               <ChatWidget />
+              <GoogleOneTap />
             </FeaturesProvider>
           </WhiteLabelProvider>
         </AuthProvider>
