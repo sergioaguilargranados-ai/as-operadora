@@ -46,7 +46,7 @@ export default function MegaTravelScrapingPage() {
             .then(r => r.json())
             .then(data => {
                 if (data.success) {
-                    setTotalTours(data.data?.stats?.total_packages || data.data?.stats?.totalPackages || 325);
+                    setTotalTours(data.data?.stats?.active_packages || data.data?.stats?.total_packages || 325);
                 }
             })
             .catch(() => setTotalTours(325));
@@ -199,7 +199,7 @@ export default function MegaTravelScrapingPage() {
             const statsRes = await fetch('/api/admin/megatravel?action=stats');
             const statsData = await statsRes.json();
             if (statsData.success) {
-                total = statsData.data?.stats?.total_packages || statsData.data?.stats?.totalPackages || total;
+                total = statsData.data?.stats?.active_packages || statsData.data?.stats?.total_packages || total;
                 setTotalTours(total);
             }
         } catch (e) { /* usar el último total conocido */ }
@@ -432,8 +432,8 @@ export default function MegaTravelScrapingPage() {
                             </button>
                             {phaseLabel && (
                                 <span className={`text-xs px-3 py-1 rounded-full font-medium ${currentPhase === 'sync' ? 'bg-blue-100 text-blue-700' :
-                                        currentPhase === 'scraping' ? 'bg-purple-100 text-purple-700' :
-                                            'bg-green-100 text-green-700'
+                                    currentPhase === 'scraping' ? 'bg-purple-100 text-purple-700' :
+                                        'bg-green-100 text-green-700'
                                     }`}>
                                     {phaseLabel}
                                 </span>
@@ -494,8 +494,8 @@ export default function MegaTravelScrapingPage() {
                         <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
                             <div
                                 className={`h-3 rounded-full transition-all duration-500 ${currentPhase === 'sync'
-                                        ? 'bg-gradient-to-r from-blue-500 to-blue-600'
-                                        : 'bg-gradient-to-r from-purple-500 to-purple-600'
+                                    ? 'bg-gradient-to-r from-blue-500 to-blue-600'
+                                    : 'bg-gradient-to-r from-purple-500 to-purple-600'
                                     }`}
                                 style={{ width: `${progress}%` }}
                             />

@@ -83,7 +83,7 @@ export async function POST(request: NextRequest) {
         const result = await pool.query(`
             SELECT id, mt_code, name, mt_url
             FROM megatravel_packages
-            WHERE mt_url IS NOT NULL
+            WHERE mt_url IS NOT NULL AND is_active = true
             ORDER BY id
             LIMIT $1 OFFSET $2
         `, [limit, offset]);
