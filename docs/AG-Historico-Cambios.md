@@ -1,7 +1,7 @@
 # 📋 AG-Histórico de Cambios - AS Operadora
 
-**Última actualización:** 12 de Febrero de 2026 - 02:45 CST  
-**Versión actual:** v2.316  
+**Última actualización:** 19 de Febrero de 2026 - 00:03 CST  
+**Versión actual:** v2.317  
 **Actualizado por:** AntiGravity AI Assistant  
 **Propósito:** Documento maestro del proyecto para trabajo con agentes AntiGravity
 
@@ -34,6 +34,49 @@ Esto permite detectar si se perdieron tablas/campos entre versiones.
 ---
 
 ## 📅 HISTORIAL DE CAMBIOS
+
+### v2.317 - 19 de Febrero de 2026 - 00:03 CST
+
+**🔗 Unificación de Datos de Clientes — Automatización CRM**
+
+**Automatización en Registro Web (`src/app/api/auth/register/route.ts`):**
+- ✅ Al registrarse un usuario, se crea automáticamente un contacto CRM con `contact_type: 'lead'`, `source: 'web_register'`, `pipeline_stage: 'new'`
+- ✅ Si ya existe un contacto con el mismo email, se vincula el `user_id` al contacto existente
+- ✅ Implementado con `try/catch` para no bloquear el registro si el CRM falla
+
+**Automatización en Cotización de Tours (`src/app/api/tours/quote/route.ts`):**
+- ✅ Al crear una cotización, se crea automáticamente un contacto CRM con `contact_type: 'lead'`, `source: 'tour_quote'`, `pipeline_stage: 'quoted'`
+- ✅ Si ya existe un contacto, se registra una interacción de tipo `quote_sent` y se puede avanzar la etapa del pipeline
+- ✅ Se capturan datos del tour: destino, num_travelers, budget_max
+- ✅ Implementado con `try/catch` para no bloquear la cotización si el CRM falla
+
+**API de Importación de Datos Existentes (`src/app/api/crm/import-existing/route.ts`):**
+- ✅ Endpoint POST que ejecuta importación masiva al CRM
+- ✅ Importa `agency_clients` → `crm_contacts` (como `'client'`) usando `CRMService.importExistingClients()`
+- ✅ Importa `tour_quotes` → `crm_contacts` (como `'lead'`) usando `CRMService.importExistingQuotes()`
+- ✅ Importa usuarios registrados (`users`) → `crm_contacts`, clasificando automáticamente como `'client'` si tienen reservas o `'lead'` si no
+- ✅ Evita duplicados verificando por `user_id` y `email`
+
+**Página Catálogo de Clientes (`src/app/dashboard/clientes/page.tsx`):**
+- ✅ KPIs: Total contactos, Clientes convertidos, Leads activos, Valor pipeline
+- ✅ Tabs de filtrado: Todos | Clientes | Leads/Prospectos
+- ✅ Filtros avanzados: búsqueda texto, etapa pipeline, fuente, ordenamiento
+- ✅ Tabla responsiva con: avatar, nombre/email/tel, tipo, etapa, score, fuente, reservas, LTV, último contacto
+- ✅ Paginación (25 por página)
+- ✅ Botón "Importar Existentes" integrado
+- ✅ Enlace a vista 360° del CRM por cada contacto
+- ✅ Leyenda explicativa de fuentes
+
+**Navegación (`src/components/CRMSidebar.tsx`):**
+- ✅ Agregado enlace "Catálogo Clientes" con ícono `BookUser` en el sidebar del CRM
+- ✅ Agregado botón rápido "Catálogo Clientes" en el footer del sidebar
+
+**Lecciones Aprendidas:**
+- Los datos de clientes estaban dispersos en 4 tablas (`users`, `crm_contacts`, `tour_quotes`, `agency_clients`). La unificación automática alimenta `crm_contacts` como fuente única
+- Las automatizaciones siempre deben ser resilientes (try/catch) para no bloquear flujos principales
+- Los APIs del CRM usan params `type` y `stage` (no `contact_type`/`pipeline_stage`) y responden con `{ data: [], meta: { total } }`
+
+---
 
 ### v2.316 - 12 de Febrero de 2026 - 02:45 CST
 

@@ -114,6 +114,38 @@ export async function POST(request: NextRequest) {
         // No fallar el registro si el correo falla
       }
 
+      // ─── Auto-creación de contacto CRM ───
+      try {
+        const { CRMService } = await import('@/services/CRMService');
+        const crm = new CRMService();
+
+        // Verificar si ya existe un contacto con este email
+        const existing = await crm.listContacts({ search: result.user.email, limit: 1 });
+        if (existing.contacts.length === 0) {
+          await crm.createContact({
+            user_id: result.user.id,
+            contact_type: 'lead',
+            full_name: name,
+            email: result.user.email,
+            phone: phone || undefined,
+            source: 'web_register',
+            source_detail: `Registro web (tipo: ${user_type})`,
+            pipeline_stage: 'new',
+          });
+          console.log('🟢 Contacto CRM creado para nuevo usuario:', result.user.email);
+        } else {
+          // Vincular user_id al contacto existente si no lo tiene
+          const contact = existing.contacts[0];
+          if (!contact.user_id) {
+            await crm.updateContact(contact.id, { user_id: result.user.id });
+            console.log('🔗 Usuario vinculado a contacto CRM existente:', result.user.email);
+          }
+        }
+      } catch (crmError) {
+        console.error('⚠️ Error creando contacto CRM (no bloquea registro):', crmError);
+        // No fallar el registro si el CRM falla
+      }
+
       // ─── Auto-vinculación de referido ───
       try {
         const referralCode = request.cookies.get('as_referral')?.value

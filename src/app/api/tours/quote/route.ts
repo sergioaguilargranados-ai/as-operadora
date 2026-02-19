@@ -296,6 +296,76 @@ ${specialRequests ? `*Comentarios:* ${specialRequests}` : ''}
             // TODO: Integrar con SendGrid o servicio de email
         }
 
+        // ============================================
+        // CREAR/ACTUALIZAR CONTACTO CRM AUTOMÁTICAMENTE
+        // ============================================
+        try {
+            const { CRMService } = await import('@/services/CRMService')
+            const crm = new CRMService()
+
+            // Verificar si ya existe un contacto con este email
+            const existing = await crm.listContacts({ search: contactEmail, limit: 1 })
+
+            if (existing.contacts.length === 0) {
+                // Crear nuevo contacto como lead
+                const newContact = await crm.createContact({
+                    contact_type: 'lead',
+                    full_name: contactName,
+                    email: contactEmail,
+                    phone: contactPhone || undefined,
+                    source: 'tour_quote',
+                    source_detail: `Cotización web: ${tourName}`,
+                    pipeline_stage: 'quoted',
+                    interested_destination: tourRegion || undefined,
+                    num_travelers: parseInt(numPersonas) || undefined,
+                    budget_max: totalPrice || undefined,
+                    budget_currency: 'USD',
+                })
+
+                // Registrar interacción de cotización
+                await crm.createInteraction({
+                    contact_id: newContact.id,
+                    interaction_type: 'quote_sent',
+                    channel: 'email',
+                    direction: 'outbound',
+                    subject: `Cotización: ${tourName}`,
+                    body: `Folio: ${quoteFolio}. Tour: ${tourName}. Total: $${totalPrice} USD. Personas: ${numPersonas}.`,
+                    quote_id: quoteId,
+                    is_automated: true,
+                })
+
+                console.log(`🟢 Contacto CRM creado automáticamente: ${contactName} (${contactEmail})`)
+            } else {
+                // Ya existe → sólo registrar la interacción de cotización
+                const contact = existing.contacts[0]
+                await crm.createInteraction({
+                    contact_id: contact.id,
+                    interaction_type: 'quote_sent',
+                    channel: 'email',
+                    direction: 'outbound',
+                    subject: `Nueva cotización: ${tourName}`,
+                    body: `Folio: ${quoteFolio}. Tour: ${tourName}. Total: $${totalPrice} USD. Personas: ${numPersonas}.`,
+                    quote_id: quoteId,
+                    is_automated: true,
+                })
+
+                // Actualizar datos si pipeline está en etapa anterior a 'quoted'
+                const earlyStages = ['new', 'qualified']
+                if (earlyStages.includes(contact.pipeline_stage || '')) {
+                    await crm.updateContact(contact.id, {
+                        pipeline_stage: 'quoted',
+                        interested_destination: tourRegion || contact.interested_destination,
+                        budget_max: totalPrice || contact.budget_max,
+                    })
+                }
+
+                console.log(`🔗 Interacción de cotización registrada para contacto existente: ${contactEmail}`)
+            }
+        } catch (crmError) {
+            console.error('⚠️ Error creando contacto CRM (no bloquea cotización):', crmError)
+            // No fallar la cotización si el CRM falla
+        }
+
         return NextResponse.json({
             success: true,
             message: 'Cotización enviada exitosamente. Te contactaremos pronto.',
