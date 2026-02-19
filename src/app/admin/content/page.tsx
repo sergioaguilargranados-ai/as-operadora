@@ -13,7 +13,7 @@ import { ContentModal } from "@/components/admin/ContentModal"
 import { VideoUrlEditor } from "@/components/admin/VideoUrlEditor"
 import {
   Plus, Edit, Trash2, DollarSign, Calendar, Plane, Hotel, Package,
-  Home, Globe, CheckCircle2, AlertCircle, X
+  Home, Globe, CheckCircle2, AlertCircle, X, RefreshCw
 } from "lucide-react"
 
 export default function AdminContentPage() {
@@ -395,10 +395,10 @@ export default function AdminContentPage() {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-5 mb-8">
+          <TabsList className="grid w-full grid-cols-6 mb-8">
             <TabsTrigger value="hero" className="flex items-center gap-2">
               <Home className="w-4 h-4" />
-              Banner Principal
+              Banner
             </TabsTrigger>
             <TabsTrigger value="promotions" className="flex items-center gap-2">
               <DollarSign className="w-4 h-4" />
@@ -415,6 +415,10 @@ export default function AdminContentPage() {
             <TabsTrigger value="videos" className="flex items-center gap-2">
               <Globe className="w-4 h-4" />
               Videos/URLs
+            </TabsTrigger>
+            <TabsTrigger value="megatravel" className="flex items-center gap-2">
+              <RefreshCw className="w-4 h-4" />
+              MegaTravel
             </TabsTrigger>
           </TabsList>
 
@@ -709,6 +713,61 @@ export default function AdminContentPage() {
                     label="URL del Video de Grupos"
                     onSave={() => showToast('Video de Grupos actualizado', 'success')}
                   />
+                </div>
+              </div>
+            </Card>
+          </TabsContent>
+
+          {/* MEGATRAVEL TAB */}
+          <TabsContent value="megatravel">
+            <Card className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold">🌍 MegaTravel — Tours y Scraping</h2>
+              </div>
+
+              <div className="space-y-6">
+                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-6">
+                  <h3 className="text-lg font-bold text-gray-900 mb-2">Sincronización y Scraping de Tours</h3>
+                  <p className="text-sm text-gray-600 mb-4">
+                    Descubre tours nuevos de MegaTravel, da de baja los eliminados y actualiza itinerarios, precios, includes y not-includes de todos los tours.
+                  </p>
+                  <div className="flex gap-3">
+                    <Button
+                      className="bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 text-white shadow-lg"
+                      onClick={() => router.push('/admin/megatravel-scraping')}
+                    >
+                      <RefreshCw className="w-4 h-4 mr-2" />
+                      Abrir Panel de Sincronización y Scraping
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => router.push('/admin/megatravel')}
+                    >
+                      <Package className="w-4 h-4 mr-2" />
+                      Ver Paquetes Sincronizados
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="border rounded-lg p-4">
+                    <h4 className="font-semibold mb-2 text-sm">📡 Paso 1: Sincronizar</h4>
+                    <p className="text-xs text-muted-foreground">
+                      Navega las categorías de MegaTravel para descubrir tours nuevos y marcar como inactivos los que ya no existen.
+                    </p>
+                  </div>
+                  <div className="border rounded-lg p-4">
+                    <h4 className="font-semibold mb-2 text-sm">🔄 Paso 2: Scraping</h4>
+                    <p className="text-xs text-muted-foreground">
+                      Actualiza itinerarios, precios USD, includes y not-includes de cada tour individual.
+                    </p>
+                  </div>
+                  <div className="border rounded-lg p-4">
+                    <h4 className="font-semibold mb-2 text-sm">⏱️ Duración</h4>
+                    <p className="text-xs text-muted-foreground">
+                      El proceso completo puede tomar 60-120 minutos. Puedes detenerlo en cualquier momento.
+                    </p>
+                  </div>
                 </div>
               </div>
             </Card>
