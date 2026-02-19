@@ -92,7 +92,7 @@ export function BrandFooter() {
                         </p>
                     )}
                     <p className="text-xs mt-2 opacity-50">
-                        v2.323 | 19 Feb 2026 11:12
+                        v2.323 | 19 Feb 2026 12:49
                     </p>
                 </div>
             </div>
