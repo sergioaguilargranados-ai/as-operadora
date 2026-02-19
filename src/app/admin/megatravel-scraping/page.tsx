@@ -1,6 +1,6 @@
 // src/app/admin/megatravel-scraping/page.tsx
-// Panel de Scraping MegaTravel - Ejecución manual de scraping completo
-// Build: 19 Feb 2026 - v2.322 - Mejorado con auth por cookie, resultados y botón Detener
+// Panel unificado: Sincronización + Scraping MegaTravel
+// Build: 19 Feb 2026 - v2.322 - Flujo unificado Sync→Scraping con logs y botón Detener
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
@@ -11,6 +11,7 @@ export default function MegaTravelScrapingPage() {
     const { user } = useAuth();
     const router = useRouter();
     const [isRunning, setIsRunning] = useState(false);
+    const [currentPhase, setCurrentPhase] = useState<'idle' | 'sync' | 'scraping' | 'done'>('idle');
     const [progress, setProgress] = useState(0);
     const [logs, setLogs] = useState<string[]>([]);
     const [stats, setStats] = useState({
@@ -18,6 +19,7 @@ export default function MegaTravelScrapingPage() {
         success: 0,
         errors: 0,
         deprecated: 0,
+        newTours: 0,
         itineraryDays: 0,
         includesFound: 0,
         notIncludesFound: 0,
@@ -47,23 +49,87 @@ export default function MegaTravelScrapingPage() {
             .catch(() => setTotalTours(325)); // fallback
     }, []);
 
-    const stopScraping = () => {
+    const stopProcess = () => {
         abortRef.current = true;
-        addLog('⛔ Deteniendo scraping... (terminando batch actual)');
+        addLog('⛔ Deteniendo proceso... (terminando operación actual)');
     };
 
+    // ==========================================
+    // FASE 1: SINCRONIZACIÓN (descubrir tours nuevos + dar de baja)
+    // ==========================================
+    const runSync = async (): Promise<boolean> => {
+        setCurrentPhase('sync');
+        addLog('');
+        addLog('═══════════════════════════════════════════');
+        addLog('📡 FASE 1: SINCRONIZACIÓN CON MEGATRAVEL');
+        addLog('═══════════════════════════════════════════');
+        addLog('🔍 Descubriendo tours desde MegaTravel...');
+        addLog('   Navegando categorías: Europa, Asia, Turquía, etc.');
+
+        try {
+            const response = await fetch('/api/admin/megatravel', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({ action: 'sync', force: true })
+            });
+
+            if (!response.ok) {
+                if (response.status === 401) {
+                    addLog('❌ Error de autenticación. Redirigiendo al login...');
+                    router.push('/login');
+                    return false;
+                }
+                throw new Error(`HTTP ${response.status}`);
+            }
+
+            const data = await response.json();
+
+            if (data.success) {
+                const found = data.data.packagesFound || 0;
+                const synced = data.data.packagesSynced || 0;
+                const failed = data.data.packagesFailed || 0;
+                const duration = data.data.duration || '?';
+
+                addLog(`✅ Sincronización completada en ${duration}`);
+                addLog(`   📦 Tours descubiertos: ${found}`);
+                addLog(`   ✅ Sincronizados: ${synced}`);
+                if (failed > 0) addLog(`   ❌ Fallidos: ${failed}`);
+
+                // Actualizar total de tours con lo descubierto
+                if (found > 0) {
+                    setTotalTours(found);
+                    setStats(prev => ({ ...prev, newTours: Math.max(0, found - totalTours) }));
+                    if (found > totalTours) {
+                        addLog(`   🆕 Tours NUEVOS detectados: ${found - totalTours}`);
+                    }
+                }
+
+                return true;
+            } else {
+                addLog(`❌ Error en sincronización: ${data.error?.message || 'Error desconocido'}`);
+                return false;
+            }
+        } catch (error: any) {
+            addLog(`❌ Error en sincronización: ${error.message}`);
+            return false;
+        }
+    };
+
+    // ==========================================
+    // FASE 2: SCRAPING COMPLETO (actualizar detalles)
+    // ==========================================
     const runScraping = async () => {
-        abortRef.current = false;
-        setIsRunning(true);
-        setLogs([]);
-        setProgress(0);
-        setStats({ processed: 0, success: 0, errors: 0, deprecated: 0, itineraryDays: 0, includesFound: 0, notIncludesFound: 0 });
+        setCurrentPhase('scraping');
+        addLog('');
+        addLog('═══════════════════════════════════════════');
+        addLog('🔄 FASE 2: SCRAPING COMPLETO DE DETALLES');
+        addLog('═══════════════════════════════════════════');
 
         const BATCH_SIZE = 5;
         const total = totalTours || 325;
         const totalBatches = Math.ceil(total / BATCH_SIZE);
 
-        addLog('🚀 Iniciando scraping completo de MegaTravel...');
         addLog(`📊 Total estimado: ${total} tours en ${totalBatches} batches de ${BATCH_SIZE}`);
 
         let offset = 0;
@@ -83,7 +149,7 @@ export default function MegaTravelScrapingPage() {
                 const response = await fetch('/api/admin/scrape-all', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    credentials: 'include', // Enviar cookies de autenticación
+                    credentials: 'include',
                     body: JSON.stringify({ limit: BATCH_SIZE, offset })
                 });
 
@@ -130,7 +196,8 @@ export default function MegaTravelScrapingPage() {
                         }
                     });
 
-                    setStats({
+                    setStats(prev => ({
+                        ...prev,
                         processed: totalProcessed,
                         success: totalSuccess,
                         errors: totalErrors,
@@ -138,7 +205,7 @@ export default function MegaTravelScrapingPage() {
                         itineraryDays: totalItinerary,
                         includesFound: totalIncludes,
                         notIncludesFound: totalNotIncludes,
-                    });
+                    }));
 
                 } else {
                     addLog(`❌ Error en batch ${batchNumber}: ${data.error}`);
@@ -163,12 +230,73 @@ export default function MegaTravelScrapingPage() {
             addLog('⛔ Scraping detenido por el usuario');
             addLog(`📊 Resumen parcial: ${totalProcessed} procesados, ${totalSuccess} exitosos, ${totalErrors} errores`);
         }
+    };
 
-        addLog('🎉 Scraping completo finalizado');
-        addLog(`📊 Resumen: ${totalProcessed} procesados, ${totalSuccess} exitosos, ${totalErrors} errores`);
-        addLog(`📅 Itinerarios: ${totalItinerary} días | ✅ Includes: ${totalIncludes} | ❌ Not includes: ${totalNotIncludes}`);
+    // ==========================================
+    // FLUJO COMPLETO: Sync → Scraping
+    // ==========================================
+    const runFullProcess = async () => {
+        abortRef.current = false;
+        setIsRunning(true);
+        setLogs([]);
+        setProgress(0);
+        setStats({ processed: 0, success: 0, errors: 0, deprecated: 0, newTours: 0, itineraryDays: 0, includesFound: 0, notIncludesFound: 0 });
+
+        addLog('🚀 Iniciando proceso completo de actualización MegaTravel...');
+        addLog(`📅 ${new Date().toLocaleString('es-MX')}`);
+
+        // FASE 1: Sincronización
+        if (!abortRef.current) {
+            const syncOk = await runSync();
+            if (!syncOk) {
+                addLog('⚠️ La sincronización tuvo errores, pero continuaremos con el scraping...');
+            }
+        }
+
+        // FASE 2: Scraping (si no se detuvo)
+        if (!abortRef.current) {
+            await runScraping();
+        }
+
+        // RESUMEN FINAL
+        setCurrentPhase('done');
+        addLog('');
+        addLog('═══════════════════════════════════════════');
+        addLog('🎉 PROCESO COMPLETO FINALIZADO');
+        addLog('═══════════════════════════════════════════');
+        addLog(`📊 Resumen Final:`);
+        addLog(`   📦 Tours procesados: ${stats.processed}`);
+        addLog(`   ✅ Exitosos: ${stats.success}`);
+        addLog(`   ❌ Errores: ${stats.errors}`);
+        addLog(`   🚫 Dados de baja: ${stats.deprecated}`);
+        addLog(`   📅 Días de itinerario: ${stats.itineraryDays}`);
+        addLog(`   ✅ Includes: ${stats.includesFound} | ❌ Not includes: ${stats.notIncludesFound}`);
         setIsRunning(false);
     };
+
+    // Solo scraping (sin sync)
+    const runScrapingOnly = async () => {
+        abortRef.current = false;
+        setIsRunning(true);
+        setLogs([]);
+        setProgress(0);
+        setStats({ processed: 0, success: 0, errors: 0, deprecated: 0, newTours: 0, itineraryDays: 0, includesFound: 0, notIncludesFound: 0 });
+
+        addLog('🔄 Iniciando solo Scraping (sin sincronización)...');
+        addLog(`📅 ${new Date().toLocaleString('es-MX')}`);
+
+        await runScraping();
+
+        setCurrentPhase('done');
+        addLog('');
+        addLog('🎉 Scraping finalizado');
+        setIsRunning(false);
+    };
+
+    const phaseLabel = currentPhase === 'sync' ? '📡 Sincronizando...'
+        : currentPhase === 'scraping' ? '🔄 Scraping...'
+            : currentPhase === 'done' ? '✅ Completado'
+                : '';
 
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4 md:p-8">
@@ -178,23 +306,33 @@ export default function MegaTravelScrapingPage() {
                     <div className="flex items-center justify-between">
                         <div>
                             <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-1">
-                                🔄 Scraping MegaTravel
+                                🌍 MegaTravel — Sincronización y Scraping
                             </h1>
                             <p className="text-gray-600 dark:text-gray-400">
-                                Actualizar itinerarios, precios, includes y not-includes de todos los tours
+                                Descubrir tours nuevos, dar de baja los eliminados y actualizar información completa
                             </p>
                         </div>
-                        <button
-                            onClick={() => router.push('/admin/megatravel')}
-                            className="text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 hover:underline"
-                        >
-                            ← Panel Admin
-                        </button>
+                        <div className="flex flex-col items-end gap-2">
+                            <button
+                                onClick={() => router.push('/dashboard')}
+                                className="text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 hover:underline"
+                            >
+                                ← Dashboard
+                            </button>
+                            {phaseLabel && (
+                                <span className={`text-xs px-3 py-1 rounded-full font-medium ${currentPhase === 'sync' ? 'bg-blue-100 text-blue-700' :
+                                        currentPhase === 'scraping' ? 'bg-purple-100 text-purple-700' :
+                                            'bg-green-100 text-green-700'
+                                    }`}>
+                                    {phaseLabel}
+                                </span>
+                            )}
+                        </div>
                     </div>
                 </div>
 
                 {/* Stats Cards */}
-                <div className="grid grid-cols-2 md:grid-cols-6 gap-3 mb-6">
+                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3 mb-6">
                     <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 border border-gray-200 dark:border-gray-700">
                         <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Procesados</div>
                         <div className="text-2xl font-bold text-blue-600">{stats.processed}</div>
@@ -212,6 +350,10 @@ export default function MegaTravelScrapingPage() {
                         <div className="text-2xl font-bold text-gray-500">{stats.deprecated}</div>
                     </div>
                     <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 border border-gray-200 dark:border-gray-700">
+                        <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Nuevos</div>
+                        <div className="text-2xl font-bold text-cyan-600">{stats.newTours}</div>
+                    </div>
+                    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 border border-gray-200 dark:border-gray-700">
                         <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Días Itinerario</div>
                         <div className="text-2xl font-bold text-purple-600">{stats.itineraryDays}</div>
                     </div>
@@ -226,10 +368,10 @@ export default function MegaTravelScrapingPage() {
                 </div>
 
                 {/* Progress */}
-                {isRunning && (
+                {isRunning && currentPhase === 'scraping' && (
                     <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 mb-6 border border-gray-200 dark:border-gray-700">
                         <div className="flex items-center justify-between mb-2">
-                            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Progreso</span>
+                            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Progreso Scraping</span>
                             <span className="text-sm font-medium text-blue-600">{progress}%</span>
                         </div>
                         <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
@@ -244,22 +386,45 @@ export default function MegaTravelScrapingPage() {
                     </div>
                 )}
 
+                {/* Sync progress indicator */}
+                {isRunning && currentPhase === 'sync' && (
+                    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 mb-6 border border-blue-200 dark:border-blue-700">
+                        <div className="flex items-center gap-4">
+                            <div className="w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin" />
+                            <div>
+                                <div className="text-sm font-medium text-gray-700 dark:text-gray-300">Sincronizando con MegaTravel...</div>
+                                <div className="text-xs text-gray-500 dark:text-gray-400">Descubriendo tours nuevos y verificando tours existentes</div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
                 {/* Controls */}
                 <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 mb-6 border border-gray-200 dark:border-gray-700">
-                    <div className="flex gap-3">
+                    <div className="flex gap-3 flex-wrap">
                         <button
-                            onClick={runScraping}
+                            onClick={runFullProcess}
                             disabled={isRunning}
-                            className={`flex-1 py-4 px-6 rounded-xl font-semibold text-white text-lg transition-all ${isRunning
+                            className={`flex-1 min-w-[200px] py-4 px-6 rounded-xl font-semibold text-white text-lg transition-all ${isRunning
                                 ? 'bg-gray-400 cursor-not-allowed'
-                                : 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 active:scale-[0.98] shadow-lg shadow-blue-500/25'
+                                : 'bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 active:scale-[0.98] shadow-lg shadow-blue-500/25'
                                 }`}
                         >
-                            {isRunning ? '⏳ Ejecutando scraping...' : '🚀 Iniciar Scraping Completo'}
+                            {isRunning ? '⏳ Ejecutando...' : '🚀 Proceso Completo (Sync + Scraping)'}
+                        </button>
+                        <button
+                            onClick={runScrapingOnly}
+                            disabled={isRunning}
+                            className={`py-4 px-6 rounded-xl font-semibold text-white transition-all ${isRunning
+                                ? 'bg-gray-400 cursor-not-allowed'
+                                : 'bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 active:scale-[0.98] shadow-lg shadow-purple-500/25'
+                                }`}
+                        >
+                            🔄 Solo Scraping
                         </button>
                         {isRunning && (
                             <button
-                                onClick={stopScraping}
+                                onClick={stopProcess}
                                 className="py-4 px-8 rounded-xl font-semibold text-white text-lg bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 active:scale-[0.98] shadow-lg shadow-red-500/25 transition-all"
                             >
                                 ⛔ Detener
@@ -267,11 +432,11 @@ export default function MegaTravelScrapingPage() {
                         )}
                     </div>
 
-                    <div className="mt-4 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-lg">
-                        <p className="text-sm text-amber-800 dark:text-amber-300">
-                            <strong>⚠️ Nota:</strong> Este proceso puede tomar 60-120 minutos. El navegador debe permanecer abierto.
+                    <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg">
+                        <p className="text-sm text-blue-800 dark:text-blue-300">
+                            <strong>📋 Proceso Completo:</strong> 1️⃣ Sincroniza con MegaTravel (descubre nuevos, da de baja eliminados) → 2️⃣ Scraping de detalles (itinerarios, precios, includes)
                             <br />
-                            <strong>💡 Tip:</strong> Puedes detener el proceso en cualquier momento. Los tours ya actualizados se conservan.
+                            <strong>💡 Tip:</strong> Puedes detener en cualquier momento. Los datos ya procesados se conservan.
                         </p>
                     </div>
                 </div>
@@ -292,19 +457,24 @@ export default function MegaTravelScrapingPage() {
                     <div className="bg-gray-950 rounded-lg p-4 h-96 overflow-y-auto font-mono text-xs leading-relaxed">
                         {logs.length === 0 ? (
                             <div className="text-gray-500 text-center py-8">
-                                No hay actividad aún. Haz clic en &quot;Iniciar Scraping&quot; para comenzar.
+                                No hay actividad aún. Haz clic en &quot;Proceso Completo&quot; para comenzar.
                             </div>
                         ) : (
                             <>
                                 {logs.map((log, index) => (
                                     <div
                                         key={index}
-                                        className={`mb-0.5 ${log.includes('✅') || log.includes('✓') ? 'text-green-400' :
-                                            log.includes('❌') || log.includes('✗') ? 'text-red-400' :
-                                                log.includes('📦') ? 'text-blue-400' :
-                                                    log.includes('🚀') || log.includes('🎉') ? 'text-yellow-400' :
-                                                        log.includes('📊') ? 'text-cyan-400' :
-                                                            'text-gray-400'
+                                        className={`mb-0.5 ${log.includes('═══') ? 'text-white font-bold' :
+                                            log.includes('✅') || log.includes('✓') ? 'text-green-400' :
+                                                log.includes('❌') || log.includes('✗') ? 'text-red-400' :
+                                                    log.includes('🚫') ? 'text-gray-400' :
+                                                        log.includes('🆕') ? 'text-cyan-400' :
+                                                            log.includes('📦') ? 'text-blue-400' :
+                                                                log.includes('📡') || log.includes('🔄') ? 'text-indigo-400' :
+                                                                    log.includes('🚀') || log.includes('🎉') ? 'text-yellow-400' :
+                                                                        log.includes('📊') || log.includes('📅') ? 'text-cyan-400' :
+                                                                            log.includes('⛔') || log.includes('⚠️') ? 'text-orange-400' :
+                                                                                'text-gray-400'
                                             }`}
                                     >
                                         {log}

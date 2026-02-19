@@ -92,7 +92,7 @@ export function BrandFooter() {
                         </p>
                     )}
                     <p className="text-xs mt-2 opacity-50">
-                        v2.321
+                        v2.322
                     </p>
                 </div>
             </div>
