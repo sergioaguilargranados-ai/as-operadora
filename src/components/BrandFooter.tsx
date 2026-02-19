@@ -1,5 +1,5 @@
 // BrandFooter.tsx - Footer dinámico con branding del tenant actual
-// Build: 15 Feb 2026 - v2.316d - Fase 2 Multi-Empresa / White-Label + CRM + RRHH
+// Build: 19 Feb 2026 - v2.317 - Fase 2 Multi-Empresa / White-Label + CRM + RRHH + Catálogo Clientes
 
 'use client';
 
@@ -92,7 +92,7 @@ export function BrandFooter() {
                         </p>
                     )}
                     <p className="text-xs mt-2 opacity-50">
-                        v2.316d
+                        v2.317
                     </p>
                 </div>
             </div>
