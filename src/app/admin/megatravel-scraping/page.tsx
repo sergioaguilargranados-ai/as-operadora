@@ -1,6 +1,6 @@
 // src/app/admin/megatravel-scraping/page.tsx
 // Panel de Scraping MegaTravel - Ejecución manual de scraping completo
-// Build: 19 Feb 2026 - v2.320 - Mejorado con auth por cookie y vista de resultados
+// Build: 19 Feb 2026 - v2.322 - Mejorado con auth por cookie, resultados y botón Detener
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
@@ -23,6 +23,7 @@ export default function MegaTravelScrapingPage() {
     });
     const [totalTours, setTotalTours] = useState(0);
     const logsEndRef = useRef<HTMLDivElement>(null);
+    const abortRef = useRef(false);
 
     // Auto-scroll logs
     useEffect(() => {
@@ -45,7 +46,13 @@ export default function MegaTravelScrapingPage() {
             .catch(() => setTotalTours(325)); // fallback
     }, []);
 
+    const stopScraping = () => {
+        abortRef.current = true;
+        addLog('⛔ Deteniendo scraping... (terminando batch actual)');
+    };
+
     const runScraping = async () => {
+        abortRef.current = false;
         setIsRunning(true);
         setLogs([]);
         setProgress(0);
@@ -66,7 +73,7 @@ export default function MegaTravelScrapingPage() {
         let totalIncludes = 0;
         let totalNotIncludes = 0;
 
-        while (offset < total) {
+        while (offset < total && !abortRef.current) {
             const batchNumber = Math.floor(offset / BATCH_SIZE) + 1;
             addLog(`📦 Batch ${batchNumber}/${totalBatches} (Tours ${offset + 1}-${Math.min(offset + BATCH_SIZE, total)})`);
 
@@ -140,9 +147,14 @@ export default function MegaTravelScrapingPage() {
             setProgress(Math.min(Math.round((offset / total) * 100), 100));
 
             // Pausa entre batches (5 segundos)
-            if (offset < total) {
+            if (offset < total && !abortRef.current) {
                 await new Promise(resolve => setTimeout(resolve, 5000));
             }
+        }
+
+        if (abortRef.current) {
+            addLog('⛔ Scraping detenido por el usuario');
+            addLog(`📊 Resumen parcial: ${totalProcessed} procesados, ${totalSuccess} exitosos, ${totalErrors} errores`);
         }
 
         addLog('🎉 Scraping completo finalizado');
@@ -223,22 +235,32 @@ export default function MegaTravelScrapingPage() {
 
                 {/* Controls */}
                 <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 mb-6 border border-gray-200 dark:border-gray-700">
-                    <button
-                        onClick={runScraping}
-                        disabled={isRunning}
-                        className={`w-full py-4 px-6 rounded-xl font-semibold text-white text-lg transition-all ${isRunning
-                            ? 'bg-gray-400 cursor-not-allowed'
-                            : 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 active:scale-[0.98] shadow-lg shadow-blue-500/25'
-                            }`}
-                    >
-                        {isRunning ? '⏳ Ejecutando scraping...' : '🚀 Iniciar Scraping Completo'}
-                    </button>
+                    <div className="flex gap-3">
+                        <button
+                            onClick={runScraping}
+                            disabled={isRunning}
+                            className={`flex-1 py-4 px-6 rounded-xl font-semibold text-white text-lg transition-all ${isRunning
+                                ? 'bg-gray-400 cursor-not-allowed'
+                                : 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 active:scale-[0.98] shadow-lg shadow-blue-500/25'
+                                }`}
+                        >
+                            {isRunning ? '⏳ Ejecutando scraping...' : '🚀 Iniciar Scraping Completo'}
+                        </button>
+                        {isRunning && (
+                            <button
+                                onClick={stopScraping}
+                                className="py-4 px-8 rounded-xl font-semibold text-white text-lg bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 active:scale-[0.98] shadow-lg shadow-red-500/25 transition-all"
+                            >
+                                ⛔ Detener
+                            </button>
+                        )}
+                    </div>
 
                     <div className="mt-4 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-lg">
                         <p className="text-sm text-amber-800 dark:text-amber-300">
                             <strong>⚠️ Nota:</strong> Este proceso puede tomar 60-120 minutos. El navegador debe permanecer abierto.
                             <br />
-                            <strong>💡 Alternativa:</strong> El cron job nocturno actualiza automáticamente {5 * 6} tours/día en batches de 5 cada 4 horas.
+                            <strong>💡 Tip:</strong> Puedes detener el proceso en cualquier momento. Los tours ya actualizados se conservan.
                         </p>
                     </div>
                 </div>
