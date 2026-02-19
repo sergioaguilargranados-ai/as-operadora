@@ -654,8 +654,25 @@ export class MegaTravelSyncService {
             console.log(`🔄 Iniciando sincronización MegaTravel (ID: ${syncId})`);
             console.log(`   Scraping completo: ${enableFullScraping ? '✅ ACTIVADO' : '❌ Desactivado'}`);
 
-            // Usar paquetes de ejemplo como base
-            const packages = SAMPLE_PACKAGES;
+            // PASO 1: Descubrir tours desde MegaTravel en vivo
+            let packages: Array<{ mt_code: string; mt_url: string; name: string; category: string; price_usd?: number }> = [];
+
+            try {
+                // Importar dinámicamente para evitar dependencia circular
+                const { MegaTravelScrapingService } = await import('@/services/MegaTravelScrapingService');
+                packages = await MegaTravelScrapingService.discoverAllTours();
+                console.log(`✅ Descubiertos ${packages.length} tours desde MegaTravel`);
+            } catch (discoveryError) {
+                console.error('⚠️ Error descubriendo tours, usando SAMPLE_PACKAGES como fallback:', discoveryError);
+                // Fallback a los paquetes de ejemplo si el discovery falla
+                packages = SAMPLE_PACKAGES.map(p => ({
+                    mt_code: p.mt_code,
+                    mt_url: p.mt_url,
+                    name: p.name,
+                    category: p.category,
+                    price_usd: p.price_usd
+                }));
+            }
 
             // Obtener margen configurado
             const marginResult = await pool.query(`
@@ -663,15 +680,45 @@ export class MegaTravelSyncService {
             `);
             const margin = parseFloat(marginResult.rows[0]?.value || '15');
 
-            // Sincronizar cada paquete
+            // PASO 2: Insertar/actualizar cada paquete descubierto
+            const discoveredCodes = new Set<string>();
             for (const pkg of packages) {
                 try {
                     console.log(`\n📦 Procesando: ${pkg.name} (${pkg.mt_code})`);
+                    discoveredCodes.add(pkg.mt_code);
 
-                    // 1. Insertar/actualizar datos básicos del paquete
-                    await this.upsertPackage(pkg, margin);
+                    // Insertar/actualizar datos básicos del paquete
+                    const fullPkg: MegaTravelPackageRaw = {
+                        mt_code: pkg.mt_code,
+                        mt_url: pkg.mt_url,
+                        name: pkg.name,
+                        description: '',
+                        destination_region: pkg.category,
+                        cities: [],
+                        countries: [],
+                        main_country: '',
+                        days: 0,
+                        nights: 0,
+                        price_usd: pkg.price_usd || 0,
+                        price_mxn: 0,
+                        taxes_usd: 0,
+                        currency: 'USD',
+                        price_per_person_type: 'Por persona en habitación Doble',
+                        includes_flight: true,
+                        flight_origin: 'CDMX',
+                        includes: [],
+                        not_includes: [],
+                        hotel_category: '',
+                        meal_plan: '',
+                        main_image: '',
+                        category: pkg.category,
+                        is_featured: false,
+                        is_offer: false,
+                    };
 
-                    // 2. Si está habilitado, hacer scraping completo
+                    await this.upsertPackage(fullPkg, margin);
+
+                    // Si está habilitado, hacer scraping completo
                     if (enableFullScraping) {
                         await this.syncCompletePackageData(pkg.mt_url, pkg.mt_code);
                     }
@@ -684,6 +731,22 @@ export class MegaTravelSyncService {
                     const errorMsg = `Error sincronizando ${pkg.mt_code}: ${err}`;
                     errors.push(errorMsg);
                     console.error(`   ❌ ${errorMsg}`);
+                }
+            }
+
+            // PASO 3: Marcar como inactivos los tours que ya no existen en MegaTravel
+            if (discoveredCodes.size > 0) {
+                const placeholders = Array.from(discoveredCodes).map((_, i) => `$${i + 1}`).join(', ');
+                const deprecatedResult = await pool.query(
+                    `UPDATE megatravel_packages 
+                     SET is_active = false, sync_status = 'deprecated', sync_error = 'Tour no encontrado en última sincronización', updated_at = CURRENT_TIMESTAMP 
+                     WHERE is_active = true AND mt_code NOT IN (${placeholders})
+                     RETURNING mt_code`,
+                    Array.from(discoveredCodes)
+                );
+                if (deprecatedResult.rowCount && deprecatedResult.rowCount > 0) {
+                    console.log(`🚫 ${deprecatedResult.rowCount} tours marcados como inactivos (ya no existen en MegaTravel)`);
+                    deprecatedResult.rows.forEach(r => console.log(`   🚫 ${r.mt_code}`));
                 }
             }
 

@@ -122,12 +122,30 @@ export async function POST(request: NextRequest) {
                 console.log(`✅ ${tour.mt_code}: $${scrapedData.pricing.price_usd || 'N/A'}, ${scrapedData.itinerary.length} días`);
 
             } catch (error: any) {
-                console.error(`❌ Error en ${tour.mt_code}:`, error.message);
+                const errorMsg = error.message || '';
+                console.error(`❌ Error en ${tour.mt_code}:`, errorMsg);
+
+                // Detectar si el tour fue eliminado de MegaTravel (404, timeout de navegación, etc.)
+                const isDeprecated = errorMsg.includes('404') ||
+                    errorMsg.includes('net::ERR_') ||
+                    errorMsg.includes('Navigation timeout') ||
+                    errorMsg.includes('Page not found') ||
+                    errorMsg.includes('no se encontró');
+
+                if (isDeprecated) {
+                    // Marcar como inactivo
+                    await pool.query(
+                        `UPDATE megatravel_packages SET is_active = false, sync_status = 'deprecated', sync_error = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2`,
+                        [`Tour no encontrado en MegaTravel: ${errorMsg.substring(0, 200)}`, tour.id]
+                    );
+                    console.log(`🚫 ${tour.mt_code}: Marcado como INACTIVO (no existe en MegaTravel)`);
+                }
+
                 results.push({
                     id: tour.id,
                     mt_code: tour.mt_code,
-                    status: 'error',
-                    error: error.message?.substring(0, 200)
+                    status: isDeprecated ? 'deprecated' : 'error',
+                    error: errorMsg.substring(0, 200)
                 });
             }
 

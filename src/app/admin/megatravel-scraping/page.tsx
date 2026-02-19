@@ -17,6 +17,7 @@ export default function MegaTravelScrapingPage() {
         processed: 0,
         success: 0,
         errors: 0,
+        deprecated: 0,
         itineraryDays: 0,
         includesFound: 0,
         notIncludesFound: 0,
@@ -56,7 +57,7 @@ export default function MegaTravelScrapingPage() {
         setIsRunning(true);
         setLogs([]);
         setProgress(0);
-        setStats({ processed: 0, success: 0, errors: 0, itineraryDays: 0, includesFound: 0, notIncludesFound: 0 });
+        setStats({ processed: 0, success: 0, errors: 0, deprecated: 0, itineraryDays: 0, includesFound: 0, notIncludesFound: 0 });
 
         const BATCH_SIZE = 5;
         const total = totalTours || 325;
@@ -72,6 +73,7 @@ export default function MegaTravelScrapingPage() {
         let totalItinerary = 0;
         let totalIncludes = 0;
         let totalNotIncludes = 0;
+        let totalDeprecated = 0;
 
         while (offset < total && !abortRef.current) {
             const batchNumber = Math.floor(offset / BATCH_SIZE) + 1;
@@ -99,10 +101,12 @@ export default function MegaTravelScrapingPage() {
                 if (data.success) {
                     const batchSuccess = data.results.filter((r: any) => r.status === 'success').length;
                     const batchErrors = data.results.filter((r: any) => r.status === 'error').length;
+                    const batchDeprecated = data.results.filter((r: any) => r.status === 'deprecated').length;
 
                     totalProcessed += data.processed;
                     totalSuccess += batchSuccess;
                     totalErrors += batchErrors;
+                    totalDeprecated += batchDeprecated;
 
                     // Sumar métricas detalladas
                     data.results.forEach((r: any) => {
@@ -113,12 +117,14 @@ export default function MegaTravelScrapingPage() {
                         }
                     });
 
-                    addLog(`✅ Batch ${batchNumber}: ${batchSuccess} OK, ${batchErrors} errores`);
+                    addLog(`✅ Batch ${batchNumber}: ${batchSuccess} OK, ${batchErrors} errores${batchDeprecated > 0 ? `, ${batchDeprecated} dados de baja` : ''}`);
 
                     // Mostrar resultados individuales
                     data.results.forEach((r: any) => {
                         if (r.status === 'success') {
                             addLog(`   ✓ ${r.mt_code}: $${r.price || 'N/A'} USD, ${r.itinerary || '?'} días, ${r.includes || 0}/${r.not_includes || 0} inc/no-inc`);
+                        } else if (r.status === 'deprecated') {
+                            addLog(`   🚫 ${r.mt_code}: DADO DE BAJA (ya no existe en MegaTravel)`);
                         } else {
                             addLog(`   ✗ ${r.mt_code}: ${r.error?.substring(0, 80) || 'Error'}`);
                         }
@@ -128,6 +134,7 @@ export default function MegaTravelScrapingPage() {
                         processed: totalProcessed,
                         success: totalSuccess,
                         errors: totalErrors,
+                        deprecated: totalDeprecated,
                         itineraryDays: totalItinerary,
                         includesFound: totalIncludes,
                         notIncludesFound: totalNotIncludes,
@@ -199,6 +206,10 @@ export default function MegaTravelScrapingPage() {
                     <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 border border-gray-200 dark:border-gray-700">
                         <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Errores</div>
                         <div className="text-2xl font-bold text-red-600">{stats.errors}</div>
+                    </div>
+                    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 border border-gray-200 dark:border-gray-700">
+                        <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Dados de Baja</div>
+                        <div className="text-2xl font-bold text-gray-500">{stats.deprecated}</div>
                     </div>
                     <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 border border-gray-200 dark:border-gray-700">
                         <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Días Itinerario</div>
