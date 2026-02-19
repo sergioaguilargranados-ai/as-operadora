@@ -1,6 +1,6 @@
 // src/app/admin/megatravel-scraping/page.tsx
 // Panel unificado: Sincronización + Scraping MegaTravel
-// Build: 19 Feb 2026 - v2.322 - Sync por categoría (sin timeout) + Scraping por batch
+// Build: 19 Feb 2026 11:12 - v2.323 - Sync por categoría (sin timeout) + Scraping por batch
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
@@ -746,7 +746,7 @@ export default function MegaTravelScrapingPage() {
 
                 {/* Footer */}
                 <div className="text-center text-xs text-gray-400 mt-6 py-4">
-                    v2.322 | AS Operadora — Panel MegaTravel
+                    v2.323 | 19 Feb 2026 11:12 | AS Operadora — Panel MegaTravel
                 </div>
             </div>
         </div>
