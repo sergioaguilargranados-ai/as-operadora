@@ -17,7 +17,7 @@ const ALLOWED_ROLES = ['SUPER_ADMIN', 'ADMIN'];
 export async function POST(request: NextRequest) {
     try {
         // ========== AUTENTICACIÓN ==========
-        // Método 1: Cookie de sesión
+        // Método 1: Cookie de sesión (JWT)
         const cookieStore = await cookies();
         const tokenCookie = cookieStore.get('as_token');
 
@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
 
         let authenticated = false;
 
-        // Intentar con cookie primero
+        // Intentar con cookie JWT primero
         if (tokenCookie?.value) {
             try {
                 const decoded = await verifyToken(tokenCookie.value);
@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
                     authenticated = true;
                 }
             } catch (e) {
-                // Cookie inválida, intentar otras formas
+                // Cookie JWT expirada o inválida, intentar otras formas
             }
         }
 
@@ -62,6 +62,30 @@ export async function POST(request: NextRequest) {
                     }
                 } catch (e) {
                     // Token inválido
+                }
+            }
+        }
+
+        // Método 4: Fallback - cookie as_user verificada contra BD
+        // Esto permite que procesos largos (scraping) continúen aunque el JWT expire
+        if (!authenticated) {
+            const userCookie = cookieStore.get('as_user');
+            if (userCookie?.value) {
+                try {
+                    const userData = JSON.parse(decodeURIComponent(userCookie.value));
+                    if (userData.email && userData.id) {
+                        // Verificar contra la BD que el usuario existe y tiene rol admin
+                        const userCheck = await pool.query(
+                            'SELECT id, role FROM users WHERE id = $1 AND email = $2 LIMIT 1',
+                            [userData.id, userData.email]
+                        );
+                        if (userCheck.rows.length > 0 && ALLOWED_ROLES.includes(userCheck.rows[0].role)) {
+                            authenticated = true;
+                            console.log(`🔑 Scrape-all auth via as_user cookie fallback: ${userData.email}`);
+                        }
+                    }
+                } catch (e) {
+                    // Cookie as_user inválida
                 }
             }
         }
