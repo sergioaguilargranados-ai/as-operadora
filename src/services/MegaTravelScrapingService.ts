@@ -1,13 +1,26 @@
 // MegaTravelScrapingService.ts - Servicio de scraping completo de MegaTravel
-// Build: 01 Feb 2026 - v2.262 - Scraping completo con Puppeteer + Cheerio
+// Build: 19 Feb 2026 - v2.322 - Scraping con puppeteer-core + @sparticuz/chromium para Vercel
 //
 // Este servicio extrae TODA la información de MegaTravel usando:
 // - Cheerio para datos estáticos (HTML simple)
 // - Puppeteer para datos dinámicos (JavaScript rendering)
+// - @sparticuz/chromium para compatibilidad con Vercel serverless
 
-import puppeteer, { Page } from 'puppeteer';
+import puppeteer from 'puppeteer-core';
+import type { Page } from 'puppeteer-core';
+import chromium from '@sparticuz/chromium';
 import * as cheerio from 'cheerio';
 import { pool } from '@/lib/db';
+
+// Helper para lanzar el browser compatible con Vercel serverless
+async function launchBrowser() {
+    return puppeteer.launch({
+        args: chromium.args,
+        defaultViewport: { width: 1920, height: 1080 },
+        executablePath: await chromium.executablePath(),
+        headless: true,
+    });
+}
 
 // Tipos para las nuevas estructuras de datos
 export interface ItineraryDay {
@@ -109,10 +122,7 @@ export class MegaTravelScrapingService {
         }> = [];
 
         try {
-            const browser = await puppeteer.launch({
-                headless: true,
-                args: ['--no-sandbox', '--disable-setuid-sandbox']
-            });
+            const browser = await launchBrowser();
 
             for (const categoryInfo of CATEGORY_URLS) {
                 try {
@@ -223,10 +233,7 @@ export class MegaTravelScrapingService {
 
         try {
             // Abrir navegador con Puppeteer
-            const browser = await puppeteer.launch({
-                headless: true,
-                args: ['--no-sandbox', '--disable-setuid-sandbox']
-            });
+            const browser = await launchBrowser();
 
             const page = await browser.newPage();
             await page.setViewport({ width: 1920, height: 1080 });
@@ -367,10 +374,7 @@ export class MegaTravelScrapingService {
         try {
             console.log(`   📄 Obteniendo datos desde circuito.php (viaje=${tourCode})...`);
 
-            const browser = await puppeteer.launch({
-                headless: true,
-                args: ['--no-sandbox', '--disable-setuid-sandbox']
-            });
+            const browser = await launchBrowser();
 
             const page = await browser.newPage();
             await page.setViewport({ width: 1920, height: 1080 });

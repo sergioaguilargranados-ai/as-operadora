@@ -1,12 +1,23 @@
 // MegaConexionService.ts - Servicio para extraer datos de Mega Conexión
-// Build: 05 Feb 2026 - v2.301 - Extracción desde vi.php (Mega Conexión)
+// Build: 19 Feb 2026 - v2.322 - Compatibilidad Vercel con puppeteer-core + @sparticuz/chromium
 //
 // Este servicio complementa MegaTravelScrapingService extrayendo datos que
 // están más completos en las URLs de Mega Conexión (vi.php)
 
-import puppeteer from 'puppeteer';
+import puppeteer from 'puppeteer-core';
+import chromium from '@sparticuz/chromium';
 import * as cheerio from 'cheerio';
 import { pool } from '@/lib/db';
+
+// Helper para lanzar el browser compatible con Vercel serverless
+async function launchBrowser() {
+    return puppeteer.launch({
+        args: chromium.args,
+        defaultViewport: { width: 1920, height: 1080 },
+        executablePath: await chromium.executablePath(),
+        headless: true,
+    });
+}
 
 // URLs de Mega Conexión por destino
 const MEGA_CONEXION_URLS = {
@@ -52,10 +63,7 @@ export class MegaConexionService {
     static async scrapeFromMegaConexion(mtCode: string): Promise<MegaConexionData | null> {
         console.log(`🔍 Buscando ${mtCode} en Mega Conexión...`);
 
-        const browser = await puppeteer.launch({
-            headless: true,
-            args: ['--no-sandbox', '--disable-setuid-sandbox']
-        });
+        const browser = await launchBrowser();
 
         try {
             // Buscar en todas las categorías
