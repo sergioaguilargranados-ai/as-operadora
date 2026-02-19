@@ -181,6 +181,7 @@ export default function TourDetailPage({ params }: { params: Promise<{ code: str
     }
 
     const formatPrice = (price: number) => {
+        if (!price || isNaN(price)) return '0'
         return new Intl.NumberFormat('es-MX', {
             minimumFractionDigits: 0,
             maximumFractionDigits: 0
@@ -378,19 +379,33 @@ export default function TourDetailPage({ params }: { params: Promise<{ code: str
                             </div>
                         </Card>
 
-                        {/* NUEVO: Mapa del Tour con marcadores */}
-                        {(tour.cities && tour.cities.length > 0) && (
+                        {/* NUEVO: Mapa del Tour - prioriza imagen de MegaTravel, fallback Google Maps */}
+                        {(tour.mapImage || (tour.cities && tour.cities.length > 0)) && (
                             <Card className="p-6">
                                 <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
                                     <MapIcon className="w-6 h-6 text-blue-600" />
                                     Mapa del Tour
                                 </h2>
-                                <TourMap
-                                    cities={tour.cities}
-                                    countries={tour.countries || []}
-                                    mainCountry={tour.mainCountry || tour.countries?.[0] || 'World'}
-                                    tourName={tour.name}
-                                />
+                                {tour.mapImage ? (
+                                    <div className="w-full rounded-xl overflow-hidden bg-gray-100" style={{ minHeight: '300px' }}>
+                                        <img
+                                            src={tour.mapImage}
+                                            alt={`Mapa de ${tour.name}`}
+                                            className="w-full h-auto object-contain"
+                                            onError={(e) => {
+                                                // Si la imagen falla, ocultar
+                                                (e.target as HTMLImageElement).style.display = 'none'
+                                            }}
+                                        />
+                                    </div>
+                                ) : tour.cities && tour.cities.length > 0 ? (
+                                    <TourMap
+                                        cities={tour.cities}
+                                        countries={tour.countries || []}
+                                        mainCountry={tour.mainCountry || tour.countries?.[0] || 'World'}
+                                        tourName={tour.name}
+                                    />
+                                ) : null}
                             </Card>
                         )}
 
@@ -764,11 +779,22 @@ export default function TourDetailPage({ params }: { params: Promise<{ code: str
                             <Card className="p-6 border-2 border-blue-200">
                                 {/* Precio principal */}
                                 <div className="text-center mb-6">
-                                    <div className="text-4xl font-bold text-blue-600 mb-2">
-                                        ${formatPrice(tour.pricing.basePrice)}
-                                        <span className="text-lg text-gray-600 ml-2">USD</span>
-                                    </div>
-                                    <p className="text-sm text-gray-600">Por persona en habitación Doble</p>
+                                    {tour.pricing.basePrice > 0 ? (
+                                        <>
+                                            <div className="text-4xl font-bold text-blue-600 mb-2">
+                                                ${formatPrice(tour.pricing.basePrice)}
+                                                <span className="text-lg text-gray-600 ml-2">USD</span>
+                                            </div>
+                                            <p className="text-sm text-gray-600">Por persona en habitación Doble</p>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <div className="text-3xl font-bold text-blue-600 mb-2">
+                                                Consultar precio
+                                            </div>
+                                            <p className="text-sm text-gray-600">Contacta para disponibilidad y tarifas</p>
+                                        </>
+                                    )}
                                 </div>
 
                                 <div className="space-y-3 mb-6 pb-6 border-b">
@@ -806,7 +832,10 @@ export default function TourDetailPage({ params }: { params: Promise<{ code: str
                                 <div className="flex justify-between items-center mb-6 pb-6 border-b">
                                     <span className="text-lg font-bold text-gray-900">Total ({numPersonas} {numPersonas === 1 ? 'persona' : 'personas'}):</span>
                                     <span className="text-2xl font-bold text-blue-600">
-                                        ${formatPrice((tour.pricing.totalPrice || (tour.pricing.basePrice + (tour.pricing.taxes || 0))) * numPersonas)} USD
+                                        {tour.pricing.totalPrice > 0 || tour.pricing.basePrice > 0
+                                            ? `$${formatPrice((tour.pricing.totalPrice || (tour.pricing.basePrice + (tour.pricing.taxes || 0))) * numPersonas)} USD`
+                                            : 'Consultar'
+                                        }
                                     </span>
                                 </div>
 
