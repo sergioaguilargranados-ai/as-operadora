@@ -25,8 +25,12 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
             }, { status: 400 });
         }
 
-        // Normalizar código (puede venir como "12117" o "MT-12117")
-        const mtCode = code.startsWith('MT-') ? code : `MT-${code}`;
+        // Normalizar código (puede venir como "12117", "MT-12117" o "AS-12117")
+        const mtCode = code.startsWith('AS-')
+            ? code.replace('AS-', 'MT-')
+            : code.startsWith('MT-')
+                ? code
+                : `MT-${code}`;
 
         const pkg = await MegaTravelSyncService.getPackageByCode(mtCode);
 
@@ -39,7 +43,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
         // Transformar para el frontend con TODA la información
         const formattedPackage = {
-            id: pkg.mt_code,
+            id: pkg.mt_code?.replace('MT-', 'AS-'),
             slug: pkg.slug,
             name: pkg.name,
             description: pkg.description,

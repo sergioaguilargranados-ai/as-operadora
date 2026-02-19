@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
 
         // Transformar para el frontend
         const formattedPackages = packages.map(pkg => ({
-            id: pkg.mt_code,
+            id: pkg.mt_code?.replace('MT-', 'AS-'),
             slug: pkg.slug,
             name: pkg.name,
             description: pkg.description,
