@@ -143,6 +143,7 @@ export default function TourDetailPage({ params }: { params: Promise<{ code: str
     const [showFullNotes, setShowFullNotes] = useState(false)
     const [showFullItinerary, setShowFullItinerary] = useState(false)
     const [numPersonas, setNumPersonas] = useState(1) // Selector de personas
+    const [mapImageFailed, setMapImageFailed] = useState(false)
 
     useEffect(() => {
         fetchTourDetail()
@@ -379,22 +380,23 @@ export default function TourDetailPage({ params }: { params: Promise<{ code: str
                             </div>
                         </Card>
 
-                        {/* NUEVO: Mapa del Tour - prioriza imagen de MegaTravel, fallback Google Maps */}
+                        {/* Mapa del Tour - prioriza imagen de MegaTravel, fallback Google Maps interactivo */}
                         {(tour.mapImage || (tour.cities && tour.cities.length > 0)) && (
                             <Card className="p-6">
                                 <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
                                     <MapIcon className="w-6 h-6 text-blue-600" />
                                     Mapa del Tour
                                 </h2>
-                                {tour.mapImage ? (
+                                {tour.mapImage && !mapImageFailed ? (
                                     <div className="w-full rounded-xl overflow-hidden bg-gray-100" style={{ minHeight: '300px' }}>
                                         <img
                                             src={tour.mapImage}
                                             alt={`Mapa de ${tour.name}`}
                                             className="w-full h-auto object-contain"
-                                            onError={(e) => {
-                                                // Si la imagen falla, ocultar
-                                                (e.target as HTMLImageElement).style.display = 'none'
+                                            onError={() => {
+                                                // Si la imagen falla, activar fallback a Google Maps
+                                                console.log('⚠️ Imagen de mapa falló, usando Google Maps como fallback');
+                                                setMapImageFailed(true);
                                             }}
                                         />
                                     </div>

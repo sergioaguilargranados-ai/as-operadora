@@ -1,9 +1,9 @@
 // Componente de mapa interactivo con marcadores para tours
-// Build: 31 Ene 2026 - v2.257 - Google Maps JavaScript API
+// Build: 23 Feb 2026 - v2.326 - Mejorado geocoding y fallback
 
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 // Declaración de tipos para Google Maps
 declare global {
@@ -23,6 +23,8 @@ interface TourMapProps {
 export function TourMap({ cities, countries, mainCountry, tourName }: TourMapProps) {
     const mapRef = useRef<HTMLDivElement>(null)
     const googleMapRef = useRef<any>(null)
+    const [isLoading, setIsLoading] = useState(true)
+    const [hasError, setHasError] = useState(false)
 
     useEffect(() => {
         // Cargar Google Maps API
@@ -37,6 +39,10 @@ export function TourMap({ cities, countries, mainCountry, tourName }: TourMapPro
             script.async = true
             script.defer = true
             script.onload = () => initMap()
+            script.onerror = () => {
+                setIsLoading(false)
+                setHasError(true)
+            }
             document.head.appendChild(script)
         }
 
@@ -44,18 +50,35 @@ export function TourMap({ cities, countries, mainCountry, tourName }: TourMapPro
             if (!mapRef.current) return
 
             const google = (window as any).google
-            if (!google) return
+            if (!google) {
+                setIsLoading(false)
+                setHasError(true)
+                return
+            }
+
+            // Determinar el contexto de país para geocoding
+            // Si mainCountry es 'World' o vacío, usar el primer país disponible
+            const countryContext = (mainCountry && mainCountry !== 'World')
+                ? mainCountry
+                : (countries && countries.length > 0 ? countries[0] : '')
 
             // Geocodificar las ciudades para obtener coordenadas
             const geocoder = new google.maps.Geocoder()
             const bounds = new google.maps.LatLngBounds()
 
             // Crear el mapa centrado en el país principal
-            const mainLocation = await geocodeLocation(geocoder, mainCountry)
+            let centerLocation = { lat: 20, lng: 0 } // Default: centro del mundo
+            try {
+                if (countryContext) {
+                    centerLocation = await geocodeLocation(geocoder, countryContext)
+                }
+            } catch {
+                console.log('No se pudo geocodificar el país principal, usando default')
+            }
 
             const map = new google.maps.Map(mapRef.current, {
-                zoom: 6,
-                center: mainLocation,
+                zoom: 5,
+                center: centerLocation,
                 mapTypeControl: true,
                 streetViewControl: false,
                 fullscreenControl: true,
@@ -71,9 +94,23 @@ export function TourMap({ cities, countries, mainCountry, tourName }: TourMapPro
             googleMapRef.current = map
 
             // Agregar marcadores para cada ciudad
-            const cityPromises = cities.slice(0, 10).map(async (city, index) => {
+            let markersAdded = 0
+            const cityPromises = cities.slice(0, 15).map(async (city, index) => {
                 try {
-                    const location = await geocodeLocation(geocoder, `${city}, ${mainCountry}`)
+                    // Intentar con contexto de país primero, luego sin él
+                    let location
+                    try {
+                        const query = countryContext ? `${city}, ${countryContext}` : city
+                        location = await geocodeLocation(geocoder, query)
+                    } catch {
+                        // Fallback: intentar sin contexto de país
+                        try {
+                            location = await geocodeLocation(geocoder, city)
+                        } catch {
+                            console.warn(`No se pudo geocodificar: ${city}`)
+                            return null
+                        }
+                    }
 
                     // Crear marcador
                     const marker = new google.maps.Marker({
@@ -111,6 +148,7 @@ export function TourMap({ cities, countries, mainCountry, tourName }: TourMapPro
                     })
 
                     bounds.extend(location)
+                    markersAdded++
                     return marker
                 } catch (error) {
                     console.error(`Error geocoding ${city}:`, error)
@@ -121,8 +159,15 @@ export function TourMap({ cities, countries, mainCountry, tourName }: TourMapPro
             await Promise.all(cityPromises)
 
             // Ajustar el mapa para mostrar todos los marcadores
-            if (cities.length > 1) {
+            if (markersAdded > 1) {
                 map.fitBounds(bounds)
+            } else if (markersAdded === 1) {
+                map.setZoom(8)
+            }
+
+            setIsLoading(false)
+            if (markersAdded === 0) {
+                setHasError(true)
             }
         }
 
@@ -132,7 +177,7 @@ export function TourMap({ cities, countries, mainCountry, tourName }: TourMapPro
                     if (status === 'OK' && results && results[0]) {
                         resolve(results[0].geometry.location)
                     } else {
-                        reject(new Error(`Geocoding failed: ${status}`))
+                        reject(new Error(`Geocoding failed for "${address}": ${status}`))
                     }
                 })
             })
@@ -141,11 +186,33 @@ export function TourMap({ cities, countries, mainCountry, tourName }: TourMapPro
         loadGoogleMaps()
     }, [cities, countries, mainCountry, tourName])
 
+    if (hasError && !isLoading) {
+        return (
+            <div className="w-full h-64 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600">
+                <p className="text-center">
+                    <span className="text-3xl block mb-2">🗺️</span>
+                    Ciudades del tour: {cities.join(' → ')}
+                </p>
+            </div>
+        )
+    }
+
     return (
-        <div
-            ref={mapRef}
-            className="w-full h-96 rounded-xl overflow-hidden bg-gray-100"
-            style={{ minHeight: '400px' }}
-        />
+        <div className="relative">
+            {isLoading && (
+                <div className="absolute inset-0 z-10 bg-gray-100 rounded-xl flex items-center justify-center">
+                    <div className="text-center text-gray-500">
+                        <div className="animate-spin w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full mx-auto mb-2"></div>
+                        Cargando mapa...
+                    </div>
+                </div>
+            )}
+            <div
+                ref={mapRef}
+                className="w-full h-96 rounded-xl overflow-hidden bg-gray-100"
+                style={{ minHeight: '400px' }}
+            />
+        </div>
     )
 }
+
