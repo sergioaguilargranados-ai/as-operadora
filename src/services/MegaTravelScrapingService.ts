@@ -270,6 +270,19 @@ export class MegaTravelScrapingService {
             // NUEVO: Extraer precios dinámicos ANTES de cerrar el navegador
             const dynamicPricing = await this.scrapeDynamicPricing(page);
 
+            // NUEVO: Extraer meta tags OG ANTES de cerrar el navegador
+            // (la SPA puede no conservarlos en page.content())
+            const browserMeta = await page.evaluate(() => {
+                return {
+                    ogDescription: document.querySelector('meta[property="og:description"]')?.getAttribute('content') || '',
+                    ogTitle: document.querySelector('meta[property="og:title"]')?.getAttribute('content') || '',
+                    title: document.title || '',
+                    // Buscar texto "Visitando" en la página visible
+                    bodyText: document.body?.innerText?.substring(0, 5000) || ''
+                };
+            });
+            console.log('   📋 Meta OG extraído:', browserMeta.ogDescription?.substring(0, 80) || '(vacío)');
+
             // Obtener HTML completo DESPUÉS de que todo se haya cargado
             const html = await page.content();
 
@@ -291,8 +304,8 @@ export class MegaTravelScrapingService {
             const images = await this.scrapeImages($, tourCode);
             const tags = await this.scrapeClassifications($);
 
-            // NUEVO: Extraer ciudades, países y duración desde la página principal
-            const tourMeta = await this.scrapeCitiesAndCountries($);
+            // NUEVO: Extraer ciudades, países y duración — usar datos del browser
+            const tourMeta = await this.scrapeCitiesAndCountries($, browserMeta);
 
             // Extraer precios estáticos (fallback si no hay dinámicos)
             const staticPricing = await this.scrapePricing($);
@@ -421,13 +434,19 @@ export class MegaTravelScrapingService {
             if (!itinContainer.find('p').length) {
                 itinContainer = itinHeading.parent().next();
             }
+            // A veces es h5 → parent → closest div → next
+            if (!itinContainer.find('p').length && !itinContainer.find('b, strong').length) {
+                itinContainer = itinHeading.closest('div').next();
+            }
 
             const paragraphs = itinContainer.find('p');
+            console.log(`   📝 Circuito HTML: ${paragraphs.length} párrafos encontrados en itinerario`);
 
             if (paragraphs.length > 0) {
                 for (let i = 0; i < paragraphs.length; i++) {
                     const p = $(paragraphs[i]);
-                    const boldText = p.find('b, strong').text().trim();
+                    const boldElem = p.find('b, strong');
+                    const boldText = boldElem.text().trim();
 
                     if (boldText && boldText.length > 0) {
                         // Ignorar títulos que no son días (ej: nombre del barco)
@@ -435,19 +454,31 @@ export class MegaTravelScrapingService {
 
                         const title = boldText;
 
-                        // Buscar descripción en siguiente(s) <p> sin bold
+                        // CASO 1: Descripción en EL MISMO párrafo después del bold
+                        // HTML: <p><b>DÍA 1 MÉXICO</b> Cita en el aeropuerto...</p>
                         let description = '';
-                        let j = i + 1;
-                        while (j < paragraphs.length) {
-                            const nextP = $(paragraphs[j]);
-                            if (nextP.find('b, strong').length > 0) break;
-                            const nextText = nextP.text().trim();
-                            if (nextText) {
-                                description += (description ? ' ' : '') + nextText;
-                            }
-                            j++;
+                        const pClone = p.clone();
+                        pClone.find('b, strong').remove();
+                        const sameParaDesc = pClone.text().trim();
+
+                        if (sameParaDesc && sameParaDesc.length > 10) {
+                            description = sameParaDesc;
                         }
-                        i = j - 1; // Saltar los párrafos consumidos
+
+                        // CASO 2: Descripción en siguiente(s) <p> sin bold
+                        if (!description) {
+                            let j = i + 1;
+                            while (j < paragraphs.length) {
+                                const nextP = $(paragraphs[j]);
+                                if (nextP.find('b, strong').length > 0) break;
+                                const nextText = nextP.text().trim();
+                                if (nextText) {
+                                    description += (description ? ' ' : '') + nextText;
+                                }
+                                j++;
+                            }
+                            i = j - 1; // Saltar los párrafos consumidos
+                        }
 
                         // Extraer ciudad del título
                         // Formato 1: "DÍA 01  MÉXICO – CASABLANCA"
@@ -473,7 +504,46 @@ export class MegaTravelScrapingService {
                 }
             }
 
-            console.log(`   📅 Circuito: ${days.length} días de itinerario`);
+            // FALLBACK: Si no encontramos itinerario por párrafos, intentar con texto plano
+            if (days.length === 0) {
+                console.log(`   ⚠️  No se encontró itinerario por párrafos, intentando texto plano...`);
+                const itinHtml = itinContainer.html() || '';
+                const cleanedText = itinHtml
+                    .replace(/<br\s*\/?>/gi, '\n')
+                    .replace(/<\/p>/gi, '\n')
+                    .replace(/<\/div>/gi, '\n')
+                    .replace(/<\/strong>/gi, ' ')
+                    .replace(/<\/b>/gi, ' ')
+                    .replace(/<[^>]+>/g, '')
+                    .replace(/&nbsp;/gi, ' ')
+                    .replace(/&amp;/g, '&')
+                    .replace(/\n{3,}/g, '\n\n')
+                    .trim();
+
+                if (cleanedText.length > 50) {
+                    const dayRegex = /D[ÍIí]A\s+0?(\d+)\s+([^\n]+?)(?:\n|$)([\s\S]*?)(?=D[ÍIí]A\s+0?\d+|$)/gi;
+                    let match;
+                    while ((match = dayRegex.exec(cleanedText)) !== null) {
+                        const num = parseInt(match[1]);
+                        const t = match[2].trim().substring(0, 500);
+                        const d = match[3].split('\n').map((l: string) => l.trim()).filter((l: string) => l.length > 0).join(' ').trim().substring(0, 2000);
+                        let city: string | undefined;
+                        const cp = t.split(/[-–]/)[0].trim();
+                        if (cp) city = cp.replace(/\(.+?\)/g, '').trim() || undefined;
+                        days.push({ day_number: num, title: `DÍA ${num} ${t}`, description: d, meals: undefined, hotel: undefined, city, activities: [], highlights: [] });
+                    }
+                }
+            }
+
+            // Log detallado para debugging
+            if (days.length > 0) {
+                console.log(`   📅 Circuito: ${days.length} días de itinerario`);
+                console.log(`   📅 Día 1: "${days[0].title}" → desc: ${days[0].description?.substring(0, 80) || '(vacía)'}...`);
+            } else {
+                console.log(`   ⚠️  Circuito: 0 días de itinerario encontrados`);
+                const rawHtml = itinContainer.html() || '';
+                console.log(`   📝 HTML del contenedor (first 300): ${rawHtml.substring(0, 300)}`);
+            }
 
             // ========== INCLUDES desde circuito.php ==========
             const includes: string[] = [];
@@ -857,13 +927,20 @@ export class MegaTravelScrapingService {
 
     /**
      * 5B. EXTRAER CIUDADES, PAÍSES Y DURACIÓN del HTML principal del tour
-     * Fuentes:
-     * - OG description: "Viaje desde México a Argentina, Brasil. Visitando: Río de Janeiro, Iguazú, Buenos Aires durante 11 días"
-     * - Texto "Visitando" en la página
-     * - Breadcrumb (viajes Sudamérica, etc.)
-     * - Badges de duración (11 Días / 9 Noches)
+     * Fuentes (en orden de prioridad):
+     * 1. browserMeta: datos extraídos con page.evaluate() ANTES de cerrar Puppeteer
+     * 2. Cheerio ($): parseando el HTML guardado con page.content()
+     * 3. Texto visible del body (innerText del browser)
+     * 
+     * El browserMeta es CRÍTICO porque MegaTravel es una SPA y page.content()
+     * puede no conservar los meta tags OG originales del servidor.
      */
-    static async scrapeCitiesAndCountries($: cheerio.Root): Promise<{
+    static async scrapeCitiesAndCountries($: cheerio.Root, browserMeta?: {
+        ogDescription: string;
+        ogTitle: string;
+        title: string;
+        bodyText: string;
+    }): Promise<{
         cities: string[];
         countries: string[];
         main_country: string;
@@ -877,41 +954,81 @@ export class MegaTravelScrapingService {
             let days = 0;
             let nights = 0;
 
+            // Obtener OG description — PRIORIZAR browser (page.evaluate) sobre Cheerio
+            const ogDescBrowser = browserMeta?.ogDescription || '';
+            const ogDescCheerio = $('meta[property="og:description"]').attr('content') || '';
+            const ogDesc = ogDescBrowser || ogDescCheerio;
+
+            const ogTitleBrowser = browserMeta?.ogTitle || '';
+            const ogTitleCheerio = $('meta[property="og:title"]').attr('content') || '';
+            const ogTitle = ogTitleBrowser || ogTitleCheerio || $('title').text() || '';
+
+            const bodyTextBrowser = browserMeta?.bodyText || '';
+            const bodyTextCheerio = $('body').text() || '';
+
+            console.log(`   📋 OG desc source: ${ogDescBrowser ? 'browser' : ogDescCheerio ? 'cheerio' : 'NONE'} → "${ogDesc.substring(0, 80)}"`);
+
             // ========== CIUDADES ==========
-            // Estrategia 1: Desde OG description (meta tag)
+            // Estrategia 1: Desde OG description
             // Formato: "Viaje desde México a Argentina, Brasil. Visitando: Río de Janeiro, Iguazú, Buenos Aires durante 11 días"
-            const ogDesc = $('meta[property="og:description"]').attr('content') || '';
-            const visitandoMatch = ogDesc.match(/Visitando:\s*(.+?)(?:\s+durante|\s*$)/i);
-            if (visitandoMatch) {
-                cities = visitandoMatch[1].split(',').map(c => c.trim()).filter(c => c.length > 1);
-                console.log(`   🏙️  Ciudades desde OG: ${cities.join(', ')}`);
+            if (ogDesc) {
+                const visitandoMatch = ogDesc.match(/Visitando:\s*(.+?)(?:\s+durante|\s*$)/i);
+                if (visitandoMatch) {
+                    cities = visitandoMatch[1].split(',').map(c => c.trim()).filter(c => c.length > 1);
+                    console.log(`   🏙️  Ciudades desde OG: ${cities.join(', ')}`);
+                }
             }
 
-            // Estrategia 2: Texto "Visitando" en el HTML (más visible)
-            if (cities.length === 0) {
-                const bodyText = $('body').text();
-                const visitandoHTML = bodyText.match(/Visitando\s*\n?\s*(.+?)(?:\n|Desde|$)/i);
+            // Estrategia 2: Texto "Visitando" en el body del browser (innerText)
+            if (cities.length === 0 && bodyTextBrowser) {
+                // El body text del browser tiene: "Visitando\nRío de Janeiro, Iguazú, Buenos Aires\nDesde"
+                const visitandoBrowser = bodyTextBrowser.match(/Visitando\s*\n\s*([^\n]+)/i);
+                if (visitandoBrowser) {
+                    const rawCities = visitandoBrowser[1].trim();
+                    cities = rawCities.split(',').map(c => c.trim()).filter(c => c.length > 1 && c.length < 50);
+                    console.log(`   🏙️  Ciudades desde browser body: ${cities.join(', ')}`);
+                }
+            }
+
+            // Estrategia 3: Texto "Visitando" en Cheerio body text
+            if (cities.length === 0 && bodyTextCheerio) {
+                const visitandoHTML = bodyTextCheerio.match(/Visitando\s*\n?\s*(.+?)(?:\n|Desde|$)/i);
                 if (visitandoHTML) {
                     const rawCities = visitandoHTML[1].trim();
                     cities = rawCities.split(',').map(c => c.trim()).filter(c => c.length > 1 && c.length < 50);
-                    console.log(`   🏙️  Ciudades desde HTML: ${cities.join(', ')}`);
+                    console.log(`   🏙️  Ciudades desde cheerio body: ${cities.join(', ')}`);
+                }
+            }
+
+            // Estrategia 4: Sección "Mapa del tour" — MegaTravel lista las ciudades ahí
+            if (cities.length === 0) {
+                const mapSection = $('h4, h5, h3').filter((i, el) => {
+                    const text = $(el).text().toLowerCase();
+                    return text.includes('mapa del tour') || text.includes('mapa del viaje');
+                });
+                if (mapSection.length > 0) {
+                    const mapText = mapSection.next().text().trim();
+                    if (mapText && mapText.length < 200) {
+                        cities = mapText.replace(/\.$/, '').split(',').map(c => c.trim()).filter(c => c.length > 1 && c.length < 50);
+                        console.log(`   🏙️  Ciudades desde mapa del tour: ${cities.join(', ')}`);
+                    }
                 }
             }
 
             // ========== PAÍSES ==========
             // Estrategia 1: Desde OG description
             // "Viaje desde México a Argentina, Brasil."
-            const paisesMatch = ogDesc.match(/Viaje\s+desde\s+M[eé]xico\s+a\s+(.+?)\.\s*Visitando/i);
-            if (paisesMatch) {
-                countries = paisesMatch[1].split(',').map(c => c.trim()).filter(c => c.length > 1);
-                mainCountry = countries[0] || '';
-                console.log(`   🌍  Países desde OG: ${countries.join(', ')}`);
+            if (ogDesc) {
+                const paisesMatch = ogDesc.match(/Viaje\s+desde\s+M[eé]xico\s+a\s+(.+?)\.\s*Visitando/i);
+                if (paisesMatch) {
+                    countries = paisesMatch[1].split(',').map(c => c.trim()).filter(c => c.length > 1);
+                    mainCountry = countries[0] || '';
+                    console.log(`   🌍  Países desde OG: ${countries.join(', ')}`);
+                }
             }
 
-            // Estrategia 2: Breadcrumb - "viajes Sudamérica" → categoría general
-            if (countries.length === 0) {
-                // El título del tour a menudo tiene los países: "Brasil y Argentina"
-                const ogTitle = $('meta[property="og:title"]').attr('content') || $('title').text() || '';
+            // Estrategia 2: Desde título del tour
+            if (countries.length === 0 && ogTitle) {
                 // Formato: "Viaje: Brasil y Argentina MT-52172"
                 const titleMatch = ogTitle.match(/Viaje:\s*(.+?)(?:\s+MT-|\s*$)/i);
                 if (titleMatch) {
@@ -927,26 +1044,74 @@ export class MegaTravelScrapingService {
                 }
             }
 
+            // Estrategia 3: Desde browser body text
+            // "Viaje desde México a Argentina, Brasil." aparece en el texto visible
+            if (countries.length === 0 && bodyTextBrowser) {
+                const paisesBody = bodyTextBrowser.match(/Viaje\s+desde\s+M[eé]xico\s+a\s+(.+?)[\.\n]/i);
+                if (paisesBody) {
+                    countries = paisesBody[1].split(',').map(c => c.trim()).filter(c => c.length > 1 && c.length < 30);
+                    mainCountry = countries[0] || '';
+                    console.log(`   🌍  Países desde browser body: ${countries.join(', ')}`);
+                }
+            }
+
+            // Estrategia 4: Desde sección "Visas" del HTML — MegaTravel lista los países
+            if (countries.length === 0) {
+                const visaSection = $('h4, h5, h3').filter((i, el) => {
+                    return $(el).text().toLowerCase().includes('visa');
+                });
+                if (visaSection.length > 0) {
+                    const visaCountries: string[] = [];
+                    visaSection.nextAll().each((i, sibling) => {
+                        const $sib = $(sibling);
+                        if ($sib.is('h4, h5, h3')) return false;
+                        const text = $sib.text().trim();
+                        // Buscar nombres de países en mayúsculas: "ARGENTINA", "BRASIL"
+                        const countryMatch = text.match(/^([A-ZÁÉÍÓÚÑ]{3,})$/);
+                        if (countryMatch) {
+                            visaCountries.push(countryMatch[1].charAt(0) + countryMatch[1].slice(1).toLowerCase());
+                        }
+                    });
+                    if (visaCountries.length > 0) {
+                        countries = visaCountries;
+                        mainCountry = countries[0] || '';
+                        console.log(`   🌍  Países desde visas: ${countries.join(', ')}`);
+                    }
+                }
+            }
+
             // ========== DURACIÓN ==========
-            // Buscar badges o texto con "X Días / Y Noches"
-            const daysMatch = ogDesc.match(/(\d+)\s*d[ií]as/i);
-            if (daysMatch) {
-                days = parseInt(daysMatch[1]);
+            // Buscar en OG description: "durante 11 días"
+            if (ogDesc) {
+                const daysMatch = ogDesc.match(/(\d+)\s*d[ií]as/i);
+                if (daysMatch) {
+                    days = parseInt(daysMatch[1]);
+                }
+            }
+
+            // Buscar en body text del browser: "11 Días / 9 Noches"
+            if (!days && bodyTextBrowser) {
+                const durBrowser = bodyTextBrowser.match(/(\d+)\s*D[ií]as\s*[\/\|]\s*(\d+)\s*Noches/i);
+                if (durBrowser) {
+                    days = parseInt(durBrowser[1]);
+                    nights = parseInt(durBrowser[2]);
+                }
             }
 
             // Buscar en badges de la página
-            $('span.badge, .badge').each((i, elem) => {
-                const text = $(elem).text().trim();
-                const dMatch = text.match(/(\d+)\s*D[ií]as/i);
-                const nMatch = text.match(/(\d+)\s*Noches/i);
-                if (dMatch && !days) days = parseInt(dMatch[1]);
-                if (nMatch && !nights) nights = parseInt(nMatch[1]);
-            });
+            if (!days) {
+                $('span.badge, .badge').each((i, elem) => {
+                    const text = $(elem).text().trim();
+                    const dMatch = text.match(/(\d+)\s*D[ií]as/i);
+                    const nMatch = text.match(/(\d+)\s*Noches/i);
+                    if (dMatch && !days) days = parseInt(dMatch[1]);
+                    if (nMatch && !nights) nights = parseInt(nMatch[1]);
+                });
+            }
 
-            // Fallback: buscar en todo el texto
+            // Fallback: buscar en todo el texto de Cheerio
             if (!days || !nights) {
-                const bodyText = $('body').text();
-                const durMatch = bodyText.match(/(\d+)\s*D[ií]as\s*\/?\s*(\d+)\s*Noches/i);
+                const durMatch = bodyTextCheerio.match(/(\d+)\s*D[ií]as\s*\/?\s*(\d+)\s*Noches/i);
                 if (durMatch) {
                     if (!days) days = parseInt(durMatch[1]);
                     if (!nights) nights = parseInt(durMatch[2]);
