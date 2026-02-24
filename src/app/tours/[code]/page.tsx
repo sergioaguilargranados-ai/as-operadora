@@ -207,6 +207,12 @@ export default function TourDetailPage({ params }: { params: Promise<{ code: str
         }).format(price)
     }
 
+    // Helper para parsear fechas tanto ISO completas como date-only
+    const parseDepartureDate = (dateStr: string) => {
+        if (dateStr.includes('T')) return new Date(dateStr)
+        return new Date(dateStr + 'T12:00:00')
+    }
+
     const handleWhatsApp = () => {
         const message = encodeURIComponent(
             `Hola, me interesa el tour "${tour?.name}" (${tour?.id}). ` +
@@ -814,7 +820,7 @@ export default function TourDetailPage({ params }: { params: Promise<{ code: str
                                             </div>
                                             <p className="text-sm text-gray-600">Por persona en habitación Doble</p>
                                             <p className="text-xs text-green-600 mt-1">
-                                                📅 Salida: {new Date(selectedDeparture.departure_date + 'T12:00:00').toLocaleDateString('es-MX', { day: 'numeric', month: 'long', year: 'numeric' })}
+                                                📅 Salida: {new Date(selectedDeparture.departure_date).toLocaleDateString('es-MX', { day: 'numeric', month: 'long', year: 'numeric' })}
                                             </p>
                                         </>
                                     ) : tour.pricing.basePrice > 0 ? (
@@ -927,11 +933,11 @@ export default function TourDetailPage({ params }: { params: Promise<{ code: str
                             {tour.departures && tour.departures.length > 0 && (() => {
                                 // Agrupar fechas por mes
                                 const sortedDeps = [...tour.departures]
-                                    .filter(d => new Date(d.departure_date + 'T12:00:00') >= new Date())
+                                    .filter(d => new Date(d.departure_date) >= new Date())
                                     .sort((a, b) => a.departure_date.localeCompare(b.departure_date))
 
                                 const months = [...new Set(sortedDeps.map(d => {
-                                    const date = new Date(d.departure_date + 'T12:00:00')
+                                    const date = new Date(d.departure_date)
                                     return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
                                 }))]
 
@@ -980,7 +986,7 @@ export default function TourDetailPage({ params }: { params: Promise<{ code: str
                                         {/* Lista de fechas */}
                                         <div className="space-y-2 max-h-[400px] overflow-y-auto pr-1">
                                             {filteredDeps.map((dep, i) => {
-                                                const date = new Date(dep.departure_date + 'T12:00:00')
+                                                const date = new Date(dep.departure_date)
                                                 const dateStr = date.toLocaleDateString('es-MX', {
                                                     weekday: 'short', day: 'numeric', month: 'short', year: 'numeric'
                                                 })
