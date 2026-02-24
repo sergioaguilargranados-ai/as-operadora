@@ -278,7 +278,7 @@ export default function TourDetailPage({ params }: { params: Promise<{ code: str
                     <div className="lg:col-span-2 space-y-6">
                         {/* Galería de imágenes */}
                         <Card className="overflow-hidden">
-                            <div className="relative h-96 bg-gray-100">
+                            <div className="relative bg-gray-900" style={{ minHeight: '360px', maxHeight: '500px' }}>
                                 <AnimatePresence mode="wait">
                                     <motion.div
                                         key={currentImageIndex}
@@ -286,13 +286,20 @@ export default function TourDetailPage({ params }: { params: Promise<{ code: str
                                         animate={{ opacity: 1 }}
                                         exit={{ opacity: 0 }}
                                         transition={{ duration: 0.5 }}
-                                        className="absolute inset-0"
+                                        className="relative w-full"
+                                        style={{ minHeight: '360px', maxHeight: '500px' }}
                                     >
+                                        {/* Fondo difuminado para efecto premium */}
+                                        <div
+                                            className="absolute inset-0 bg-cover bg-center blur-2xl opacity-40 scale-110"
+                                            style={{ backgroundImage: `url(${allImages[currentImageIndex]})` }}
+                                        />
+                                        {/* Imagen principal - completa sin recortar */}
                                         <Image
                                             src={allImages[currentImageIndex]}
                                             alt={tour.name}
                                             fill
-                                            className="object-cover object-top"
+                                            className="object-contain relative z-[1]"
                                             priority
                                         />
                                     </motion.div>
