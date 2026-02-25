@@ -912,16 +912,17 @@ export default function TourDetailPage({ params }: { params: Promise<{ code: str
                                         // Siempre pasar impuestos (del departure o del tour)
                                         const taxesVal = selectedDeparture?.taxes_usd ?? tour.pricing.taxes ?? 0
                                         if (taxesVal > 0) queryParams.impuestos = taxesVal.toString()
+
+                                        // Calcular total por persona = base + impuestos + suplemento
+                                        const baseP = selectedDeparture?.price_usd || tour.pricing.basePrice || 0
+                                        const suppVal = selectedDeparture?.supplement_usd || 0
+                                        const totalPP = baseP + taxesVal + suppVal
+                                        queryParams.totalPorPersona = totalPP.toString()
+
                                         if (selectedDeparture) {
                                             queryParams.fechaSalida = selectedDeparture.departure_date.substring(0, 10)
-                                            const totalPP = selectedDeparture.total_usd || ((selectedDeparture.price_usd || tour.pricing.basePrice) + taxesVal + (selectedDeparture.supplement_usd || 0))
-                                            if (totalPP) queryParams.totalPorPersona = totalPP.toString()
-                                            if (selectedDeparture.supplement_usd) queryParams.suplemento = selectedDeparture.supplement_usd.toString()
+                                            if (suppVal > 0) queryParams.suplemento = suppVal.toString()
                                             if (selectedDeparture.origin_city) queryParams.ciudadSalida = selectedDeparture.origin_city
-                                        } else {
-                                            // Sin departure seleccionado, calcular total con impuestos del tour
-                                            const totalPP = tour.pricing.basePrice + taxesVal
-                                            if (totalPP > tour.pricing.basePrice) queryParams.totalPorPersona = totalPP.toString()
                                         }
                                         const params = new URLSearchParams(queryParams)
                                         window.location.href = `/cotizar-tour?${params.toString()}`
@@ -1057,9 +1058,11 @@ export default function TourDetailPage({ params }: { params: Promise<{ code: str
                                                                             fechaSalida: dep.departure_date.substring(0, 10)
                                                                         }
                                                                         if (taxesVal > 0) queryParams.impuestos = taxesVal.toString()
-                                                                        const totalPP = dep.total_usd || ((dep.price_usd || tour.pricing.basePrice) + taxesVal + (dep.supplement_usd || 0))
-                                                                        if (totalPP) queryParams.totalPorPersona = totalPP.toString()
-                                                                        if (dep.supplement_usd) queryParams.suplemento = dep.supplement_usd.toString()
+                                                                        const baseP = dep.price_usd || tour.pricing.basePrice || 0
+                                                                        const suppVal = dep.supplement_usd || 0
+                                                                        const totalPP = baseP + taxesVal + suppVal
+                                                                        queryParams.totalPorPersona = totalPP.toString()
+                                                                        if (suppVal > 0) queryParams.suplemento = suppVal.toString()
                                                                         if (dep.origin_city) queryParams.ciudadSalida = dep.origin_city
                                                                         const params = new URLSearchParams(queryParams)
                                                                         window.location.href = `/cotizar-tour?${params.toString()}`
