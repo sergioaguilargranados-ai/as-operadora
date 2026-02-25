@@ -23,7 +23,12 @@ export async function GET(request: NextRequest) {
                 special_requests,
                 notification_method,
                 tour_duration,
-                tour_cities
+                tour_cities,
+                departure_date,
+                taxes,
+                supplement,
+                origin_city,
+                total_per_person
             FROM tour_quotes
             ORDER BY created_at DESC
         `)

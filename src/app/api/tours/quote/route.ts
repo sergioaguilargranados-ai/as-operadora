@@ -1,7 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { query } from '@/lib/db'
 
-const WHATSAPP_NUMBER = '+527208156804' // Número oficial AS Operadora
+// Generar folio con formato AS-99999-AAMMDD-99999
+async function generateFolio(tourId: string): Promise<string> {
+    // Obtener secuencia del tour (los últimos 5 dígitos del ID o hash)
+    const tourNum = tourId.replace(/\D/g, '').slice(0, 5).padStart(5, '0')
+
+    // Fecha AAMMDD
+    const now = new Date()
+    const aa = String(now.getFullYear()).slice(-2)
+    const mm = String(now.getMonth() + 1).padStart(2, '0')
+    const dd = String(now.getDate()).padStart(2, '0')
+    const dateStr = `${aa}${mm}${dd}`
+
+    // Secuencia auto-incremental
+    try {
+        const seqResult = await query(`SELECT nextval('tour_quote_folio_seq') as seq`)
+        const seq = String(seqResult.rows[0].seq).padStart(5, '0')
+        return `AS-${tourNum}-${dateStr}-${seq}`
+    } catch {
+        // Fallback si la secuencia no existe aún
+        const fallbackSeq = String(Date.now() % 100000).padStart(5, '0')
+        return `AS-${tourNum}-${dateStr}-${fallbackSeq}`
+    }
+}
 
 export async function POST(request: NextRequest) {
     try {
@@ -18,7 +40,13 @@ export async function POST(request: NextRequest) {
             contactPhone,
             numPersonas,
             specialRequests,
-            notificationMethod
+            notificationMethod,
+            // Nuevos campos de fecha y precios
+            departureDate,
+            taxes,
+            supplement,
+            totalPerPerson,
+            originCity
         } = body
 
         // Validaciones
@@ -29,12 +57,16 @@ export async function POST(request: NextRequest) {
             )
         }
 
-        // Generar folio único
-        const folio = `TOUR-${Date.now()}-${Math.random().toString(36).substring(2, 7).toUpperCase()}`
+        // Generar folio único con nuevo formato
+        const folio = await generateFolio(tourId)
 
-        // Calcular precio total
-        const pricePerPerson = parseFloat(tourPrice) || 0
-        const totalPrice = pricePerPerson * (parseInt(numPersonas) || 1)
+        // Calcular precios
+        const basePrice = parseFloat(tourPrice) || 0
+        const taxesAmount = parseFloat(taxes) || 0
+        const supplementAmount = parseFloat(supplement) || 0
+        const totalPP = parseFloat(totalPerPerson) || (basePrice + taxesAmount + supplementAmount)
+        const personas = parseInt(numPersonas) || 1
+        const totalPrice = totalPP * personas
 
         // Guardar en base de datos
         const insertQuery = `
@@ -53,9 +85,14 @@ export async function POST(request: NextRequest) {
                 total_price,
                 special_requests,
                 notification_method,
+                departure_date,
+                taxes,
+                supplement,
+                origin_city,
+                total_per_person,
                 status,
                 created_at
-            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, NOW())
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, NOW())
             RETURNING id, folio
         `
 
@@ -69,11 +106,16 @@ export async function POST(request: NextRequest) {
             contactName,
             contactEmail,
             contactPhone || '',
-            parseInt(numPersonas) || 1,
-            pricePerPerson,
+            personas,
+            basePrice,
             totalPrice,
             specialRequests || '',
             notificationMethod || 'both',
+            departureDate || null,
+            taxesAmount,
+            supplementAmount,
+            originCity || null,
+            totalPP,
             'pending'
         ])
 
@@ -84,7 +126,6 @@ export async function POST(request: NextRequest) {
         // CREAR THREAD DE COMUNICACIÓN
         // ============================================
         try {
-            // Crear thread de comunicación para esta cotización
             const threadResult = await query(`
                 INSERT INTO communication_threads (
                     thread_type,
@@ -104,12 +145,19 @@ export async function POST(request: NextRequest) {
                 quoteId,
                 'active',
                 'normal',
-                1 // tenant_id
+                1
             ])
 
             const threadId = threadResult.rows[0].id
 
-            // Crear mensaje automático de confirmación
+            // Mensaje de confirmación automático
+            const departureLine = departureDate
+                ? `• Fecha de salida: ${new Date(departureDate + 'T12:00:00').toLocaleDateString('es-MX', { day: 'numeric', month: 'long', year: 'numeric' })}\r\n`
+                : ''
+            const originLine = originCity ? `• Ciudad de salida: ${originCity}\r\n` : ''
+            const taxesLine = taxesAmount > 0 ? `• Impuestos: $${taxesAmount.toLocaleString('es-MX')} USD\r\n` : ''
+            const supplementLine = supplementAmount > 0 ? `• Suplemento: $${supplementAmount.toLocaleString('es-MX')} USD\r\n` : ''
+
             await query(`
                 INSERT INTO messages (
                     thread_id,
@@ -128,259 +176,77 @@ export async function POST(request: NextRequest) {
                 'system',
                 'AS Operadora',
                 'viajes@asoperadora.com',
-                `¡Hola ${contactName}!
-
-Hemos recibido tu solicitud de cotización para el tour "${tourName}".
-
-📋 Detalles de tu solicitud:
-• Folio: ${quoteFolio}
-• Tour: ${tourName}
-• Región: ${tourRegion}
-• Duración: ${tourDuration}
-• Personas: ${numPersonas}
-• Precio estimado: $${totalPrice.toLocaleString('es-MX')} USD
-
-Nuestro equipo revisará tu solicitud y te contactaremos pronto con una propuesta personalizada.
-
-Puedes dar seguimiento a tu cotización en: ${process.env.NEXT_PUBLIC_APP_URL || 'https://www.as-ope-viajes.company'}/cotizacion/${quoteFolio}
-
-¡Gracias por tu preferencia!`,
+                `¡Hola ${contactName}!\r\n\r\nHemos recibido tu solicitud de cotización para el tour "${tourName}".\r\n\r\n📋 Detalles de tu solicitud:\r\n• Folio: ${quoteFolio}\r\n• Tour: ${tourName}\r\n• Región: ${tourRegion}\r\n• Duración: ${tourDuration}\r\n${departureLine}${originLine}• Personas: ${personas}\r\n• Precio base por persona: $${basePrice.toLocaleString('es-MX')} USD\r\n${taxesLine}${supplementLine}• Total por persona: $${totalPP.toLocaleString('es-MX')} USD\r\n• Total estimado: $${totalPrice.toLocaleString('es-MX')} USD\r\n\r\nNuestro equipo revisará tu solicitud y te contactaremos pronto con una propuesta personalizada.\r\n\r\nPuedes dar seguimiento a tu cotización en: ${process.env.NEXT_PUBLIC_APP_URL || 'https://www.as-ope-viajes.company'}/cotizacion/${quoteFolio}\r\n\r\n¡Gracias por tu preferencia!`,
                 'text',
                 'sent',
-                1 // tenant_id
+                1
             ])
 
             console.log(`✅ Thread de comunicación creado (ID: ${threadId}) para cotización ${quoteFolio}`)
         } catch (commError) {
             console.error('⚠️ Error creando thread de comunicación:', commError)
-            // No fallar la cotización si falla la comunicación
-        }
-
-        // Generar URL de seguimiento
-        const trackingUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://www.as-ope-viajes.company'}/cotizacion/${quoteFolio}`
-
-        // Preparar mensajes de notificación
-        const whatsappMessage = `
-🌍 *Nueva Cotización de Tour*
-
-*Folio:* ${quoteFolio}
-*Tour:* ${tourName}
-*Región:* ${tourRegion}
-*Duración:* ${tourDuration}
-*Personas:* ${numPersonas}
-*Precio por persona:* $${pricePerPerson.toLocaleString('es-MX')} USD
-*Total estimado:* $${totalPrice.toLocaleString('es-MX')} USD
-
-*Cliente:*
-${contactName}
-${contactEmail}
-${contactPhone ? `Tel: ${contactPhone}` : ''}
-
-${specialRequests ? `*Comentarios:* ${specialRequests}` : ''}
-
-*Seguimiento:* ${trackingUrl}
-
-¡Gracias por tu interés! Te contactaremos pronto.
-        `.trim()
-
-        const emailSubject = `Cotización de Tour - ${tourName} (${quoteFolio})`
-        const emailBody = `
-<!DOCTYPE html>
-<html>
-<head>
-    <style>
-        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-        .header { background: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
-        .content { background: #f9fafb; padding: 30px; border-radius: 0 0 10px 10px; }
-        .info-box { background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #2563eb; }
-        .info-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #e5e7eb; }
-        .info-label { font-weight: bold; color: #6b7280; }
-        .info-value { color: #111827; }
-        .price { font-size: 24px; font-weight: bold; color: #2563eb; }
-        .button { display: inline-block; background: #2563eb; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; margin: 20px 0; }
-        .footer { text-align: center; color: #6b7280; font-size: 12px; margin-top: 30px; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1>¡Gracias por tu interés!</h1>
-            <p>Hemos recibido tu solicitud de cotización</p>
-        </div>
-        <div class="content">
-            <p>Hola <strong>${contactName}</strong>,</p>
-            <p>Hemos recibido tu solicitud de cotización para el tour <strong>${tourName}</strong>. Nuestro equipo revisará tu solicitud y te contactaremos pronto con una propuesta personalizada.</p>
-            
-            <div class="info-box">
-                <h3 style="margin-top: 0; color: #2563eb;">Detalles de tu Cotización</h3>
-                <div class="info-row">
-                    <span class="info-label">Folio:</span>
-                    <span class="info-value">${quoteFolio}</span>
-                </div>
-                <div class="info-row">
-                    <span class="info-label">Tour:</span>
-                    <span class="info-value">${tourName}</span>
-                </div>
-                <div class="info-row">
-                    <span class="info-label">Región:</span>
-                    <span class="info-value">${tourRegion}</span>
-                </div>
-                <div class="info-row">
-                    <span class="info-label">Duración:</span>
-                    <span class="info-value">${tourDuration}</span>
-                </div>
-                <div class="info-row">
-                    <span class="info-label">Personas:</span>
-                    <span class="info-value">${numPersonas}</span>
-                </div>
-                <div class="info-row">
-                    <span class="info-label">Precio por persona:</span>
-                    <span class="info-value price">$${pricePerPerson.toLocaleString('es-MX')} USD</span>
-                </div>
-                <div class="info-row" style="border-bottom: none;">
-                    <span class="info-label">Total estimado:</span>
-                    <span class="info-value price">$${totalPrice.toLocaleString('es-MX')} USD</span>
-                </div>
-            </div>
-
-            ${specialRequests ? `
-            <div class="info-box">
-                <h4 style="margin-top: 0;">Tus comentarios:</h4>
-                <p>${specialRequests}</p>
-            </div>
-            ` : ''}
-
-            <div style="text-align: center;">
-                <a href="${trackingUrl}" class="button">Ver Estado de Cotización</a>
-            </div>
-
-            <p><strong>¿Qué sigue?</strong></p>
-            <ul>
-                <li>Revisaremos tu solicitud en las próximas 24 horas</li>
-                <li>Te contactaremos ${notificationMethod === 'whatsapp' ? 'por WhatsApp' : notificationMethod === 'email' ? 'por correo electrónico' : 'por WhatsApp y correo electrónico'}</li>
-                <li>Recibirás una cotización personalizada con opciones de pago</li>
-            </ul>
-
-            <div class="footer">
-                <p><strong>AS Operadora de Viajes y Eventos</strong></p>
-                <p>Tel: ${WHATSAPP_NUMBER} | Email: viajes@asoperadora.com</p>
-                <p>© 2026 Todos los derechos reservados</p>
-            </div>
-        </div>
-    </div>
-</body>
-</html>
-        `.trim()
-
-        // Enviar notificaciones según preferencia
-        // TODO: Implementar envío real de WhatsApp y Email
-        // Por ahora solo registramos en consola
-        console.log('=== NUEVA COTIZACIÓN DE TOUR ===')
-        console.log('Folio:', quoteFolio)
-        console.log('Tour:', tourName)
-        console.log('Cliente:', contactName, contactEmail)
-        console.log('Método de notificación:', notificationMethod)
-        console.log('URL de seguimiento:', trackingUrl)
-
-        if (notificationMethod === 'whatsapp' || notificationMethod === 'both') {
-            console.log('\n--- WhatsApp Message ---')
-            console.log(whatsappMessage)
-            // TODO: Integrar con API de WhatsApp Business
-        }
-
-        if (notificationMethod === 'email' || notificationMethod === 'both') {
-            console.log('\n--- Email ---')
-            console.log('To:', contactEmail)
-            console.log('Subject:', emailSubject)
-            // TODO: Integrar con SendGrid o servicio de email
         }
 
         // ============================================
-        // CREAR/ACTUALIZAR CONTACTO CRM AUTOMÁTICAMENTE
+        // CRM - Crear contacto e interacción
         // ============================================
         try {
             const { CRMService } = await import('@/services/CRMService')
             const crm = new CRMService()
 
-            // Verificar si ya existe un contacto con este email
-            const existing = await crm.listContacts({ search: contactEmail, limit: 1 })
+            // Crear contacto CRM
+            const contact = await crm.createContact({
+                full_name: contactName,
+                email: contactEmail,
+                phone: contactPhone || '',
+                source: 'tour_quote',
+                source_detail: `Tour: ${tourName}`,
+                contact_type: 'lead',
+                pipeline_stage: 'new',
+                interested_destination: tourRegion || '',
+                num_travelers: personas,
+                travel_type: 'tour',
+                special_requirements: specialRequests || '',
+                tags: ['tour', tourRegion || 'general'].filter(Boolean),
+                notes: `Cotización ${quoteFolio} - ${tourName}`
+            })
 
-            if (existing.contacts.length === 0) {
-                // Crear nuevo contacto como lead
-                const newContact = await crm.createContact({
-                    contact_type: 'lead',
-                    full_name: contactName,
-                    email: contactEmail,
-                    phone: contactPhone || undefined,
-                    source: 'tour_quote',
-                    source_detail: `Cotización web: ${tourName}`,
-                    pipeline_stage: 'quoted',
-                    interested_destination: tourRegion || undefined,
-                    num_travelers: parseInt(numPersonas) || undefined,
-                    budget_max: totalPrice || undefined,
-                    budget_currency: 'USD',
-                })
+            // Registrar interacción
+            await crm.createInteraction({
+                contact_id: contact.id,
+                interaction_type: 'quote_request',
+                channel: 'web',
+                direction: 'inbound',
+                subject: `Cotización: ${tourName}`,
+                body: `Solicitud de cotización para ${tourName}. Folio: ${quoteFolio}. ${personas} personas. Total: $${totalPrice.toLocaleString('es-MX')} USD`,
+                is_automated: true,
+                metadata: { folio: quoteFolio, tourId, tourName, numPersonas: personas, totalPrice }
+            })
 
-                // Registrar interacción de cotización
-                await crm.createInteraction({
-                    contact_id: newContact.id,
-                    interaction_type: 'quote_sent',
-                    channel: 'email',
-                    direction: 'outbound',
-                    subject: `Cotización: ${tourName}`,
-                    body: `Folio: ${quoteFolio}. Tour: ${tourName}. Total: $${totalPrice} USD. Personas: ${numPersonas}.`,
-                    quote_id: quoteId,
-                    is_automated: true,
-                })
-
-                console.log(`🟢 Contacto CRM creado automáticamente: ${contactName} (${contactEmail})`)
-            } else {
-                // Ya existe → sólo registrar la interacción de cotización
-                const contact = existing.contacts[0]
-                await crm.createInteraction({
-                    contact_id: contact.id,
-                    interaction_type: 'quote_sent',
-                    channel: 'email',
-                    direction: 'outbound',
-                    subject: `Nueva cotización: ${tourName}`,
-                    body: `Folio: ${quoteFolio}. Tour: ${tourName}. Total: $${totalPrice} USD. Personas: ${numPersonas}.`,
-                    quote_id: quoteId,
-                    is_automated: true,
-                })
-
-                // Actualizar datos si pipeline está en etapa anterior a 'quoted'
-                const earlyStages = ['new', 'qualified']
-                if (earlyStages.includes(contact.pipeline_stage || '')) {
-                    await crm.updateContact(contact.id, {
-                        pipeline_stage: 'quoted',
-                        interested_destination: tourRegion || contact.interested_destination,
-                        budget_max: totalPrice || contact.budget_max,
-                    })
-                }
-
-                console.log(`🔗 Interacción de cotización registrada para contacto existente: ${contactEmail}`)
-            }
+            console.log(`✅ CRM actualizado para ${contactEmail}`)
         } catch (crmError) {
-            console.error('⚠️ Error creando contacto CRM (no bloquea cotización):', crmError)
-            // No fallar la cotización si el CRM falla
+            console.error('⚠️ Error en CRM:', crmError)
         }
+
+        // Generar URL de seguimiento
+        const trackingUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://www.as-ope-viajes.company'}/cotizacion/${quoteFolio}`
 
         return NextResponse.json({
             success: true,
-            message: 'Cotización enviada exitosamente. Te contactaremos pronto.',
+            message: `¡Cotización ${quoteFolio} creada exitosamente! Te contactaremos pronto.`,
             data: {
+                id: quoteId,
                 folio: quoteFolio,
-                quoteId,
                 trackingUrl,
-                notificationMethod
+                totalPrice,
+                totalPerPerson: totalPP
             }
-        })
+        }, { status: 201 })
 
-    } catch (error) {
-        console.error('Error creating tour quote:', error)
+    } catch (error: any) {
+        console.error('❌ Error creando cotización:', error)
         return NextResponse.json(
-            { success: false, error: 'Error al procesar la cotización' },
+            { success: false, error: error.message || 'Error al crear la cotización' },
             { status: 500 }
         )
     }

@@ -37,6 +37,7 @@ function CotizarTourContent() {
     const { toast } = useToast()
     const [loading, setLoading] = useState(false)
     const [submitted, setSubmitted] = useState(false)
+    const [submittedFolio, setSubmittedFolio] = useState('')
     const [tourData, setTourData] = useState<any>(null)
 
     const [formData, setFormData] = useState({
@@ -59,14 +60,32 @@ function CotizarTourContent() {
         const tourCities = searchParams?.get('cities')
         const tourPersonas = searchParams?.get('personas')
 
+        // Nuevos parámetros de fecha e impuestos
+        const fechaSalida = searchParams?.get('fechaSalida')
+        const totalPorPersona = searchParams?.get('totalPorPersona')
+        const impuestos = searchParams?.get('impuestos')
+        const suplemento = searchParams?.get('suplemento')
+        const ciudadSalida = searchParams?.get('ciudadSalida')
+
         if (tourId && tourName) {
+            const basePrice = tourPrice ? parseFloat(tourPrice) : 0
+            const taxesVal = impuestos ? parseFloat(impuestos) : 0
+            const supplementVal = suplemento ? parseFloat(suplemento) : 0
+            const totalPP = totalPorPersona ? parseFloat(totalPorPersona) : (basePrice + taxesVal + supplementVal)
+
             setTourData({
                 id: tourId,
                 name: decodeURIComponent(tourName),
-                price: tourPrice ? parseFloat(tourPrice) : 0,
+                price: basePrice,
                 region: tourRegion ? decodeURIComponent(tourRegion) : '',
                 duration: tourDuration ? decodeURIComponent(tourDuration) : '',
-                cities: tourCities ? decodeURIComponent(tourCities).split(',') : []
+                cities: tourCities ? decodeURIComponent(tourCities).split(',').map((c: string) => c.trim()) : [],
+                // Nuevos datos
+                departureDate: fechaSalida || null,
+                taxes: taxesVal,
+                supplement: supplementVal,
+                totalPerPerson: totalPP,
+                originCity: ciudadSalida ? decodeURIComponent(ciudadSalida) : null
             })
             // Actualizar número de personas si viene desde la página anterior
             if (tourPersonas) {
@@ -81,6 +100,14 @@ function CotizarTourContent() {
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target
         setFormData(prev => ({ ...prev, [name]: value }))
+    }
+
+    const formatPrice = (price: number) => {
+        if (!price || isNaN(price)) return '0'
+        return new Intl.NumberFormat('es-MX', {
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0
+        }).format(price)
     }
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -111,7 +138,7 @@ function CotizarTourContent() {
         }
 
         try {
-            // Enviar cotización
+            // Enviar cotización con todos los datos incluyendo impuestos
             const response = await fetch('/api/tours/quote', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -122,21 +149,28 @@ function CotizarTourContent() {
                     tourRegion: tourData.region,
                     tourDuration: tourData.duration,
                     tourCities: tourData.cities,
-                    contactName: `${formData.nombre} ${formData.apellido}`,
+                    contactName: `${formData.nombre} ${formData.apellido}`.trim(),
                     contactEmail: formData.correo,
                     contactPhone: formData.telefono,
                     numPersonas: parseInt(formData.numPersonas) || 1,
                     specialRequests: formData.comentarios,
-                    notificationMethod: formData.notificationMethod
+                    notificationMethod: formData.notificationMethod,
+                    // Nuevos campos
+                    departureDate: tourData.departureDate,
+                    taxes: tourData.taxes,
+                    supplement: tourData.supplement,
+                    totalPerPerson: tourData.totalPerPerson,
+                    originCity: tourData.originCity
                 })
             })
 
             const data = await response.json()
 
             if (data.success) {
+                setSubmittedFolio(data.data?.folio || '')
                 setSubmitted(true)
                 toast({
-                    title: 'Cotización enviada',
+                    title: '✅ Cotización enviada',
                     description: data.message || 'Te contactaremos pronto con tu cotización personalizada'
                 })
             } else {
@@ -156,7 +190,7 @@ function CotizarTourContent() {
     const handleWhatsApp = () => {
         const message = encodeURIComponent(
             `Hola, me interesa el tour "${tourData?.name}". ` +
-            `Precio: $${tourData?.price?.toLocaleString('es-MX')} USD. ` +
+            `Precio: $${formatPrice(tourData?.totalPerPerson || tourData?.price)} USD por persona. ` +
             `¿Me pueden dar más información?`
         )
         window.open(`https://wa.me/${WHATSAPP_NUMBER.replace(/\s+/g, '')}?text=${message}`, '_blank')
@@ -194,16 +228,43 @@ function CotizarTourContent() {
                             Hemos recibido tu solicitud de cotización para <strong>{tourData.name}</strong>.
                             Te contactaremos pronto por {formData.notificationMethod === 'whatsapp' ? 'WhatsApp' : formData.notificationMethod === 'email' ? 'correo electrónico' : 'WhatsApp y correo electrónico'}.
                         </p>
-                        <div className="bg-blue-50 p-4 rounded-lg mb-6">
+
+                        {submittedFolio && (
+                            <div className="bg-blue-100 border-2 border-blue-300 p-4 rounded-xl mb-6">
+                                <p className="text-sm text-blue-600 mb-1">Tu número de folio:</p>
+                                <p className="text-2xl font-bold text-blue-800 font-mono">{submittedFolio}</p>
+                            </div>
+                        )}
+
+                        <div className="bg-blue-50 p-4 rounded-lg mb-6 text-left">
                             <p className="text-sm text-blue-700">
                                 <strong>Tour:</strong> {tourData.name}<br />
                                 <strong>Región:</strong> {tourData.region}<br />
                                 <strong>Duración:</strong> {tourData.duration}<br />
+                                {tourData.departureDate && (
+                                    <><strong>Fecha de salida:</strong> {new Date(tourData.departureDate + 'T12:00:00').toLocaleDateString('es-MX', { day: 'numeric', month: 'long', year: 'numeric' })}<br /></>
+                                )}
+                                {tourData.originCity && (
+                                    <><strong>Ciudad de salida:</strong> {tourData.originCity}<br /></>
+                                )}
                                 <strong>Personas:</strong> {formData.numPersonas}<br />
-                                <strong>Precio base:</strong> ${tourData.price?.toLocaleString('es-MX')} USD por persona
+                                <strong>Precio por persona:</strong> ${formatPrice(tourData.totalPerPerson)} USD<br />
+                                {tourData.taxes > 0 && (
+                                    <><span className="text-xs text-blue-500">(Incluye impuestos: ${formatPrice(tourData.taxes)} USD)</span><br /></>
+                                )}
+                                <strong>Total estimado:</strong> ${formatPrice(tourData.totalPerPerson * parseInt(formData.numPersonas))} USD
                             </p>
                         </div>
-                        <div className="flex gap-3 justify-center">
+                        <div className="flex gap-3 justify-center flex-wrap">
+                            {submittedFolio && (
+                                <Button
+                                    onClick={() => router.push(`/cotizacion/${submittedFolio}`)}
+                                    className="bg-green-600 hover:bg-green-700 text-white"
+                                >
+                                    <CheckCircle className="w-4 h-4 mr-2" />
+                                    Ver mi cotización
+                                </Button>
+                            )}
                             <Button onClick={() => router.push('/tours')} className="bg-blue-600 hover:bg-blue-700 text-white">
                                 Ver más tours
                             </Button>
@@ -216,6 +277,11 @@ function CotizarTourContent() {
             </div>
         )
     }
+
+    // Calcular el total con impuestos
+    const totalPerPerson = tourData.totalPerPerson || tourData.price || 0
+    const numPersonas = parseInt(formData.numPersonas) || 1
+    const totalEstimado = totalPerPerson * numPersonas
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/30">
@@ -322,6 +388,33 @@ function CotizarTourContent() {
                                         <Users className="w-5 h-5 text-blue-600" />
                                         Detalles del viaje
                                     </h3>
+
+                                    {/* Fecha de salida seleccionada */}
+                                    {tourData.departureDate && (
+                                        <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-xl">
+                                            <div className="flex items-center gap-3">
+                                                <Calendar className="w-5 h-5 text-green-600" />
+                                                <div>
+                                                    <p className="text-sm text-green-600 font-medium">Fecha de salida seleccionada</p>
+                                                    <p className="text-lg font-bold text-green-800">
+                                                        {new Date(tourData.departureDate + 'T12:00:00').toLocaleDateString('es-MX', {
+                                                            weekday: 'long',
+                                                            day: 'numeric',
+                                                            month: 'long',
+                                                            year: 'numeric'
+                                                        })}
+                                                    </p>
+                                                    {tourData.originCity && (
+                                                        <p className="text-sm text-green-600 mt-1">
+                                                            <Plane className="w-4 h-4 inline mr-1" />
+                                                            Salida desde: {tourData.originCity}
+                                                        </p>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+
                                     <div>
                                         <label className="block text-sm font-medium mb-2">Número de personas</label>
                                         <Input
@@ -442,6 +535,27 @@ function CotizarTourContent() {
                                         <Clock className="w-4 h-4 text-blue-600" />
                                         <span>{tourData.duration}</span>
                                     </div>
+
+                                    {/* Fecha de salida en resumen */}
+                                    {tourData.departureDate && (
+                                        <div className="flex items-center gap-2 text-green-700">
+                                            <Calendar className="w-4 h-4 text-green-600" />
+                                            <span className="font-medium">
+                                                {new Date(tourData.departureDate + 'T12:00:00').toLocaleDateString('es-MX', {
+                                                    day: 'numeric', month: 'short', year: 'numeric'
+                                                })}
+                                            </span>
+                                        </div>
+                                    )}
+
+                                    {/* Ciudad de salida */}
+                                    {tourData.originCity && (
+                                        <div className="flex items-center gap-2 text-gray-700">
+                                            <Plane className="w-4 h-4 text-blue-600" />
+                                            <span>Desde: {tourData.originCity}</span>
+                                        </div>
+                                    )}
+
                                     {tourData.cities && tourData.cities.length > 0 && (
                                         <div>
                                             <div className="text-gray-600 mb-1">Ciudades</div>
@@ -449,16 +563,33 @@ function CotizarTourContent() {
                                         </div>
                                     )}
 
-                                    {/* Precio base */}
-                                    <div className="border-t pt-3 mt-3">
-                                        <div className="text-gray-600 mb-1">Precio base</div>
-                                        <div className="text-2xl font-bold text-blue-600">
-                                            ${tourData.price?.toLocaleString('es-MX')} USD
+                                    {/* Desglose de precios */}
+                                    <div className="border-t pt-3 mt-3 space-y-2">
+                                        <div className="flex justify-between text-sm">
+                                            <span className="text-gray-600">Precio base:</span>
+                                            <span className="font-semibold">${formatPrice(tourData.price)} USD</span>
                                         </div>
-                                        <div className="text-xs text-gray-500">por persona</div>
+                                        {tourData.taxes > 0 && (
+                                            <div className="flex justify-between text-sm">
+                                                <span className="text-gray-600">Impuestos:</span>
+                                                <span className="font-semibold">${formatPrice(tourData.taxes)} USD</span>
+                                            </div>
+                                        )}
+                                        {tourData.supplement > 0 && (
+                                            <div className="flex justify-between text-sm">
+                                                <span className="text-gray-600">Suplemento:</span>
+                                                <span className="font-semibold text-orange-600">${formatPrice(tourData.supplement)} USD</span>
+                                            </div>
+                                        )}
+                                        <div className="flex justify-between text-sm border-t pt-2">
+                                            <span className="font-medium text-gray-800">Total por persona:</span>
+                                            <span className="text-xl font-bold text-blue-600">
+                                                ${formatPrice(totalPerPerson)} USD
+                                            </span>
+                                        </div>
 
                                         {/* Cálculo del total según número de personas */}
-                                        {parseInt(formData.numPersonas) > 0 && (
+                                        {numPersonas > 0 && (
                                             <div className="mt-4 pt-4 border-t border-blue-200 bg-blue-50/50 -mx-4 px-4 py-3 rounded-b-lg">
                                                 <div className="flex justify-between items-center mb-2">
                                                     <span className="text-sm text-gray-600">Personas:</span>
@@ -467,7 +598,7 @@ function CotizarTourContent() {
                                                 <div className="flex justify-between items-center">
                                                     <span className="text-sm font-semibold text-gray-900">Total estimado:</span>
                                                     <span className="text-xl font-bold text-blue-700">
-                                                        ${((tourData.price || 0) * parseInt(formData.numPersonas)).toLocaleString('es-MX')} USD
+                                                        ${formatPrice(totalEstimado)} USD
                                                     </span>
                                                 </div>
                                                 <div className="text-xs text-gray-500 mt-1 italic">
@@ -492,7 +623,7 @@ function CotizarTourContent() {
                 </div>
             </div>
 
-            {/* Footer - igual a la página principal */}
+            {/* Footer */}
             <footer className="bg-[#F7F7F7] mt-16 py-12">
                 <div className="container mx-auto px-4 max-w-6xl">
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-8">
@@ -529,9 +660,9 @@ function CotizarTourContent() {
                         </div>
                     </div>
                     <div className="border-t pt-8 text-sm text-muted-foreground text-center">
-                        <p>© 2024 AS Operadora de Viajes y Eventos. Todos los derechos reservados.</p>
+                        <p>© 2026 AS Operadora de Viajes y Eventos. Todos los derechos reservados.</p>
                         <p className="text-xs mt-1">AS Viajando</p>
-                        <p className="text-xs mt-2 opacity-50">v2.297 | Build: 04 Feb 2026</p>
+                        <p className="text-xs mt-2 opacity-50">v2.325 | Build: 25 Feb 2026</p>
                     </div>
                 </div>
             </footer>

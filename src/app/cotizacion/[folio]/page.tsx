@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { useToast } from '@/hooks/use-toast'
 import {
     ArrowLeft,
     CheckCircle,
@@ -16,20 +18,39 @@ import {
     Users,
     DollarSign,
     Loader2,
-    AlertCircle
+    AlertCircle,
+    Calendar,
+    Plane,
+    Edit,
+    Save,
+    Shield,
+    FileText
 } from 'lucide-react'
 import { Logo } from '@/components/Logo'
+import { useAuth } from '@/contexts/AuthContext'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
 
 const WHATSAPP_NUMBER = '+527208156804' // Número oficial AS Operadora
 
-const STATUS_CONFIG = {
+const STATUS_CONFIG: Record<string, any> = {
     pending: {
-        label: 'Pendiente de Revisión',
+        label: 'Solicitud Recibida',
         color: 'bg-yellow-100 text-yellow-800 border-yellow-300',
         icon: Clock,
         description: 'Hemos recibido tu solicitud y la estamos revisando'
+    },
+    solicitud: {
+        label: 'Solicitud',
+        color: 'bg-yellow-100 text-yellow-800 border-yellow-300',
+        icon: Clock,
+        description: 'Tu solicitud está pendiente de revisión'
+    },
+    en_proceso: {
+        label: 'En Proceso',
+        color: 'bg-blue-100 text-blue-800 border-blue-300',
+        icon: MessageCircle,
+        description: 'Nuestro equipo está preparando tu cotización'
     },
     contacted: {
         label: 'Contactado',
@@ -57,12 +78,22 @@ const STATUS_CONFIG = {
     }
 }
 
+const STAFF_ROLES = ['SUPER_ADMIN', 'ADMIN', 'MANAGER']
+
 export default function CotizacionTrackingPage({ params }: { params: Promise<{ folio: string }> }) {
     const resolvedParams = use(params)
     const router = useRouter()
+    const { toast } = useToast()
+    const { user, isAuthenticated } = useAuth()
     const [quote, setQuote] = useState<any>(null)
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState(false)
+    const [editing, setEditing] = useState(false)
+    const [saving, setSaving] = useState(false)
+    const [editData, setEditData] = useState<any>({})
+
+    const isStaff = isAuthenticated && user?.role && STAFF_ROLES.includes(user.role)
+    const canClientEdit = quote?.status === 'pending' || quote?.status === 'solicitud'
 
     useEffect(() => {
         fetchQuote()
@@ -76,6 +107,13 @@ export default function CotizacionTrackingPage({ params }: { params: Promise<{ f
 
             if (data.success) {
                 setQuote(data.data)
+                setEditData({
+                    num_personas: data.data.num_personas,
+                    special_requests: data.data.special_requests || '',
+                    contact_phone: data.data.contact_phone || '',
+                    notes: data.data.notes || '',
+                    status: data.data.status || 'pending'
+                })
             } else {
                 setError(true)
             }
@@ -87,11 +125,51 @@ export default function CotizacionTrackingPage({ params }: { params: Promise<{ f
         }
     }
 
+    const handleSaveChanges = async () => {
+        setSaving(true)
+        try {
+            const response = await fetch(`/api/tours/quote/${resolvedParams.folio}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    ...editData,
+                    updatedBy: isStaff ? user?.name : 'cliente'
+                })
+            })
+            const data = await response.json()
+
+            if (data.success) {
+                toast({
+                    title: '✅ Cambios guardados',
+                    description: 'La cotización ha sido actualizada exitosamente'
+                })
+                setEditing(false)
+                fetchQuote()
+            } else {
+                throw new Error(data.error || 'Error al guardar')
+            }
+        } catch (err: any) {
+            toast({
+                title: 'Error',
+                description: err.message || 'No se pudieron guardar los cambios',
+                variant: 'destructive'
+            })
+        } finally {
+            setSaving(false)
+        }
+    }
+
     const handleWhatsApp = () => {
         const message = encodeURIComponent(
             `Hola, tengo una consulta sobre mi cotización ${resolvedParams.folio} para el tour "${quote?.tour_name}"`
         )
         window.open(`https://wa.me/${WHATSAPP_NUMBER.replace(/\s+/g, '')}?text=${message}`, '_blank')
+    }
+
+    const formatPrice = (price: number | string) => {
+        const num = typeof price === 'string' ? parseFloat(price) : price
+        if (!num || isNaN(num)) return '0'
+        return new Intl.NumberFormat('es-MX', { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(num)
     }
 
     if (loading) {
@@ -131,7 +209,7 @@ export default function CotizacionTrackingPage({ params }: { params: Promise<{ f
         )
     }
 
-    const statusConfig = STATUS_CONFIG[quote.status as keyof typeof STATUS_CONFIG] || STATUS_CONFIG.pending
+    const statusConfig = STATUS_CONFIG[quote.status as string] || STATUS_CONFIG.pending
     const StatusIcon = statusConfig.icon
 
     return (
@@ -152,14 +230,22 @@ export default function CotizacionTrackingPage({ params }: { params: Promise<{ f
                                 <Logo className="py-2" />
                             </Link>
                         </div>
-                        <Button
-                            size="sm"
-                            onClick={handleWhatsApp}
-                            className="bg-green-500 text-white hover:bg-green-600"
-                        >
-                            <MessageCircle className="w-4 h-4 mr-2" />
-                            <span className="hidden sm:inline">WhatsApp</span>
-                        </Button>
+                        <div className="flex items-center gap-3">
+                            {isStaff && (
+                                <span className="px-3 py-1 bg-purple-100 text-purple-700 text-xs font-bold rounded-full flex items-center gap-1">
+                                    <Shield className="w-3 h-3" />
+                                    Staff
+                                </span>
+                            )}
+                            <Button
+                                size="sm"
+                                onClick={handleWhatsApp}
+                                className="bg-green-500 text-white hover:bg-green-600"
+                            >
+                                <MessageCircle className="w-4 h-4 mr-2" />
+                                <span className="hidden sm:inline">WhatsApp</span>
+                            </Button>
+                        </div>
                     </div>
                 </div>
             </header>
@@ -167,20 +253,133 @@ export default function CotizacionTrackingPage({ params }: { params: Promise<{ f
             <div className="container mx-auto px-4 py-8 max-w-4xl">
                 {/* Estado de la cotización */}
                 <Card className="p-6 mb-6">
-                    <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
                         <div>
                             <h1 className="text-2xl font-bold mb-1">Cotización {quote.folio}</h1>
                             <p className="text-gray-600">
                                 Solicitada el {format(new Date(quote.created_at), "d 'de' MMMM 'de' yyyy", { locale: es })}
                             </p>
                         </div>
-                        <div className={`px-4 py-2 rounded-full border-2 ${statusConfig.color} flex items-center gap-2`}>
-                            <StatusIcon className="w-5 h-5" />
-                            <span className="font-semibold">{statusConfig.label}</span>
+                        <div className="flex items-center gap-3">
+                            <div className={`px-4 py-2 rounded-full border-2 ${statusConfig.color} flex items-center gap-2`}>
+                                <StatusIcon className="w-5 h-5" />
+                                <span className="font-semibold">{statusConfig.label}</span>
+                            </div>
+                            {/* Botón editar para staff o cliente cuando es solicitud */}
+                            {(isStaff || canClientEdit) && !editing && (
+                                <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => setEditing(true)}
+                                    className="flex items-center gap-1"
+                                >
+                                    <Edit className="w-4 h-4" />
+                                    Editar
+                                </Button>
+                            )}
                         </div>
                     </div>
                     <p className="text-gray-700">{statusConfig.description}</p>
                 </Card>
+
+                {/* Panel de edición Staff */}
+                {editing && isStaff && (
+                    <Card className="p-6 mb-6 border-2 border-purple-300 bg-purple-50/50">
+                        <h2 className="text-xl font-bold mb-4 flex items-center gap-2 text-purple-800">
+                            <Shield className="w-5 h-5" />
+                            Edición Operativa
+                        </h2>
+                        <div className="grid md:grid-cols-2 gap-4">
+                            <div>
+                                <label className="block text-sm font-medium mb-1">Estado</label>
+                                <select
+                                    className="w-full h-10 px-3 border rounded-md"
+                                    value={editData.status}
+                                    onChange={(e) => setEditData({ ...editData, status: e.target.value })}
+                                >
+                                    <option value="pending">Pendiente</option>
+                                    <option value="solicitud">Solicitud</option>
+                                    <option value="en_proceso">En Proceso</option>
+                                    <option value="contacted">Contactado</option>
+                                    <option value="quoted">Cotización Enviada</option>
+                                    <option value="confirmed">Confirmado</option>
+                                    <option value="cancelled">Cancelado</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium mb-1">Número de personas</label>
+                                <Input
+                                    type="number"
+                                    min="1"
+                                    value={editData.num_personas}
+                                    onChange={(e) => setEditData({ ...editData, num_personas: parseInt(e.target.value) || 1 })}
+                                />
+                            </div>
+                            <div className="md:col-span-2">
+                                <label className="block text-sm font-medium mb-1">Notas internas (solo staff)</label>
+                                <textarea
+                                    className="w-full p-3 border rounded-lg bg-white min-h-[80px]"
+                                    value={editData.notes}
+                                    onChange={(e) => setEditData({ ...editData, notes: e.target.value })}
+                                    placeholder="Notas internas sobre esta cotización..."
+                                />
+                            </div>
+                        </div>
+                        <div className="flex gap-3 mt-4">
+                            <Button onClick={handleSaveChanges} disabled={saving} className="bg-purple-600 hover:bg-purple-700 text-white">
+                                <Save className="w-4 h-4 mr-2" />
+                                {saving ? 'Guardando...' : 'Guardar Cambios'}
+                            </Button>
+                            <Button variant="outline" onClick={() => setEditing(false)}>
+                                Cancelar
+                            </Button>
+                        </div>
+                    </Card>
+                )}
+
+                {/* Panel de edición Cliente (solo en solicitud) */}
+                {editing && !isStaff && canClientEdit && (
+                    <Card className="p-6 mb-6 border-2 border-blue-300 bg-blue-50/50">
+                        <h2 className="text-xl font-bold mb-4 text-blue-800">Editar Solicitud</h2>
+                        <div className="space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium mb-1">Número de personas</label>
+                                <Input
+                                    type="number"
+                                    min="1"
+                                    value={editData.num_personas}
+                                    onChange={(e) => setEditData({ ...editData, num_personas: parseInt(e.target.value) || 1 })}
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium mb-1">Teléfono de contacto</label>
+                                <Input
+                                    value={editData.contact_phone}
+                                    onChange={(e) => setEditData({ ...editData, contact_phone: e.target.value })}
+                                    placeholder="Tu teléfono"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium mb-1">Comentarios especiales</label>
+                                <textarea
+                                    className="w-full p-3 border rounded-lg bg-white min-h-[80px]"
+                                    value={editData.special_requests}
+                                    onChange={(e) => setEditData({ ...editData, special_requests: e.target.value })}
+                                    placeholder="Tus comentarios..."
+                                />
+                            </div>
+                        </div>
+                        <div className="flex gap-3 mt-4">
+                            <Button onClick={handleSaveChanges} disabled={saving} className="bg-blue-600 hover:bg-blue-700 text-white">
+                                <Save className="w-4 h-4 mr-2" />
+                                {saving ? 'Guardando...' : 'Guardar Cambios'}
+                            </Button>
+                            <Button variant="outline" onClick={() => setEditing(false)}>
+                                Cancelar
+                            </Button>
+                        </div>
+                    </Card>
+                )}
 
                 <div className="grid lg:grid-cols-3 gap-6">
                     {/* Detalles del tour */}
@@ -200,6 +399,30 @@ export default function CotizacionTrackingPage({ params }: { params: Promise<{ f
                                     <Clock className="w-4 h-4 text-blue-600" />
                                     <span>{quote.tour_duration}</span>
                                 </div>
+
+                                {/* Fecha de salida */}
+                                {quote.departure_date && (
+                                    <div className="flex items-center gap-2 text-green-700 bg-green-50 p-3 rounded-lg border border-green-200">
+                                        <Calendar className="w-5 h-5 text-green-600" />
+                                        <div>
+                                            <p className="text-xs text-green-600">Fecha de salida</p>
+                                            <p className="font-bold">
+                                                {new Date(quote.departure_date + 'T12:00:00').toLocaleDateString('es-MX', {
+                                                    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+                                                })}
+                                            </p>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Ciudad de salida */}
+                                {quote.origin_city && (
+                                    <div className="flex items-center gap-2 text-gray-700">
+                                        <Plane className="w-4 h-4 text-blue-600" />
+                                        <span>Salida desde: <strong>{quote.origin_city}</strong></span>
+                                    </div>
+                                )}
+
                                 {quote.tour_cities && (
                                     <div>
                                         <div className="text-sm text-gray-600 mb-1">Ciudades</div>
@@ -240,10 +463,34 @@ export default function CotizacionTrackingPage({ params }: { params: Promise<{ f
                             </Card>
                         )}
 
-                        {quote.notes && (
+                        {/* Notas del equipo - visibles para staff siempre, para clientes si hay notas */}
+                        {(isStaff || quote.notes) && quote.notes && (
                             <Card className="p-6 bg-blue-50 border-blue-200">
-                                <h2 className="text-xl font-bold mb-4 text-blue-900">Notas del Equipo</h2>
+                                <h2 className="text-xl font-bold mb-4 text-blue-900">
+                                    {isStaff ? 'Notas Internas' : 'Notas del Equipo'}
+                                </h2>
                                 <p className="text-blue-800">{quote.notes}</p>
+                            </Card>
+                        )}
+
+                        {/* Link al dashboard para staff */}
+                        {isStaff && (
+                            <Card className="p-4 bg-purple-50 border-purple-200">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2 text-purple-700">
+                                        <Shield className="w-5 h-5" />
+                                        <span className="font-semibold">Panel Operativo</span>
+                                    </div>
+                                    <Button
+                                        size="sm"
+                                        variant="outline"
+                                        className="border-purple-300 text-purple-700 hover:bg-purple-100"
+                                        onClick={() => router.push('/dashboard/quotes')}
+                                    >
+                                        <FileText className="w-4 h-4 mr-1" />
+                                        Ir a Gestión de Cotizaciones
+                                    </Button>
+                                </div>
                             </Card>
                         )}
                     </div>
@@ -258,16 +505,37 @@ export default function CotizacionTrackingPage({ params }: { params: Promise<{ f
                                         <Users className="w-4 h-4" />
                                         <span>{quote.num_personas} {quote.num_personas === 1 ? 'persona' : 'personas'}</span>
                                     </div>
+
+                                    {/* Desglose de precios */}
+                                    <div className="border-t border-white/20 pt-3 space-y-2">
+                                        <div className="flex justify-between">
+                                            <span className="text-white/80">Precio base:</span>
+                                            <span className="font-semibold">${formatPrice(quote.price_per_person)} USD</span>
+                                        </div>
+                                        {parseFloat(quote.taxes) > 0 && (
+                                            <div className="flex justify-between">
+                                                <span className="text-white/80">Impuestos:</span>
+                                                <span className="font-semibold">${formatPrice(quote.taxes)} USD</span>
+                                            </div>
+                                        )}
+                                        {parseFloat(quote.supplement) > 0 && (
+                                            <div className="flex justify-between">
+                                                <span className="text-white/80">Suplemento:</span>
+                                                <span className="font-semibold">${formatPrice(quote.supplement)} USD</span>
+                                            </div>
+                                        )}
+                                    </div>
+
                                     <div className="border-t border-white/20 pt-3">
-                                        <div className="text-white/80 mb-1">Precio por persona</div>
+                                        <div className="text-white/80 mb-1">Total por persona</div>
                                         <div className="text-2xl font-bold">
-                                            ${parseFloat(quote.price_per_person).toLocaleString('es-MX')} USD
+                                            ${formatPrice(quote.total_per_person || quote.price_per_person)} USD
                                         </div>
                                     </div>
                                     <div className="border-t border-white/20 pt-3">
                                         <div className="text-white/80 mb-1">Total estimado</div>
                                         <div className="text-3xl font-bold">
-                                            ${parseFloat(quote.total_price).toLocaleString('es-MX')} USD
+                                            ${formatPrice(quote.total_price)} USD
                                         </div>
                                     </div>
                                 </div>
@@ -318,6 +586,7 @@ export default function CotizacionTrackingPage({ params }: { params: Promise<{ f
                 <div className="container mx-auto px-4">
                     <div className="text-center text-sm text-gray-600">
                         <p>© 2026 AS Operadora de Viajes y Eventos. Todos los derechos reservados.</p>
+                        <p className="text-xs mt-2 opacity-50">v2.325 | Build: 25 Feb 2026</p>
                     </div>
                 </div>
             </footer>
