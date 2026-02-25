@@ -81,7 +81,7 @@ function CotizarTourContent() {
                 duration: tourDuration ? decodeURIComponent(tourDuration) : '',
                 cities: tourCities ? decodeURIComponent(tourCities).split(',').map((c: string) => c.trim()) : [],
                 // Nuevos datos
-                departureDate: fechaSalida || null,
+                departureDate: fechaSalida ? fechaSalida.substring(0, 10) : null,
                 taxes: taxesVal,
                 supplement: supplementVal,
                 totalPerPerson: totalPP,
@@ -242,7 +242,7 @@ function CotizarTourContent() {
                                 <strong>Región:</strong> {tourData.region}<br />
                                 <strong>Duración:</strong> {tourData.duration}<br />
                                 {tourData.departureDate && (
-                                    <><strong>Fecha de salida:</strong> {new Date(tourData.departureDate + 'T12:00:00').toLocaleDateString('es-MX', { day: 'numeric', month: 'long', year: 'numeric' })}<br /></>
+                                    <><strong>Fecha de salida:</strong> {new Date(tourData.departureDate + 'T12:00:00Z').toLocaleDateString('es-MX', { day: 'numeric', month: 'long', year: 'numeric' })}<br /></>
                                 )}
                                 {tourData.originCity && (
                                     <><strong>Ciudad de salida:</strong> {tourData.originCity}<br /></>
@@ -397,7 +397,7 @@ function CotizarTourContent() {
                                                 <div>
                                                     <p className="text-sm text-green-600 font-medium">Fecha de salida seleccionada</p>
                                                     <p className="text-lg font-bold text-green-800">
-                                                        {new Date(tourData.departureDate + 'T12:00:00').toLocaleDateString('es-MX', {
+                                                        {new Date(tourData.departureDate + 'T12:00:00Z').toLocaleDateString('es-MX', {
                                                             weekday: 'long',
                                                             day: 'numeric',
                                                             month: 'long',
@@ -541,7 +541,7 @@ function CotizarTourContent() {
                                         <div className="flex items-center gap-2 text-green-700">
                                             <Calendar className="w-4 h-4 text-green-600" />
                                             <span className="font-medium">
-                                                {new Date(tourData.departureDate + 'T12:00:00').toLocaleDateString('es-MX', {
+                                                {new Date(tourData.departureDate + 'T12:00:00Z').toLocaleDateString('es-MX', {
                                                     day: 'numeric', month: 'short', year: 'numeric'
                                                 })}
                                             </span>

@@ -407,9 +407,12 @@ export default function CotizacionTrackingPage({ params }: { params: Promise<{ f
                                         <div>
                                             <p className="text-xs text-green-600">Fecha de salida</p>
                                             <p className="font-bold">
-                                                {new Date(quote.departure_date + 'T12:00:00').toLocaleDateString('es-MX', {
-                                                    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
-                                                })}
+                                                {(() => {
+                                                    const dateStr = String(quote.departure_date).substring(0, 10)
+                                                    return new Date(dateStr + 'T12:00:00Z').toLocaleDateString('es-MX', {
+                                                        weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+                                                    })
+                                                })()}
                                             </p>
                                         </div>
                                     </div>
