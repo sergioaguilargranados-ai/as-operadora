@@ -1,5 +1,5 @@
 // BrandFooter.tsx - Footer dinámico con branding del tenant actual
-// Build: 25 Feb 2026 - v2.330 - Fix totales con impuestos en cotización de tours
+// Build: 25 Feb 2026 - 15:31 CST - v2.332 - Botón MegaTravel staff, panel operativo, PDF cotización
 
 'use client';
 
@@ -92,7 +92,7 @@ export function BrandFooter() {
                         </p>
                     )}
                     <p className="text-xs mt-2 opacity-50">
-                        v2.331 | 25 Feb 2026 00:00
+                        v2.332 | 25 Feb 2026 15:31
                     </p>
                 </div>
             </div>

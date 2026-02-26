@@ -35,7 +35,49 @@ Esto permite detectar si se perdieron tablas/campos entre versiones.
 
 ## 📅 HISTORIAL DE CAMBIOS
 
+### v2.332 - 25 de Febrero de 2026 - 15:31 CST
+
+**🔧 Pantalla Cotización `/cotizacion/[folio]` — Mejoras Operativas**
+
+**Puntos implementados:**
+
+1. **Botón "Ver en MegaTravel" (solo staff) — req. 2.5:**
+   - Visible únicamente para roles `SUPER_ADMIN`, `ADMIN`, `MANAGER`
+   - Construye URL de búsqueda MegaTravel desde `tour_id` (ej: `MT-60966` → `megatravel.com.mx/busqueda?q=60966`)
+   - Aparece en el "Panel Operativo" con color naranja distintivo
+   - Invisible totalmente para clientes
+
+2. **Panel staff enriquecido con campos de precio — req. 2:**
+   - Staff puede editar: `precio base`, `impuestos`, `suplemento` por persona
+   - Muestra total por persona y total estimado calculados en tiempo real
+   - Lista de "Servicios / Incluye" editable con agregar/eliminar ítems
+   - Ítems se muestran al cliente como lista de inclusiones del tour
+
+3. **PDF formal de cotización — req. 3:**
+   - Botón "PDF" en header (visible para todos)
+   - Al imprimir/guardar como PDF: muestra cabecera AS Operadora con logo, datos de contacto
+   - Contenido: folio, fecha, detalles del tour, precios, servicios incluidos, datos de contacto
+   - Pie de página con nota legal y fecha de generación
+   - Elementos de navegación/UI ocultos con `@media print` y clase `no-print`
+
+4. **API PUT extendida (`/api/tours/quote/[folio]`):**
+   - Acepta nuevos campos: `price_per_person`, `taxes`, `supplement`, `total_per_person`, `total_price`, `included_items`
+   - Permite al staff actualizar precios completos desde la pantalla de cotización
+
+5. **Migración 018 — columna `included_items`:**
+   - `ALTER TABLE tour_quotes ADD COLUMN IF NOT EXISTS included_items TEXT`
+   - `CREATE SEQUENCE IF NOT EXISTS tour_quote_folio_seq`
+
+**Archivos modificados:**
+- ✅ `src/app/cotizacion/[folio]/page.tsx` — Reescritura completa
+- ✅ `src/app/api/tours/quote/[folio]/route.ts` — PUT extendido
+- ✅ `migrations/018_add_included_items_to_tour_quotes.sql` — Nueva migración
+- ✅ `src/components/BrandFooter.tsx` — Bump v2.332
+
+---
+
 ### v2.331 - 25 de Febrero de 2026 - 00:09 CST
+
 
 **🐛 Fix Crítico: Cálculo de Totales con Impuestos en Cotización de Tours**
 
