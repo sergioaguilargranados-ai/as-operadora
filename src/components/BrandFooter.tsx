@@ -1,5 +1,5 @@
 // BrandFooter.tsx - Footer dinámico con branding del tenant actual
-// Build: 12 Mar 2026 - 16:24 CST - v2.335 - Código de viaje AS-XXXXX en catálogo, cotización, PDF y email
+// Build: 12 Mar 2026 - 17:25 CST - v2.336 - Email automático + pre-llenado contactos + Communication Center bidireccional
 
 'use client';
 
@@ -92,7 +92,7 @@ export function BrandFooter() {
                         </p>
                     )}
                     <p className="text-xs mt-2 opacity-50">
-                        v2.335 | 12 Mar 2026 16:24 CST
+                        v2.336 | 12 Mar 2026 17:25 CST
                     </p>
                 </div>
             </div>

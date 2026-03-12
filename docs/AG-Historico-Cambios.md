@@ -1,7 +1,7 @@
 # 📋 AG-Histórico de Cambios - AS Operadora
 
-**Última actualización:** 26 de Febrero de 2026 - 17:10 CST  
-**Versión actual:** v2.334  
+**Última actualización:** 12 de Marzo de 2026 - 17:25 CST  
+**Versión actual:** v2.336  
 **Actualizado por:** AntiGravity AI Assistant  
 **Propósito:** Documento maestro del proyecto para trabajo con agentes AntiGravity
 
@@ -34,6 +34,45 @@ Esto permite detectar si se perdieron tablas/campos entre versiones.
 ---
 
 ## 📅 HISTORIAL DE CAMBIOS
+
+### v2.336 - 12 de Marzo de 2026 - 17:25 CST
+
+**📧 Email automático + Pre-llenado de contactos + Centro de Comunicación bidireccional**
+
+**Puntos implementados:**
+
+1. **Email automático de confirmación al enviar cotización:**
+   - Al enviar el formulario de cotización, se envía inmediatamente un email de confirmación al cliente
+   - HTML de marca AS Operadora: header azul gradiente, franja dorada, card con todos los detalles, botón CTA al seguimiento, footer navy/gold
+   - Incluye: nombre del tour, código AS-XXXXX, folio, región, duración, fecha de salida, ciudad de salida, personas, precio base, impuestos, suplemento, total por persona, total estimado
+   - Respeta la preferencia de notificación del cliente (email/ambos = envía, solo whatsapp = no envía)
+   - La respuesta del API ahora indica si el email fue enviado (`emailSent: true/false`)
+   - Archivo: `src/app/api/tours/quote/route.ts`
+
+2. **Communication Center completamente bidireccional:**
+   - **Mensaje INBOUND (customer):** Représenta la solicitud del cliente con todos los detalles del tour
+   - **Mensaje OUTBOUND (system):** Confirmación automática enviada, con URL de seguimiento e indicación del canal usado (email/WhatsApp)
+   - Ambos mensajes quedan visibles en el thread del Centro de Comunicación para el equipo
+   - Archivo: `src/app/api/tours/quote/route.ts`
+
+3. **Pre-llenado automático de campos de contacto:**
+   - Nuevo endpoint GET `/api/tours/quote/contact-lookup?email=...`
+   - Busca primero en `crm_contacts` por email (case-insensitive)
+   - Si no encuentra, busca en historial de `tour_quotes`
+   - Al salir del campo email (onBlur), si el email es válido, llama al endpoint
+   - Si encuentra al cliente, pre-llena: nombre, apellido, teléfono y número de personas
+   - Solo pre-llena campos vacíos (no sobreescribe lo que el usuario ya escribió)
+   - Muestra toast: "✅ Datos encontrados — Hemos pre-llenado tus datos de una solicitud anterior"
+   - Archivos: `src/app/api/tours/quote/contact-lookup/route.ts` (NUEVO), `src/app/cotizar-tour/page.tsx`
+
+**Archivos creados/modificados:**
+- ✅ `src/app/api/tours/quote/route.ts` — Email automático con HTML de marca + mensajes bidireccionales en Communication Center
+- ✅ `src/app/api/tours/quote/contact-lookup/route.ts` — NUEVO endpoint de lookup para pre-llenado
+- ✅ `src/app/cotizar-tour/page.tsx` — Auto-completado de campos al escribir email (onBlur con lookup)
+- ✅ `src/components/BrandFooter.tsx` — Bump v2.336
+- ✅ `docs/AG-Historico-Cambios.md` — Esta entrada
+
+---
 
 ### v2.335 - 12 de Marzo de 2026 - 16:24 CST
 

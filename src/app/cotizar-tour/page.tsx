@@ -39,6 +39,7 @@ function CotizarTourContent() {
     const [submitted, setSubmitted] = useState(false)
     const [submittedFolio, setSubmittedFolio] = useState('')
     const [tourData, setTourData] = useState<any>(null)
+    const [lookupDone, setLookupDone] = useState(false)
 
     const [formData, setFormData] = useState({
         nombre: '',
@@ -100,6 +101,34 @@ function CotizarTourContent() {
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target
         setFormData(prev => ({ ...prev, [name]: value }))
+    }
+
+    // Auto-completar datos cuando el usuario sale del campo email
+    const handleEmailBlur = async () => {
+        const email = formData.correo.trim()
+        if (!email || lookupDone || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return
+
+        try {
+            const res = await fetch(`/api/tours/quote/contact-lookup?email=${encodeURIComponent(email)}`)
+            const data = await res.json()
+
+            if (data.success && data.found) {
+                setLookupDone(true)
+                setFormData(prev => ({
+                    ...prev,
+                    nombre: prev.nombre || data.contact.nombre,
+                    apellido: prev.apellido || data.contact.apellido,
+                    telefono: prev.telefono || data.contact.telefono,
+                    numPersonas: prev.numPersonas === '1' ? (data.contact.numPersonas || '1') : prev.numPersonas
+                }))
+                toast({
+                    title: '✅ Datos encontrados',
+                    description: `Hemos pre-llenado tus datos de una solicitud anterior. Verifica y ajusta si es necesario.`
+                })
+            }
+        } catch {
+            // Silencioso — no interfiere con el flujo
+        }
     }
 
     // Convertir código MT al formato AS para mostrar al cliente
@@ -390,6 +419,7 @@ function CotizarTourContent() {
                                                 name="correo"
                                                 value={formData.correo}
                                                 onChange={handleChange}
+                                                onBlur={handleEmailBlur}
                                                 placeholder="tu@email.com"
                                                 className="h-12"
                                                 required
