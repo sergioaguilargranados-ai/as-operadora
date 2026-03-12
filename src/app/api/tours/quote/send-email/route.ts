@@ -4,11 +4,14 @@ import { sendEmail } from '@/lib/emailHelper'
 export async function POST(request: NextRequest) {
     try {
         const body = await request.json()
-        const { folio, to, customerName, tourName, total, currency, trackingUrl } = body
+        const { folio, to, customerName, tourName, tourId, total, currency, trackingUrl } = body
 
         if (!folio || !to) {
             return NextResponse.json({ success: false, error: 'Faltan datos requeridos' }, { status: 400 })
         }
+
+        // Convertir código MT al formato AS para el cliente
+        const tourCode = tourId ? `AS-${tourId.replace(/^(AS-|MT-)/, '')}` : ''
 
         const html = `
         <!DOCTYPE html>
@@ -57,6 +60,12 @@ export async function POST(request: NextRequest) {
                                             <td style="padding:4px 0;color:#888;font-size:12px;">Tour:</td>
                                             <td style="padding:4px 0;font-weight:bold;font-size:14px;text-align:right;">${tourName || '-'}</td>
                                         </tr>
+                                        ${tourCode ? `<tr>
+                                            <td style="padding:4px 0;color:#888;font-size:12px;">Código del viaje:</td>
+                                            <td style="padding:4px 0;text-align:right;">
+                                                <span style="font-family:monospace;background:#dbeafe;color:#1e40af;padding:2px 8px;border-radius:4px;font-weight:bold;font-size:13px;">${tourCode}</span>
+                                            </td>
+                                        </tr>` : ''}
                                         <tr>
                                             <td colspan="2" style="border-top:1px solid #e0e0e0;padding-top:12px;margin-top:12px;">
                                                 <table width="100%">

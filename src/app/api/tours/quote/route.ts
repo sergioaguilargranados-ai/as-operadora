@@ -157,6 +157,8 @@ export async function POST(request: NextRequest) {
             const originLine = originCity ? `• Ciudad de salida: ${originCity}\r\n` : ''
             const taxesLine = taxesAmount > 0 ? `• Impuestos: $${taxesAmount.toLocaleString('es-MX')} USD\r\n` : ''
             const supplementLine = supplementAmount > 0 ? `• Suplemento: $${supplementAmount.toLocaleString('es-MX')} USD\r\n` : ''
+            // Formatear código del viaje al formato AS
+            const tourCode = tourId ? `AS-${tourId.replace(/^(AS-|MT-)/, '')}` : tourId
 
             await query(`
                 INSERT INTO messages (
@@ -176,7 +178,7 @@ export async function POST(request: NextRequest) {
                 'system',
                 'AS Operadora',
                 'viajes@asoperadora.com',
-                `¡Hola ${contactName}!\r\n\r\nHemos recibido tu solicitud de cotización para el tour "${tourName}".\r\n\r\n📋 Detalles de tu solicitud:\r\n• Folio: ${quoteFolio}\r\n• Tour: ${tourName}\r\n• Región: ${tourRegion}\r\n• Duración: ${tourDuration}\r\n${departureLine}${originLine}• Personas: ${personas}\r\n• Precio base por persona: $${basePrice.toLocaleString('es-MX')} USD\r\n${taxesLine}${supplementLine}• Total por persona: $${totalPP.toLocaleString('es-MX')} USD\r\n• Total estimado: $${totalPrice.toLocaleString('es-MX')} USD\r\n\r\nNuestro equipo revisará tu solicitud y te contactaremos pronto con una propuesta personalizada.\r\n\r\nPuedes dar seguimiento a tu cotización en: ${process.env.NEXT_PUBLIC_APP_URL || 'https://www.as-ope-viajes.company'}/cotizacion/${quoteFolio}\r\n\r\n¡Gracias por tu preferencia!`,
+                `¡Hola ${contactName}!\r\n\r\nHemos recibido tu solicitud de cotización para el tour "${tourName}".\r\n\r\n📋 Detalles de tu solicitud:\r\n• Folio: ${quoteFolio}\r\n• Código del viaje: ${tourCode}\r\n• Tour: ${tourName}\r\n• Región: ${tourRegion}\r\n• Duración: ${tourDuration}\r\n${departureLine}${originLine}• Personas: ${personas}\r\n• Precio base por persona: $${basePrice.toLocaleString('es-MX')} USD\r\n${taxesLine}${supplementLine}• Total por persona: $${totalPP.toLocaleString('es-MX')} USD\r\n• Total estimado: $${totalPrice.toLocaleString('es-MX')} USD\r\n\r\nNuestro equipo revisará tu solicitud y te contactaremos pronto con una propuesta personalizada.\r\n\r\nPuedes dar seguimiento a tu cotización en: ${process.env.NEXT_PUBLIC_APP_URL || 'https://www.as-ope-viajes.company'}/cotizacion/${quoteFolio}\r\n\r\n¡Gracias por tu preferencia!`,
                 'text',
                 'sent',
                 1

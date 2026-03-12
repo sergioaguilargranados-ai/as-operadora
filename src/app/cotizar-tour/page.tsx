@@ -102,6 +102,13 @@ function CotizarTourContent() {
         setFormData(prev => ({ ...prev, [name]: value }))
     }
 
+    // Convertir código MT al formato AS para mostrar al cliente
+    const formatTourCode = (id: string): string => {
+        if (!id) return ''
+        const numCode = id.replace(/^(AS-|MT-)/, '')
+        return `AS-${numCode}`
+    }
+
     const formatPrice = (price: number) => {
         if (!price || isNaN(price)) return '0'
         return new Intl.NumberFormat('es-MX', {
@@ -237,6 +244,12 @@ function CotizarTourContent() {
                         )}
 
                         <div className="bg-blue-50 p-4 rounded-lg mb-6 text-left">
+                            {tourData.id && (
+                                <div className="mb-3 flex items-center gap-2">
+                                    <span className="text-xs text-blue-600">Código del viaje:</span>
+                                    <span className="font-mono font-bold text-blue-800 bg-blue-100 px-2 py-0.5 rounded text-sm">{formatTourCode(tourData.id)}</span>
+                                </div>
+                            )}
                             <p className="text-sm text-blue-700">
                                 <strong>Tour:</strong> {tourData.name}<br />
                                 <strong>Región:</strong> {tourData.region}<br />
@@ -331,7 +344,9 @@ function CotizarTourContent() {
                     {/* Columna izquierda - Formulario */}
                     <div className="lg:col-span-2">
                         <Card className="p-6 md:p-8">
-                            <h1 className="text-2xl font-bold mb-2">Cotizar Tour</h1>
+                            <h1 className="text-2xl font-bold mb-2">
+                                ¡Cotizar {tourData ? formatTourCode(tourData.id) : ''} — {tourData?.name || 'Tour'}!
+                            </h1>
                             <p className="text-gray-600 mb-6">
                                 Completa tus datos y te enviaremos una cotización personalizada
                             </p>
@@ -540,6 +555,11 @@ function CotizarTourContent() {
                                     <div>
                                         <div className="text-gray-600 mb-1">Tour seleccionado</div>
                                         <div className="font-semibold text-gray-900">{tourData.name}</div>
+                                        {tourData.id && (
+                                            <div className="inline-flex items-center gap-1 mt-1 px-2 py-0.5 bg-blue-100 text-blue-700 text-xs font-mono rounded">
+                                                {formatTourCode(tourData.id)}
+                                            </div>
+                                        )}
                                     </div>
                                     <div className="flex items-center gap-2 text-gray-700">
                                         <MapPin className="w-4 h-4 text-blue-600" />

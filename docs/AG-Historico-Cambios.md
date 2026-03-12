@@ -35,6 +35,54 @@ Esto permite detectar si se perdieron tablas/campos entre versiones.
 
 ## 📅 HISTORIAL DE CAMBIOS
 
+### v2.335 - 12 de Marzo de 2026 - 16:24 CST
+
+**🏷️ Flujo Viajes Grupales — Código AS-XXXXX visible en todo el flujo (catálogo, cotización, PDF, email)**
+
+**Puntos implementados:**
+
+1. **Catálogo de Tours (`/tours`) — código AS en tarjeta:**
+   - Función `formatTourCode(id)` que normaliza cualquier código (`MT-XXXXX`, `AS-XXXXX`, numérico) al formato `AS-XXXXX`
+   - Etiqueta monospace gris discreta en la esquina superior derecha de cada tarjeta, junto al nombre de la región
+   - Archivo: `src/app/tours/page.tsx`
+
+2. **Formulario de Cotización (`/cotizar-tour`) — código AS en título y resumen:**
+   - Título del formulario ahora muestra `¡Cotizar AS-XXXXX — Nombre del Tour!` (equivalente al formato del proveedor MegaTravel)
+   - Resumen lateral: etiqueta azul `AS-XXXXX` debajo del nombre del tour seleccionado
+   - Pantalla de confirmación de envío: sección "Código del viaje" con badge azul monospace
+   - Archivo: `src/app/cotizar-tour/page.tsx`
+
+3. **Página de Seguimiento / PDF (`/cotizacion/[folio]`) — código AS en vista web y PDF:**
+   - Vista web: etiqueta `AS-XXXXX` en azul dentro de "Detalles del Tour"
+   - PDF imprimible: bloque con nombre del tour + código `AS-XXXXX` en azul, antes del desglose de precios
+   - Función `formatTourCode()` agregada como helper global en el archivo
+   - Archivo: `src/app/cotizacion/[folio]/page.tsx`
+
+4. **Email de Cotización — código AS incluido:**
+   - Nuevo parámetro `tourId` aceptado por el endpoint
+   - Fila "Código del viaje: AS-XXXXX" con badge azul monospace en la card del email HTML
+   - Archivo: `src/app/api/tours/quote/send-email/route.ts`
+
+5. **Mensaje Communication Center — código AS en confirmación automática:**
+   - El mensaje automático de confirmación incluye `• Código del viaje: AS-XXXXX` junto al folio
+   - Archivo: `src/app/api/tours/quote/route.ts`
+
+**Nota técnica:**
+- La API `GET /api/groups` ya convertía `MT-XXXXX → AS-XXXXX` en el campo `id` (desde v2.322). Esta versión extiende la visibilidad de ese código hacia todos los puntos de contacto con el cliente.
+- `formatTourCode()` es idempotente: si el id ya viene como `AS-42829`, la función retorna `AS-42829` sin duplicar el prefijo.
+
+**Archivos modificados:**
+- ✅ `src/app/tours/page.tsx` — Código AS en tarjetas del catálogo
+- ✅ `src/app/cotizar-tour/page.tsx` — Código AS en título, sidebar y pantalla de confirmación
+- ✅ `src/app/cotizacion/[folio]/page.tsx` — Código AS en vista web y PDF, footer v2.335
+- ✅ `src/app/api/tours/quote/send-email/route.ts` — Código AS en email HTML
+- ✅ `src/app/api/tours/quote/route.ts` — Código AS en mensaje Communication Center
+- ✅ `src/components/BrandFooter.tsx` — Bump v2.335
+- ✅ `docs/AG-Historico-Cambios.md` — Esta entrada
+- ✅ `docs/AG-Contexto-Proyecto.md` — Versión actualizada
+
+---
+
 ### v2.334 - 26 de Febrero de 2026 - 17:10 CST
 
 **🎟️ Módulo de Reservas & Pagos — Acciones, PDFs Premium, Pasarela de Pagos**

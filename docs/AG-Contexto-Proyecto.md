@@ -1,7 +1,7 @@
 # 🎯 AG-Contexto-Proyecto - AS Operadora
 
-**Última actualización:** 26 de Febrero de 2026 - 17:10 CST  
-**Versión actual:** v2.334  
+**Última actualización:** 12 de Marzo de 2026 - 16:24 CST  
+**Versión actual:** v2.335  
 **Actualizado por:** AntiGravity AI Assistant  
 **Propósito:** Documento maestro del proyecto para trabajo con agentes AntiGravity, trabajar de esta manera es para tener un mejor control de los cambios que se hacen en el proyecto y asegurar que todo funcione correctamente. 
 
@@ -23,7 +23,7 @@ Sergio Aguilar Granados
 Sistema completo de gestión de viajes corporativos con búsqueda, reservas, aprobaciones, pagos, reportes y dashboard ejecutivo. Competir con plataformas como Expedia con funcionalidades superiores.
 
 ### AL VERSIONAR CONSERVAR V0.000 CON FECHA Y HORA
-- **Versión:** V2.334 2026-02-26 17:10:00 CST 
+- **Versión:** V2.335 2026-03-12 16:24:00 CST 
 La fecha y hora tiempo del CDMX
 
 
@@ -695,6 +695,12 @@ Antes de finalizar cualquier sesión:
 - **API:** `/api/tours/quote`
 - **Tabla:** `tour_quotes` (21 campos)
 - **Lección:** Este módulo es CRÍTICO, no debe perderse en futuras actualizaciones
+
+### Código AS-XXXXX en Flujo de Viajes Grupales (v2.335)
+- **Funcionalidad:** El código de viaje del proveedor (internamente `MT-XXXXX`) se presenta al cliente siempre como `AS-XXXXX` en todo el flujo: catálogo, formulario, confirmación, PDF y email
+- **Función helper:** `formatTourCode(id)` — idempotente, normaliza `MT-XXXXX`, `AS-XXXXX` o numérico al formato `AS-XXXXX`
+- **Puntos de contacto:** tarjetas del catálogo `/tours`, título y sidebar de `/cotizar-tour`, confirmación de envío, vista web y PDF de `/cotizacion/[folio]`, email HTML, mensaje automático Communication Center
+- **Lección:** La transformación de prefijo ya se hacía en la API (`/api/groups`). Esta versión lleva el código al cliente en cada pantalla sin tocar la BD ni el modelo de datos
 
 ### Módulo de Reservas y Pagos (v2.334)
 - **Funcionalidad:** Gestión completa de reservas con acciones: Ver detalles, PDF oficial, Pago (pasarela Stripe/PayPal/MercadoPago), Facturar

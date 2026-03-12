@@ -322,6 +322,12 @@ function ToursContent() {
         fetchPackages()
     }
 
+    // Convertir código MT al formato AS para mostrar al cliente
+    const formatTourCode = (id: string): string => {
+        const numCode = id.replace(/^(AS-|MT-)/, '')
+        return `AS-${numCode}`
+    }
+
     const formatPrice = (price: number) => {
         return new Intl.NumberFormat('es-MX', {
             minimumFractionDigits: 0,
@@ -844,9 +850,14 @@ function ToursContent() {
 
                                                                 {/* Contenido */}
                                                                 <div className="p-4">
-                                                                    <span className="text-xs font-medium text-blue-600 uppercase tracking-wide">
-                                                                        {pkg.region}
-                                                                    </span>
+                                                                    <div className="flex items-center justify-between">
+                                                                        <span className="text-xs font-medium text-blue-600 uppercase tracking-wide">
+                                                                            {pkg.region}
+                                                                        </span>
+                                                                        <span className="text-xs font-mono text-gray-400 bg-gray-100 px-2 py-0.5 rounded">
+                                                                            {formatTourCode(pkg.id)}
+                                                                        </span>
+                                                                    </div>
                                                                     <h3 className="font-bold text-lg text-gray-800 group-hover:text-blue-600 transition-colors line-clamp-2 mt-1">
                                                                         {pkg.name}
                                                                     </h3>

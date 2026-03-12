@@ -1,5 +1,5 @@
 'use client'
-// Build: 25 Feb 2026 - 15:31 CST - v2.332 - Botón MegaTravel staff, panel staff enriquecido, PDF cotización
+// Build: 12 Mar 2026 - 16:24 CST - v2.335 - Código AS-XXXXX en vista web, PDF y mensaje de confirmación
 
 import { useState, useEffect, use, useRef } from 'react'
 import { useRouter } from 'next/navigation'
@@ -93,6 +93,13 @@ function getMegaTravelUrl(tourId: string): string {
     const code = tourId.replace(/^(AS-|MT-)/, '')
     // URL directa al circuito (más confiable que la búsqueda)
     return `https://www.megatravel.com.mx/tools/circuito.php?viaje=${code}`
+}
+
+// Convertir código MT/interno al formato AS para mostrar al cliente
+function formatTourCode(tourId: string): string {
+    if (!tourId) return ''
+    const numCode = tourId.replace(/^(AS-|MT-)/, '')
+    return `AS-${numCode}`
 }
 
 export default function CotizacionTrackingPage({ params }: { params: Promise<{ folio: string }> }) {
@@ -551,6 +558,11 @@ export default function CotizacionTrackingPage({ params }: { params: Promise<{ f
                                     <div>
                                         <div className="text-sm text-gray-600 mb-1">Tour</div>
                                         <div className="font-semibold text-lg">{quote.tour_name}</div>
+                                        {quote.tour_id && (
+                                            <div className="inline-flex items-center gap-1 mt-1 px-2 py-0.5 bg-blue-100 text-blue-700 text-xs font-mono rounded">
+                                                {formatTourCode(quote.tour_id)}
+                                            </div>
+                                        )}
                                     </div>
                                     <div className="flex items-center gap-2 text-gray-700">
                                         <MapPin className="w-4 h-4 text-blue-600" />
@@ -753,6 +765,16 @@ export default function CotizacionTrackingPage({ params }: { params: Promise<{ f
                     <div className="print-only mt-6">
                         {/* Tabla de precios formal */}
                         <div className="pdf-no-break" style={{ marginBottom: '20px' }}>
+                            {/* Nombre del tour + código AS */}
+                            <div style={{ marginBottom: '12px', padding: '10px 16px', background: '#f8f9fa', border: '1px solid #dee2e6' }}>
+                                <div style={{ fontSize: '8pt', color: '#888', marginBottom: '2px' }}>Tour</div>
+                                <div style={{ fontSize: '12pt', fontWeight: 'bold', color: '#111' }}>{quote.tour_name}</div>
+                                {quote.tour_id && (
+                                    <div style={{ display: 'inline-block', marginTop: '4px', padding: '2px 8px', background: '#dbeafe', color: '#1e40af', fontSize: '9pt', fontFamily: 'monospace', fontWeight: 'bold', borderRadius: '4px' }}>
+                                        {formatTourCode(quote.tour_id)}
+                                    </div>
+                                )}
+                            </div>
                             <div className="pdf-accent-bar" style={{ backgroundColor: '#0066FF', color: 'white', padding: '8px 16px', fontSize: '11pt', fontWeight: 'bold' }}>
                                 💰 Desglose de Precios
                             </div>
@@ -880,7 +902,7 @@ export default function CotizacionTrackingPage({ params }: { params: Promise<{ f
                     <div className="container mx-auto px-4">
                         <div className="text-center text-sm text-gray-600">
                             <p>© 2026 AS Operadora de Viajes y Eventos. Todos los derechos reservados.</p>
-                            <p className="text-xs mt-2 opacity-50">v2.332</p>
+                            <p className="text-xs mt-2 opacity-50">v2.335</p>
                         </div>
                     </div>
                 </footer>
