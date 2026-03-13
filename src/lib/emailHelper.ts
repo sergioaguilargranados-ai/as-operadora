@@ -10,16 +10,15 @@ import path from 'path';
 // Crear transporter
 const createTransporter = () => {
     return nodemailer.createTransport({
-        host: process.env.SMTP_HOST,
+        host: (process.env.SMTP_HOST || '').trim(),
         port: parseInt(process.env.SMTP_PORT || '465'),
         secure: process.env.SMTP_PORT === '465',
         auth: {
-            type: 'LOGIN' as const,
             user: (process.env.SMTP_USER || '').trim(),
             pass: (process.env.SMTP_PASS || '').replace(/^"|"$/g, '').trim()
         },
         tls: { rejectUnauthorized: false }
-    });
+    } as any);
 };
 
 // Renderizar template
