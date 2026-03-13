@@ -26,26 +26,41 @@ export class EmailService {
   }
 
   private initializeTransporter() {
-    // Verificar si las credenciales SMTP están configuradas
-    if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
-      console.warn('[EMAIL] SMTP credentials not configured. Emails will be logged only.');
-      return;
+    const sendgridKey = (process.env.SENDGRID_API_KEY || '').trim()
+
+    if (sendgridKey) {
+      // SendGrid SMTP relay — sin restricciones de IP desde Vercel/AWS
+      this.transporter = nodemailer.createTransport({
+        host: 'smtp.sendgrid.net',
+        port: 587,
+        secure: false,
+        auth: { user: 'apikey', pass: sendgridKey }
+      } as any)
+      console.log('[EMAIL] SendGrid SMTP relay inicializado')
+      return
+    }
+
+    // Fallback: SMTP directo (SiteGround / cPanel)
+    const smtpHost = (process.env.SMTP_HOST || '').trim()
+    const smtpUser = (process.env.SMTP_USER || '').trim()
+    const smtpPass = (process.env.SMTP_PASS || '').replace(/^"|"$/g, '').trim()
+
+    if (!smtpHost || !smtpUser || !smtpPass) {
+      console.warn('[EMAIL] Sin credenciales SMTP. Los emails se simularán.')
+      return
     }
 
     try {
       this.transporter = nodemailer.createTransport({
-        host: process.env.SMTP_HOST,
+        host: smtpHost,
         port: parseInt(process.env.SMTP_PORT || '587'),
-        secure: process.env.SMTP_PORT === '465', // true for 465, false for other ports
-        auth: {
-          user: process.env.SMTP_USER,
-          pass: process.env.SMTP_PASS,
-        },
-      });
-
-      console.log('[EMAIL] SMTP transporter initialized successfully');
+        secure: process.env.SMTP_PORT === '465',
+        auth: { user: smtpUser, pass: smtpPass },
+        tls: { rejectUnauthorized: false }
+      } as any)
+      console.log('[EMAIL] SMTP directo inicializado')
     } catch (error) {
-      console.error('[EMAIL] Error initializing SMTP transporter:', error);
+      console.error('[EMAIL] Error inicializando transporter:', error)
     }
   }
 
@@ -61,7 +76,7 @@ export class EmailService {
       }
 
       const info = await this.transporter.sendMail({
-        from: `"AS Operadora" <${process.env.SMTP_USER}>`,
+        from: `"AS Operadora" <${(process.env.SENDGRID_FROM_EMAIL || process.env.SMTP_USER || 'noreply@asoperadora.com').trim()}>`,
         to: options.to,
         subject: options.subject,
         text: options.text,

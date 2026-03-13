@@ -39,17 +39,22 @@ export async function POST(
     const pdf = generateQuotePDF(quote)
     const pdfBuffer = Buffer.from(pdf.output('arraybuffer'))
 
-    // Configurar transportador de email
-    // NOTA: En producción usa SMTP real o servicio como SendGrid, Resend, etc.
-    const transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST || 'smtp.gmail.com',
-      port: parseInt(process.env.SMTP_PORT || '587'),
-      secure: false,
-      auth: {
-        user: process.env.SMTP_USER || 'noreply@asoperadora.com',
-        pass: process.env.SMTP_PASS || 'password'
-      }
-    })
+    // Configurar transportador — SendGrid SMTP relay (o fallback a SMTP directo)
+    const sgKey = (process.env.SENDGRID_API_KEY || '').trim()
+    const transportConfig = sgKey
+      ? { host: 'smtp.sendgrid.net', port: 587, secure: false, auth: { user: 'apikey', pass: sgKey } }
+      : {
+          host: (process.env.SMTP_HOST || '').trim(),
+          port: parseInt(process.env.SMTP_PORT || '587'),
+          secure: false,
+          auth: {
+            user: (process.env.SMTP_USER || '').trim(),
+            pass: (process.env.SMTP_PASS || '').replace(/^"|"$/g, '').trim()
+          },
+          tls: { rejectUnauthorized: false }
+        }
+    const transporter = nodemailer.createTransport(transportConfig as any)
+    const fromAddress = (process.env.SENDGRID_FROM_EMAIL || process.env.SMTP_USER || 'noreply@asoperadora.com').trim()
 
     // Contenido del email
     const emailHTML = `
@@ -109,7 +114,7 @@ export async function POST(
 
     // Enviar email
     await transporter.sendMail({
-      from: '"AS Operadora" <noreply@asoperadora.com>',
+      from: `"AS Operadora" <${fromAddress}>`,
       to: quote.customer_email,
       subject: `Cotización ${quote.quote_number} - ${quote.title}`,
       html: emailHTML,
