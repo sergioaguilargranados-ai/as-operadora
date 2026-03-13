@@ -263,8 +263,13 @@ export default function CotizacionTrackingPage({ params }: { params: Promise<{ f
     const statusConfig = STATUS_CONFIG[quote.status as string] || STATUS_CONFIG.pending
     const StatusIcon = statusConfig.icon
     const megaTravelUrl = getMegaTravelUrl(quote.tour_id || '')
-    const totalPP = (parseFloat(quote.price_per_person) || 0) + (parseFloat(quote.taxes) || 0) + (parseFloat(quote.supplement) || 0)
-    const displayTotalPP = parseFloat(quote.total_per_person) > 0 ? parseFloat(quote.total_per_person) : totalPP
+    // Siempre calcular desde componentes para evitar errores en registros antiguos
+    const calcTotalPP = (parseFloat(quote.price_per_person) || 0) + (parseFloat(quote.taxes) || 0) + (parseFloat(quote.supplement) || 0)
+    // Usar total_per_person del DB solo si es MAYOR que precio_base (es decir, ya incluyó impuestos)
+    const basePP = parseFloat(quote.price_per_person) || 0
+    const storedTotalPP = parseFloat(quote.total_per_person) || 0
+    const displayTotalPP = storedTotalPP > basePP ? storedTotalPP : calcTotalPP
+    const displayTotalPrice = displayTotalPP * (parseInt(quote.num_personas) || 1)
     const parsedItems = quote.included_items
         ? quote.included_items.split('\n').filter((i: string) => i.trim())
         : []
@@ -747,7 +752,7 @@ export default function CotizacionTrackingPage({ params }: { params: Promise<{ f
                                         </div>
                                         <div className="border-t border-white/20 pt-3">
                                             <div className="text-white/80 mb-1">Total estimado</div>
-                                            <div className="text-3xl font-bold">${formatPrice(quote.total_price)} USD</div>
+                                            <div className="text-3xl font-bold">${formatPrice(displayTotalPrice)} USD</div>
                                         </div>
                                     </div>
                                 </Card>
@@ -828,7 +833,7 @@ export default function CotizacionTrackingPage({ params }: { params: Promise<{ f
                                         <td style={{ padding: '10px 12px', fontWeight: 'bold', fontSize: '11pt' }}>
                                             Total estimado ({quote.num_personas} {quote.num_personas === 1 ? 'persona' : 'personas'})
                                         </td>
-                                        <td style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 'bold', fontSize: '14pt' }}>${formatPrice(quote.total_price)} USD</td>
+                                        <td style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 'bold', fontSize: '14pt' }}>${formatPrice(displayTotalPrice)} USD</td>
                                     </tr>
                                 </tbody>
                             </table>
