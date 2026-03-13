@@ -2,87 +2,96 @@ import { NextRequest, NextResponse } from 'next/server'
 import nodemailer from 'nodemailer'
 
 /**
- * GET /api/test-email?to=tucorreo@gmail.com
- * Endpoint de diagnóstico SMTP — solo ADMIN o con secret
- * Devuelve el error exacto del servidor para diagnóstico.
+ * GET /api/test-email?secret=XXX&to=email@gmail.com
+ * Prueba los 3 puertos SMTP posibles y reporta cuál funciona.
  */
 export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const to = searchParams.get('to')
     const secret = searchParams.get('secret')
 
-    // Protección básica
     if (secret !== (process.env.CRON_SECRET_KEY || 'admin-test-2026')) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const host = process.env.SMTP_HOST
-    const port = parseInt(process.env.SMTP_PORT || '465')
-    const user = process.env.SMTP_USER
-    const passRaw = process.env.SMTP_PASS || ''
-    const pass = passRaw.replace(/^"|"$/g, '')
+    const host = (process.env.SMTP_HOST || '').trim()
+    const user = (process.env.SMTP_USER || '').trim()
+    const pass = (process.env.SMTP_PASS || '').replace(/^"|"$/g, '').trim()
 
     const config = {
         host,
-        port,
-        secure: port === 465,
         smtpUser: user,
         passLength: pass.length,
         passFirstChars: pass.substring(0, 3) + '***',
-        nodeEnv: process.env.NODE_ENV,
-        appUrl: process.env.NEXT_PUBLIC_APP_URL
+        nodeEnv: process.env.NODE_ENV
     }
 
-    // 1. Verificar conexión
-    let verifyResult: any = null
-    let verifyError: any = null
-    try {
-        const transporter = nodemailer.createTransport({ host, port, secure: port === 465, auth: { user, pass }, tls: { rejectUnauthorized: false } } as any)
-        await transporter.verify()
-        verifyResult = 'OK — conexión SMTP exitosa'
-    } catch (err: any) {
-        verifyError = {
-            message: err.message,
-            code: err.code,
-            responseCode: err.responseCode,
-            response: err.response,
-            command: err.command
+    // Probar los 3 puertos SMTP más comunes
+    const tryPort = async (port: number, secure: boolean, label: string) => {
+        try {
+            const t = nodemailer.createTransport({
+                host, port, secure,
+                auth: { user, pass },
+                connectionTimeout: 8000,
+                tls: { rejectUnauthorized: false }
+            } as any)
+            await t.verify()
+            return { status: 'OK', label, port, secure }
+        } catch (err: any) {
+            return {
+                status: 'FAILED', label, port, secure,
+                error: {
+                    message: err.message,
+                    code: err.code,
+                    responseCode: err.responseCode,
+                    response: err.response,
+                    command: err.command
+                }
+            }
         }
     }
 
-    // 2. Si verify OK y hay destinatario, enviar test
-    let sendResult: any = null
-    let sendError: any = null
-    if (!verifyError && to) {
+    // Probar en paralelo
+    const [r465, r587, r25] = await Promise.all([
+        tryPort(465, true,  '465 SSL'),
+        tryPort(587, false, '587 STARTTLS'),
+        tryPort(25,  false, '25 SMTP')
+    ])
+
+    const working = [r465, r587, r25].find(r => r.status === 'OK')
+
+    // Si algún puerto funciona y hay destinatario, enviar email de prueba
+    let sendResult: any = 'Sin puerto funcional o sin &to='
+    if (working && to) {
         try {
-            const transporter = nodemailer.createTransport({ host, port, secure: port === 465, auth: { user, pass }, tls: { rejectUnauthorized: false } } as any)
-            const info = await transporter.sendMail({
+            const t = nodemailer.createTransport({
+                host, port: working.port, secure: working.secure,
+                auth: { user, pass },
+                tls: { rejectUnauthorized: false }
+            } as any)
+            const info = await t.sendMail({
                 from: `"AS Operadora TEST" <${user}>`,
                 to,
                 subject: `🧪 Test SMTP ${new Date().toLocaleString('es-MX', { timeZone: 'America/Mexico_City' })}`,
-                html: `
-                    <div style="font-family:Arial;max-width:500px;margin:0 auto;padding:24px;">
-                        <div style="background:#0066FF;color:white;padding:16px;border-radius:8px 8px 0 0;">
-                            <strong>AS</strong> Operadora — Email de prueba
-                        </div>
-                        <div style="padding:20px;background:#f9f9f9;border:1px solid #eee;">
-                            <p>✅ <strong>Conexión SMTP funcionando correctamente</strong></p>
-                            <p>Servidor: ${host}:${port}</p>
-                            <p>Hora: ${new Date().toLocaleString('es-MX', { timeZone: 'America/Mexico_City' })} CST</p>
-                        </div>
-                    </div>`
+                html: `<div style="font-family:Arial;padding:24px;">
+                    <div style="background:#0066FF;color:white;padding:16px;border-radius:8px 8px 0 0;"><strong>AS</strong> Operadora</div>
+                    <div style="padding:20px;background:#f9f9f9;border:1px solid #eee;">
+                        <p>✅ <strong>Funcionando vía puerto ${working.port}</strong></p>
+                        <p>Servidor: ${host}:${working.port}</p>
+                        <p>Hora: ${new Date().toLocaleString('es-MX', { timeZone: 'America/Mexico_City' })} CST</p>
+                    </div>
+                </div>`
             })
-            sendResult = { messageId: info.messageId, accepted: info.accepted, rejected: info.rejected }
+            sendResult = { ok: true, messageId: info.messageId, accepted: info.accepted, port: working.port }
         } catch (err: any) {
-            sendError = { message: err.message, code: err.code, responseCode: err.responseCode, response: err.response }
+            sendResult = { ok: false, error: err.message }
         }
     }
 
     return NextResponse.json({
         config,
-        verify: verifyError ? { status: 'FAILED', error: verifyError } : { status: 'OK', message: verifyResult },
-        send: to
-            ? (sendError ? { status: 'FAILED', error: sendError } : { status: 'OK', result: sendResult })
-            : { status: 'SKIPPED', message: 'Agrega ?to=tucorreo@gmail.com para probar envío' }
+        ports: { p465: r465, p587: r587, p25: r25 },
+        workingPort: working?.port ?? null,
+        send: sendResult
     })
 }
