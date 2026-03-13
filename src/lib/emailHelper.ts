@@ -6,25 +6,51 @@
 import nodemailer from 'nodemailer';
 import fs from 'fs';
 import path from 'path';
+import { Resend } from 'resend';
 
-// Crear transporter — SendGrid SMTP relay si hay API key, sino SMTP directo
+// Enviar via Resend SDK (primera opción — más confiable, sin bloqueos de IP)
+const sendWithResend = async (options: {
+    to: string; subject: string; html: string; text?: string;
+    from?: string;
+}): Promise<boolean> => {
+    const apiKey = (process.env.RESEND_API_KEY || '').trim()
+    if (!apiKey) return false
+    try {
+        const resend = new Resend(apiKey)
+        // Sin dominio verificado → usar onboarding@resend.dev
+        // Con dominio verificado asoperadora.com → usar noreply@asoperadora.com
+        const fromDomain = (process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev').trim()
+        const { error } = await resend.emails.send({
+            from: `AS Operadora <${fromDomain}>`,
+            to: [options.to],
+            subject: options.subject,
+            html: options.html,
+            text: options.text
+        })
+        if (error) {
+            console.error('❌ Resend error:', error)
+            return false
+        }
+        console.log(`✅ Email enviado via Resend a: ${options.to}`)
+        return true
+    } catch (err: any) {
+        console.error('❌ Resend exception:', err?.message)
+        return false
+    }
+}
+
+// Crear transporter nodemailer — SendGrid o SMTP directo (fallback cuando no hay Resend)
 const createTransporter = () => {
     const sendgridKey = (process.env.SENDGRID_API_KEY || '').trim()
 
     if (sendgridKey) {
-        // SendGrid SMTP relay — no tiene bloqueos de IP desde Vercel/AWS
         return nodemailer.createTransport({
             host: 'smtp.sendgrid.net',
-            port: 587,
-            secure: false,
-            auth: {
-                user: 'apikey',          // Siempre literal 'apikey'
-                pass: sendgridKey        // El API Key de SendGrid
-            }
+            port: 587, secure: false,
+            auth: { user: 'apikey', pass: sendgridKey }
         } as any);
     }
 
-    // Fallback: SMTP directo (SiteGround / cPanel)
     return nodemailer.createTransport({
         host: (process.env.SMTP_HOST || '').trim(),
         port: parseInt(process.env.SMTP_PORT || '465'),
@@ -107,6 +133,7 @@ const renderTemplate = (templateName: string, variables: Record<string, any>): s
 };
 
 // Enviar correo y guardar en Centro de Comunicación
+// Jerarquía: 1) Resend SDK  2) SendGrid SMTP  3) SMTP directo
 export const sendEmail = async (options: {
     to: string;
     subject: string;
@@ -116,68 +143,65 @@ export const sendEmail = async (options: {
     bookingId?: number;
     messageType?: string;
 }): Promise<boolean> => {
+    let success = false
+    let provider = 'unknown'
+    let providerMsgId = `email-${Date.now()}`
+    let errorMsg: string | null = null
+
     try {
-        const transporter = createTransporter();
-
-        const result = await transporter.sendMail({
-            from: `"AS Operadora" <${(process.env.SENDGRID_FROM_EMAIL || process.env.SMTP_USER || '').trim()}>`,
-            to: options.to,
-            subject: options.subject,
-            html: options.html,
-            text: options.text || options.subject
-        });
-
-        console.log(`✅ Email enviado a: ${options.to}`);
-
-        // Guardar en Centro de Comunicación
-        try {
-            const { query } = await import('@/lib/db');
-
-            // Insertar en message_deliveries para tracking
-            await query(
-                `INSERT INTO message_deliveries
-                 (message_id, channel, recipient, status, provider, provider_message_id, sent_at)
-                 VALUES ($1, $2, $3, $4, $5, $6, NOW())
-                 ON CONFLICT DO NOTHING`,
-                [
-                    0, // message_id temporal (se actualizará si se crea thread)
-                    'email',
-                    options.to,
-                    'sent',
-                    'smtp',
-                    result.messageId || `smtp-${Date.now()}`
-                ]
-            );
-
-            console.log(`📝 Correo registrado en Centro de Comunicación`);
-        } catch (dbError) {
-            console.error('⚠️ Error guardando en Centro de Comunicación:', dbError);
-            // No fallar el envío si falla el guardado
+        // ---- 1. Resend SDK (prioritario) ----
+        if ((process.env.RESEND_API_KEY || '').trim()) {
+            const sent = await sendWithResend({
+                to: options.to,
+                subject: options.subject,
+                html: options.html,
+                text: options.text
+            })
+            if (sent) {
+                success = true
+                provider = 'resend'
+            } else {
+                errorMsg = 'Resend falló, intentando fallback...'
+            }
         }
 
-        return true;
+        // ---- 2. Fallback: nodemailer (SendGrid SMTP o SMTP directo) ----
+        if (!success) {
+            const transporter = createTransporter()
+            const fromAddr = (process.env.SENDGRID_FROM_EMAIL || process.env.SMTP_USER || 'noreply@asoperadora.com').trim()
+            const result = await transporter.sendMail({
+                from: `"AS Operadora" <${fromAddr}>`,
+                to: options.to,
+                subject: options.subject,
+                html: options.html,
+                text: options.text || options.subject
+            })
+            success = true
+            provider = (process.env.SENDGRID_API_KEY || '').trim() ? 'sendgrid' : 'smtp'
+            providerMsgId = result.messageId || providerMsgId
+        }
+
+        if (success) {
+            console.log(`✅ Email enviado via ${provider} a: ${options.to}`)
+        }
     } catch (error: any) {
-        console.error(`❌ Error enviando email a ${options.to}:`, error);
-        // Registrar el fallo en message_deliveries para visibilidad en Centro de Comunicación
-        try {
-            const { query } = await import('@/lib/db');
-            await query(
-                `INSERT INTO message_deliveries
-                 (message_id, channel, recipient, status, provider, error_message, sent_at)
-                 VALUES ($1, $2, $3, $4, $5, $6, NOW())
-                 ON CONFLICT DO NOTHING`,
-                [
-                    0,
-                    'email',
-                    options.to,
-                    'failed',
-                    'smtp',
-                    error?.message || 'Error desconocido'
-                ]
-            );
-        } catch { /* silencioso */ }
-        return false;
+        errorMsg = error?.message || 'Error desconocido'
+        console.error(`❌ Error enviando email a ${options.to}:`, errorMsg)
     }
+
+    // ---- Guardar en Centro de Comunicación ----
+    try {
+        const { query } = await import('@/lib/db')
+        await query(
+            `INSERT INTO message_deliveries
+             (message_id, channel, recipient, status, provider, provider_message_id, error_message, sent_at)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())
+             ON CONFLICT DO NOTHING`,
+            [0, 'email', options.to, success ? 'sent' : 'failed', provider, providerMsgId, errorMsg]
+        )
+    } catch { /* silencioso — no fallar el envío por problema de BD */ }
+
+    return success
 };
 
 // Enviar correo de bienvenida
