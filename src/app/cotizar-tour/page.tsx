@@ -387,33 +387,16 @@ function CotizarTourContent() {
                                         <Mail className="w-5 h-5 text-blue-600" />
                                         Datos de contacto
                                     </h3>
-                                    <div className="grid md:grid-cols-2 gap-4">
-                                        <div>
-                                            <label className="block text-sm font-medium mb-2">Nombre *</label>
-                                            <Input
-                                                name="nombre"
-                                                value={formData.nombre}
-                                                onChange={handleChange}
-                                                placeholder="Tu nombre"
-                                                className="h-12"
-                                                required
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm font-medium mb-2">Apellido</label>
-                                            <Input
-                                                name="apellido"
-                                                value={formData.apellido}
-                                                onChange={handleChange}
-                                                placeholder="Tu apellido"
-                                                className="h-12"
-                                            />
-                                        </div>
-                                    </div>
 
-                                    <div className="grid md:grid-cols-2 gap-4 mt-4">
+                                    {/* Email PRIMERO — activa el pre-llenado automático */}
+                                    <div className="grid md:grid-cols-2 gap-4 mb-4">
                                         <div>
-                                            <label className="block text-sm font-medium mb-2">Correo electrónico *</label>
+                                            <label className="block text-sm font-medium mb-2">
+                                                Correo electrónico *
+                                                <span className="text-xs text-blue-500 ml-2 font-normal">
+                                                    (completa primero para autocompletar)
+                                                </span>
+                                            </label>
                                             <Input
                                                 type="email"
                                                 name="correo"
@@ -433,6 +416,30 @@ function CotizarTourContent() {
                                                 value={formData.telefono}
                                                 onChange={handleChange}
                                                 placeholder="10 dígitos"
+                                                className="h-12"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="grid md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-sm font-medium mb-2">Nombre *</label>
+                                            <Input
+                                                name="nombre"
+                                                value={formData.nombre}
+                                                onChange={handleChange}
+                                                placeholder="Tu nombre"
+                                                className="h-12"
+                                                required
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium mb-2">Apellido</label>
+                                            <Input
+                                                name="apellido"
+                                                value={formData.apellido}
+                                                onChange={handleChange}
+                                                placeholder="Tu apellido"
                                                 className="h-12"
                                             />
                                         </div>

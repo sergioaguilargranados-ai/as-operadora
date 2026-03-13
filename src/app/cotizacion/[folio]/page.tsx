@@ -415,9 +415,18 @@ export default function CotizacionTrackingPage({ params }: { params: Promise<{ f
                     {/* ===== PANEL STAFF ===== */}
                     {editing && isStaff && (
                         <Card className="p-6 mb-6 border-2 border-purple-300 bg-purple-50/50 no-print">
-                            <h2 className="text-xl font-bold mb-4 flex items-center gap-2 text-purple-800">
-                                <Shield className="w-5 h-5" />Edición Operativa
-                            </h2>
+                            <div className="flex items-center justify-between mb-4">
+                                <h2 className="text-xl font-bold flex items-center gap-2 text-purple-800">
+                                    <Shield className="w-5 h-5" />Edición Operativa
+                                </h2>
+                                <button
+                                    onClick={() => setEditing(false)}
+                                    className="flex items-center gap-2 text-sm text-gray-500 hover:text-blue-600 transition-colors border border-gray-200 rounded-lg px-3 py-1.5 hover:border-blue-300"
+                                >
+                                    <ArrowLeft className="w-4 h-4" />
+                                    Regresar a la cotización
+                                </button>
+                            </div>
                             <div className="grid md:grid-cols-2 gap-4">
                                 {/* Estado */}
                                 <div>
@@ -516,7 +525,16 @@ export default function CotizacionTrackingPage({ params }: { params: Promise<{ f
                     {/* ===== PANEL CLIENTE ===== */}
                     {editing && !isStaff && canClientEdit && (
                         <Card className="p-6 mb-6 border-2 border-blue-300 bg-blue-50/50 no-print">
-                            <h2 className="text-xl font-bold mb-4 text-blue-800">Editar Solicitud</h2>
+                            <div className="flex items-center justify-between mb-4">
+                                <h2 className="text-xl font-bold text-blue-800">Editar Solicitud</h2>
+                                <button
+                                    onClick={() => setEditing(false)}
+                                    className="flex items-center gap-2 text-sm text-gray-500 hover:text-blue-600 transition-colors border border-gray-200 rounded-lg px-3 py-1.5 hover:border-blue-300"
+                                >
+                                    <ArrowLeft className="w-4 h-4" />
+                                    Regresar a la cotización
+                                </button>
+                            </div>
                             <div className="space-y-4">
                                 <div>
                                     <label className="block text-sm font-medium mb-1">Número de personas</label>
