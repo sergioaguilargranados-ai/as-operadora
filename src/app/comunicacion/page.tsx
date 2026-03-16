@@ -29,9 +29,9 @@ export default function ComunicacionPage() {
   const [filter, setFilter] = useState('all')
   const [searchTerm, setSearchTerm] = useState('')
 
-  // Usuario actual (TODO: obtener de auth)
+  // Centro de Comunicación — vista del equipo interno (agente)
   const currentUserId = 1
-  const userType = 'client' as 'client' | 'agent'
+  const userType = 'agent' as 'client' | 'agent'
   const tenantId = 1
 
   useEffect(() => {

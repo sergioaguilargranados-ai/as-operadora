@@ -207,13 +207,16 @@ export class CommunicationService {
     let sql = `
       SELECT t.*,
              u_client.name as client_name,
-             u_client.email as client_email
+             u_client.email as client_email,
+             u_agent.name as agent_name
       FROM communication_threads t
       LEFT JOIN users u_client ON t.client_id = u_client.id
-      WHERE t.assigned_agent_id = $1 AND t.tenant_id = $2
+      LEFT JOIN users u_agent ON t.assigned_agent_id = u_agent.id
+      WHERE t.tenant_id = $1
     `
-    const params: any[] = [agentId, tenantId]
-    let paramCount = 2
+    // Mostrar todos los del tenant; el agentId se puede usar para filtrar si se desea
+    const params: any[] = [tenantId]
+    let paramCount = 1
 
     if (filters?.status) {
       paramCount++
