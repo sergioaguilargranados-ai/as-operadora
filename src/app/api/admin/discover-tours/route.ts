@@ -5,6 +5,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { pool } from '@/lib/db';
 import * as cheerio from 'cheerio';
+import { verifyAdminAuth } from '@/lib/admin-auth';
 
 // Las 9 categorías de MegaTravel
 const CATEGORIES = [
@@ -31,6 +32,15 @@ export async function GET() {
 // POST: Descubrir tours de una categoría específica o acciones especiales
 export async function POST(request: NextRequest) {
     try {
+        // ========== AUTENTICACIÓN ==========
+        const auth = await verifyAdminAuth(request);
+        if (!auth.authorized) {
+            return NextResponse.json({
+                success: false,
+                error: auth.error
+            }, { status: auth.status });
+        }
+
         const body = await request.json();
         const { action, categoryIndex, discoveredCodes } = body;
 

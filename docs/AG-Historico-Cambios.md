@@ -1,13 +1,49 @@
 # 📋 AG-Histórico de Cambios - AS Operadora
 
-**Última actualización:** 21 de Marzo de 2026 - 13:07 CST  
-**Versión actual:** v2.342  
+**Última actualización:** 07 de Mayo de 2026 - 13:00 CST  
+**Versión actual:** v2.343  
 **Actualizado por:** AntiGravity AI Assistant  
 **Propósito:** Documento maestro del proyecto para trabajo con agentes AntiGravity
 
 ---
 
 ## 📅 HISTORIAL DE CAMBIOS
+
+### v2.343 - 07 de Mayo de 2026 - 13:00 CST
+
+**🚀 Estabilización de Scraping MegaTravel + Resiliencia de Sesión**
+
+**Objetivo:** Resolver errores de "Token Expirado" en procesos largos y unificar la seguridad de las APIs administrativas.
+
+**Cambios Backend:**
+- ✅ **Nueva Utilidad de Auth Admin:** `src/lib/admin-auth.ts` centraliza la validación de tokens y cookies.
+- ✅ **Fallback Robustificado:** El fallback a la cookie `as_user` ahora es más confiable y maneja decodificación URI correctamente, permitiendo que el scraping continúe aunque el JWT expire.
+- ✅ **Google One Tap Mejorado:** Ahora genera y almacena `refreshToken` en la base de datos y `localStorage`, permitiendo la renovación de sesión para usuarios de Google.
+- ✅ **Seguridad Incremental:** Añadida protección de admin a los endpoints `discover-tours` y `rescrape-tour` que estaban públicos.
+- ✅ **Refactorización de APIs:** `megatravel`, `scrape-all`, `discover-tours` y `rescrape-tour` ahora usan la lógica unificada de `verifyAdminAuth`.
+
+**Cambios Frontend:**
+- ✅ **Resiliencia en Scraping:** La página de scraping ya no se detiene ante fallos de renovación de token; intenta continuar usando la sesión persistente y registra logs detallados.
+- ✅ **Logging Detallado:** Mejora en los logs de la consola y de la interfaz para diagnosticar problemas de autenticación en tiempo real.
+- ✅ **Persistencia Google:** `GoogleOneTap.tsx` ahora guarda el `as_refresh` para mantener la paridad con el flujo de login estándar.
+
+**Archivos Modificados:**
+- `src/app/admin/megatravel-scraping/page.tsx`
+- `src/app/api/admin/scrape-all/route.ts`
+- `src/app/api/admin/discover-tours/route.ts`
+- `src/app/api/admin/megatravel/route.ts`
+- `src/app/api/admin/rescrape-tour/route.ts`
+- `src/app/api/auth/google-one-tap/route.ts`
+- `src/components/auth/GoogleOneTap.tsx`
+- `docs/AG-Historico-Cambios.md`
+
+**Archivos Creados:**
+- `src/lib/admin-auth.ts`
+
+**Cifra de Control:**
+- T: 62 | C: 620 (Sin cambios en estructura de tablas)
+
+---
 
 ### v2.342 - 21 de Marzo de 2026 - 13:07 CST
 

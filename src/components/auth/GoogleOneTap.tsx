@@ -94,6 +94,9 @@ export default function GoogleOneTap() {
                 // Guardar en localStorage (mismo formato que AuthContext)
                 localStorage.setItem('as_user', JSON.stringify(data.user));
                 localStorage.setItem('as_token', data.token);
+                if (data.refreshToken) {
+                    localStorage.setItem('as_refresh', data.refreshToken);
+                }
                 // Guardar cookies para el middleware
                 const expires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toUTCString();
                 document.cookie = `as_user=${encodeURIComponent(JSON.stringify({ id: data.user.id, email: data.user.email, role: data.user.role || 'CLIENT' }))};expires=${expires};path=/;samesite=lax`;

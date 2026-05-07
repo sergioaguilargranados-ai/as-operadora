@@ -6,6 +6,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { pool } from '@/lib/db';
+import { verifyAdminAuth } from '@/lib/admin-auth';
 
 /**
  * GET /api/admin/rescrape-tour?code=MT-60968
@@ -13,6 +14,14 @@ import { pool } from '@/lib/db';
  */
 export async function GET(request: NextRequest) {
     try {
+        const auth = await verifyAdminAuth(request);
+        if (!auth.authorized) {
+            return NextResponse.json({
+                success: false,
+                error: auth.error
+            }, { status: auth.status });
+        }
+
         const { searchParams } = new URL(request.url);
         const code = searchParams.get('code');
 
@@ -97,6 +106,14 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
     try {
+        const auth = await verifyAdminAuth(request);
+        if (!auth.authorized) {
+            return NextResponse.json({
+                success: false,
+                error: auth.error
+            }, { status: auth.status });
+        }
+
         const { searchParams } = new URL(request.url);
         const code = searchParams.get('code');
 

@@ -110,7 +110,10 @@ export default function MegaTravelScrapingPage() {
     const autoRefreshToken = async (): Promise<boolean> => {
         try {
             const storedRefresh = localStorage.getItem('as_refresh');
-            if (!storedRefresh) return false;
+            if (!storedRefresh) {
+                console.warn('AdminScraping: No hay refresh token en localStorage');
+                return false;
+            }
 
             const res = await fetch('/api/auth/refresh', {
                 method: 'POST',
@@ -124,9 +127,12 @@ export default function MegaTravelScrapingPage() {
                 const expires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toUTCString();
                 document.cookie = `as_token=${encodeURIComponent(data.data.accessToken)};expires=${expires};path=/;samesite=lax`;
                 return true;
+            } else {
+                console.error('AdminScraping: Falló refresh token API:', data.error || 'Unknown error');
+                return false;
             }
-            return false;
-        } catch {
+        } catch (e: any) {
+            console.error('AdminScraping: Error en autoRefreshToken:', e.message);
             return false;
         }
     };
@@ -341,10 +347,10 @@ export default function MegaTravelScrapingPage() {
                 if (!response.ok) {
                     if (response.status === 401) {
                         // Intentar refrescar el token y reintentar
-                        addLog('⚠️ Token expirado, renovando...');
+                        addLog('⚠️ Sesión expirada (401), intentando renovar...');
                         const refreshed = await autoRefreshToken();
                         if (refreshed) {
-                            addLog('🔄 Token renovado, reintentando batch...');
+                            addLog('🔄 Sesión renovada, reintentando batch...');
                             // Reintentar el mismo batch
                             const retryRes = await fetch('/api/admin/scrape-all', {
                                 method: 'POST',
@@ -358,10 +364,23 @@ export default function MegaTravelScrapingPage() {
                                 if (retryData.success) {
                                     const batchSuccess = retryData.results.filter((r: any) => r.status === 'success').length;
                                     const batchErrors = retryData.results.filter((r: any) => r.status === 'error').length;
+                                    const batchDeprecated = retryData.results.filter((r: any) => r.status === 'deprecated').length;
+                                    
                                     totalProcessed += retryData.processed;
                                     totalSuccess += batchSuccess;
                                     totalErrors += batchErrors;
-                                    addLog(`   ✅ ${batchSuccess} OK | ❌ ${batchErrors} errores`);
+                                    totalDeprecated += batchDeprecated;
+
+                                    addLog(`   ✅ Retry OK: ${batchSuccess} OK | ❌ ${batchErrors} errores`);
+                                    
+                                    // Sumar métricas detalladas
+                                    retryData.results.forEach((r: any) => {
+                                        if (r.status === 'success') {
+                                            totalItinerary += r.itinerary || 0;
+                                            totalIncludes += r.includes || 0;
+                                            totalNotIncludes += r.not_includes || 0;
+                                        }
+                                    });
                                 }
                                 offset += BATCH_SIZE;
                                 setProgress(50 + Math.min(Math.round((offset / total) * 50), 50));
@@ -369,12 +388,22 @@ export default function MegaTravelScrapingPage() {
                                     await new Promise(resolve => setTimeout(resolve, 5000));
                                 }
                                 continue;
+                            } else {
+                                addLog(`❌ El reintento falló con status ${retryRes.status}.`);
                             }
+                        } else {
+                            addLog('⚠️ No se pudo renovar vía refresh token. Intentando continuar vía fallback de cookie...');
+                            // Si no hay refresh token, tal vez el fallback de as_user funcione en el siguiente tour
+                            // No detenemos el proceso completo, solo saltamos este batch o intentamos el siguiente
                         }
-                        addLog('❌ No se pudo renovar la sesión. Reanuda después de iniciar sesión.');
-                        return;
+                    } else {
+                        addLog(`❌ Error HTTP ${response.status} en batch ${batchNumber}`);
                     }
-                    throw new Error(`HTTP ${response.status}`);
+                    
+                    // Si llegamos aquí es que falló y no pudimos recuperar este batch
+                    totalErrors += BATCH_SIZE;
+                    offset += BATCH_SIZE;
+                    continue;
                 }
 
                 const data = await response.json();

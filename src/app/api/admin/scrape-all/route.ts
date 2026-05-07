@@ -4,7 +4,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { MegaTravelScrapingService } from '@/services/MegaTravelScrapingService';
-import { verifyToken } from '@/services/AuthService';
+import { verifyAdminAuth } from '@/lib/admin-auth';
 import { pool } from '@/lib/db';
 import { cookies } from 'next/headers';
 
@@ -17,91 +17,12 @@ const ALLOWED_ROLES = ['SUPER_ADMIN', 'ADMIN'];
 export async function POST(request: NextRequest) {
     try {
         // ========== AUTENTICACIÓN ==========
-        // Método 1: Cookie de sesión (JWT)
-        const cookieStore = await cookies();
-        const tokenCookie = cookieStore.get('as_token');
-
-        // Método 2: Authorization header (para cron/API calls)
-        const authHeader = request.headers.get('authorization');
-
-        // Método 3: Admin secret key (legacy)
-        const adminSecret = process.env.ADMIN_SECRET_KEY;
-
-        let authenticated = false;
-
-        // Intentar con cookie JWT primero
-        if (tokenCookie?.value) {
-            try {
-                const decoded = await verifyToken(tokenCookie.value);
-                if (decoded && ALLOWED_ROLES.includes(decoded.role)) {
-                    authenticated = true;
-                }
-            } catch (e) {
-                // Cookie JWT expirada o inválida, intentar otras formas
-            }
-        }
-
-        // Intentar con Bearer token
-        if (!authenticated && authHeader) {
-            const token = authHeader.replace('Bearer ', '');
-
-            // Verificar si es el CRON_SECRET
-            if (token === process.env.CRON_SECRET) {
-                authenticated = true;
-            }
-            // Verificar si es ADMIN_SECRET_KEY (legacy)
-            else if (adminSecret && token === adminSecret) {
-                authenticated = true;
-            }
-            // Verificar como JWT
-            else {
-                try {
-                    const decoded = await verifyToken(token);
-                    if (decoded && ALLOWED_ROLES.includes(decoded.role)) {
-                        authenticated = true;
-                    }
-                } catch (e) {
-                    // Token inválido
-                }
-            }
-        }
-
-        // Método 4: Fallback - cookie as_user verificada contra BD
-        // Esto permite que procesos largos (scraping) continúen aunque el JWT expire
-        if (!authenticated) {
-            const userCookie = cookieStore.get('as_user');
-            if (userCookie?.value) {
-                try {
-                    // Intentar decodificar el valor (puede venir con o sin encodeURIComponent)
-                    let rawValue = userCookie.value;
-                    try { rawValue = decodeURIComponent(rawValue); } catch { /* ya estaba sin encode */ }
-                    const userData = JSON.parse(rawValue);
-                    if (userData.email && userData.id) {
-                        // Verificar contra la BD que el usuario existe y tiene rol admin
-                        const userCheck = await pool.query(
-                            'SELECT id, role FROM users WHERE id = $1 AND email = $2 LIMIT 1',
-                            [userData.id, userData.email]
-                        );
-                        if (userCheck.rows.length > 0 && ALLOWED_ROLES.includes(userCheck.rows[0].role)) {
-                            authenticated = true;
-                            console.log(`🔑 Scrape-all auth via as_user cookie fallback: ${userData.email} (role: ${userCheck.rows[0].role})`);
-                        } else {
-                            console.warn(`⚠️ Scrape-all: as_user cookie encontrada pero usuario no tiene rol admin. Email: ${userData.email}`);
-                        }
-                    }
-                } catch (e: any) {
-                    console.error(`❌ Scrape-all: Error parseando as_user cookie:`, e?.message);
-                }
-            } else {
-                console.warn('⚠️ Scrape-all: No hay cookie as_token, as_user ni Authorization header válidos');
-            }
-        }
-
-        if (!authenticated) {
+        const auth = await verifyAdminAuth(request);
+        if (!auth.authorized) {
             return NextResponse.json({
                 success: false,
-                error: 'No autorizado'
-            }, { status: 401 });
+                error: auth.error
+            }, { status: auth.status });
         }
 
         // ========== OBTENER PARÁMETROS ==========

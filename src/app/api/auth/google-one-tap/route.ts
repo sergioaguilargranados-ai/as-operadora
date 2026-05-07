@@ -78,7 +78,7 @@ export async function POST(request: NextRequest) {
         }
 
         // Generar JWT para la sesión (usando JWT_SECRET del proyecto)
-        const token = sign(
+        const accessToken = sign(
             {
                 id: user.id,
                 email: user.email,
@@ -86,7 +86,33 @@ export async function POST(request: NextRequest) {
                 role: user.role || 'EMPLOYEE'
             },
             process.env.JWT_SECRET!,
-            { expiresIn: '30d' }
+            { expiresIn: '15m' } // 15 minutos para consistencia
+        );
+
+        // Generar refresh token (7 días)
+        const refreshToken = sign(
+            {
+                id: user.id,
+                email: user.email,
+                type: 'refresh'
+            },
+            process.env.JWT_SECRET!,
+            { expiresIn: '7d' }
+        );
+
+        // Almacenar en la BD para que /api/auth/refresh lo reconozca
+        await query(
+            `INSERT INTO refresh_tokens (user_id, token, expires_at)
+             VALUES ($1, $2, NOW() + INTERVAL '7 days')
+             ON CONFLICT (token) DO NOTHING`,
+            [user.id, refreshToken]
+        );
+
+        // Crear sesión activa
+        await query(
+            `INSERT INTO active_sessions (user_id, session_token, expires_at, is_active)
+             VALUES ($1, $2, NOW() + INTERVAL '7 days', true)`,
+            [user.id, refreshToken]
         );
 
         return NextResponse.json({
@@ -100,7 +126,8 @@ export async function POST(request: NextRequest) {
                 memberSince: user.created_at || new Date().toISOString(),
                 avatar_url: user.avatar_url || payload.picture
             },
-            token
+            token: accessToken,
+            refreshToken
         });
 
     } catch (error) {

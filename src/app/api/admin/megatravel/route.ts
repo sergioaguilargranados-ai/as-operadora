@@ -3,60 +3,12 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { MegaTravelSyncService } from '@/services/MegaTravelSyncService';
-import { verifyToken } from '@/services/AuthService';
-import { cookies } from 'next/headers';
-
+import { verifyAdminAuth } from '@/lib/admin-auth';
 import { pool } from '@/lib/db';
 
 // Roles permitidos para acceder a esta API
 const ALLOWED_ROLES = ['SUPER_ADMIN', 'ADMIN'];
 
-/**
- * Verificar autenticación de admin
- * Soporta: JWT cookie, Authorization header, y fallback as_user cookie + BD
- */
-async function verifyAdminAuth(request: NextRequest): Promise<{ authorized: boolean; user?: any; error?: string }> {
-    try {
-        const cookieStore = await cookies();
-        const tokenCookie = cookieStore.get('as_token');
-        const authHeader = request.headers.get('Authorization');
-
-        const token = tokenCookie?.value || authHeader?.replace('Bearer ', '');
-
-        if (token) {
-            try {
-                const decoded = await verifyToken(token);
-                if (decoded && ALLOWED_ROLES.includes(decoded.role)) {
-                    return { authorized: true, user: decoded };
-                }
-            } catch {
-                // JWT expirado o inválido, intentar fallback
-            }
-        }
-
-        // Fallback: cookie as_user verificada contra BD
-        const userCookie = cookieStore.get('as_user');
-        if (userCookie?.value) {
-            try {
-                const userData = JSON.parse(decodeURIComponent(userCookie.value));
-                if (userData.email && userData.id) {
-                    const userCheck = await pool.query(
-                        'SELECT id, email, role FROM users WHERE id = $1 AND email = $2 LIMIT 1',
-                        [userData.id, userData.email]
-                    );
-                    if (userCheck.rows.length > 0 && ALLOWED_ROLES.includes(userCheck.rows[0].role)) {
-                        return { authorized: true, user: userCheck.rows[0] };
-                    }
-                }
-            } catch { /* cookie inválida */ }
-        }
-
-        return { authorized: false, error: 'No autorizado' };
-    } catch (error) {
-        console.error('Auth error:', error);
-        return { authorized: false, error: 'Error de autenticación' };
-    }
-}
 
 /**
  * GET /api/admin/megatravel
@@ -69,7 +21,7 @@ export async function GET(request: NextRequest) {
             return NextResponse.json({
                 success: false,
                 error: { message: auth.error }
-            }, { status: 401 });
+            }, { status: auth.status });
         }
 
         const searchParams = request.nextUrl.searchParams;
@@ -146,12 +98,13 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
     try {
+        // ========== AUTENTICACIÓN ==========
         const auth = await verifyAdminAuth(request);
         if (!auth.authorized) {
             return NextResponse.json({
                 success: false,
                 error: { message: auth.error }
-            }, { status: 401 });
+            }, { status: auth.status });
         }
 
         const body = await request.json().catch(() => ({}));
