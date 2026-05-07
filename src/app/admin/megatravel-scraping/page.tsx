@@ -6,6 +6,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
+import { Eye, EyeOff, Sparkles } from 'lucide-react';
 
 export default function MegaTravelScrapingPage() {
     const { user } = useAuth();
@@ -631,6 +632,52 @@ export default function MegaTravelScrapingPage() {
             : currentPhase === 'done' ? '✅ Completado'
                 : '';
 
+    // Componente de Configuración de Sesión
+    const SessionHardening = () => {
+        const [showSecret, setShowSecret] = useState(false);
+        const [secret, setSecret] = useState(typeof window !== 'undefined' ? (localStorage.getItem('as_admin_secret') || '') : '');
+
+        const saveSecret = () => {
+            if (secret) {
+                localStorage.setItem('as_admin_secret', secret);
+                alert('✅ Clave de sesión guardada. Se usará como respaldo para evitar errores 401.');
+            } else {
+                localStorage.removeItem('as_admin_secret');
+                alert('ℹ️ Clave eliminada.');
+            }
+        };
+
+        return (
+            <div className="bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800 rounded-xl p-4 mb-6">
+                <div className="flex items-center gap-2 text-amber-800 dark:text-amber-300 font-semibold mb-2 text-sm">
+                    <Sparkles className="w-4 h-4" />
+                    <span>Respaldo de Sesión (v2.345)</span>
+                </div>
+                <div className="flex gap-2">
+                    <input 
+                        type={showSecret ? "text" : "password"}
+                        placeholder="ADMIN_SECRET_KEY (opcional)"
+                        value={secret}
+                        onChange={(e) => setSecret(e.target.value)}
+                        className="flex-1 bg-white dark:bg-gray-900 border border-amber-200 dark:border-amber-800 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-500/20"
+                    />
+                    <button 
+                        onClick={() => setShowSecret(!showSecret)}
+                        className="px-3 py-2 border border-amber-200 dark:border-amber-800 rounded-lg hover:bg-amber-100 dark:hover:bg-amber-900/30 transition-colors"
+                    >
+                        {showSecret ? <EyeOff className="w-4 h-4 text-amber-700" /> : <Eye className="w-4 h-4 text-amber-700" />}
+                    </button>
+                    <button 
+                        onClick={saveSecret}
+                        className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-sm font-medium transition-colors"
+                    >
+                        Guardar
+                    </button>
+                </div>
+            </div>
+        );
+    };
+
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4 md:p-8">
             <div className="max-w-6xl mx-auto">
@@ -663,6 +710,8 @@ export default function MegaTravelScrapingPage() {
                         </div>
                     </div>
                 </div>
+
+                <SessionHardening />
 
                 {/* Stats Cards */}
                 <div className="grid grid-cols-3 md:grid-cols-5 lg:grid-cols-9 gap-3 mb-6">
@@ -827,7 +876,7 @@ export default function MegaTravelScrapingPage() {
 
                 {/* Footer */}
                 <div className="text-center text-xs text-gray-400 mt-6 py-4">
-                    v2.344 | 07 May 2026 14:00 | AS Operadora — Panel MegaTravel
+                    v2.345 | 07 May 2026 14:05 | AS Operadora — Panel MegaTravel
                 </div>
             </div>
         </div>

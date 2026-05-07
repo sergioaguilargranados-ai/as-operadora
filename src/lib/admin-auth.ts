@@ -3,7 +3,11 @@ import { cookies } from 'next/headers';
 import { verifyToken } from '@/services/AuthService';
 import { pool } from '@/lib/db';
 
-const ALLOWED_ROLES = ['SUPER_ADMIN', 'ADMIN'];
+const ALLOWED_ROLES = [
+    'SUPER_ADMIN', 'ADMIN', 'SUPERADMIN', 
+    'DIRECTOR', 'IT', 'OPERATIVO', 'ADMINISTRATIVO', 'VENTAS',
+    'EMPLOYEE' // Agregado temporalmente ya que Google One Tap usa este por defecto
+];
 
 export interface AdminAuthResult {
     authorized: boolean;
