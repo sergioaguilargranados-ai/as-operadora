@@ -16,6 +16,14 @@ import {
 } from "lucide-react"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
 
 interface Activity {
   time: string
@@ -59,6 +67,8 @@ interface Proposal {
   status: string
   start_date: string
   duration_nights: number
+  num_adults: number
+  num_children: number
   budget_total: number
   budget_currency: string
   captured_fields: any
@@ -259,7 +269,7 @@ export default function TripProposalEditorPage() {
                         <label className="text-xs font-bold text-muted-foreground italic flex items-center gap-1">
                           <MapPin className="w-3 h-3"/> Ciudad
                         </label>
-                        <Input value={day.city} bsSize="sm" className="h-8 text-sm" />
+                        <Input value={day.city} className="h-8 text-sm" />
                       </div>
                       <div className="space-y-1.5">
                         <label className="text-xs font-bold text-muted-foreground italic flex items-center gap-1">

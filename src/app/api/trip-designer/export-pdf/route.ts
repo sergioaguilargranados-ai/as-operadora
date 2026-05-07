@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
     // 4. Retornar como PDF
     return new NextResponse(pdfOutput, {
       headers: {
-        'Content-Type': 'application/json', // Lo enviamos como JSON base64 o Blob? 
+        'Content-Type': 'application/pdf',
                                           // Mejor como PDF directo
         'Content-Disposition': `attachment; filename="Itinerario-${proposal.folio}.pdf"`,
         'Access-Control-Expose-Headers': 'Content-Disposition'

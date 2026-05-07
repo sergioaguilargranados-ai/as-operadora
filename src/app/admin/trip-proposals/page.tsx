@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { 
   Search, Filter, Calendar, MapPin, 
-  Sparkles, Eye, MessageSquare, MoreVertical 
+  Sparkles, Eye, MessageSquare, MoreVertical, Loader2
 } from "lucide-react"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
