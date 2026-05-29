@@ -61,3 +61,5 @@ uploads/
 # Drive temp files
 .tmp.drive*
 
+# Obsolete files moved during cleanup
+scratch/_obsolete/

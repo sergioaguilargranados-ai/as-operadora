@@ -3,14 +3,10 @@
  * Configuración global para todos los tests
  */
 
-import '@testing-library/jest-dom'
-import { expect, afterEach, vi } from 'vitest'
-import { cleanup } from '@testing-library/react'
+import { vi } from 'vitest'
 
-// Cleanup después de cada test
-afterEach(() => {
-  cleanup()
-})
+// Cleanup no es necesario para Node.js services
+// Eliminar mocks de DOM que fallaban
 
 // Mock de variables de entorno
 process.env.NEXT_PUBLIC_APP_URL = 'http://localhost:3000'
@@ -19,11 +15,3 @@ process.env.ENCRYPTION_SECRET_KEY = 'test-encryption-key-32-chars-long!'
 
 // Mock de fetch global
 global.fetch = vi.fn()
-
-// Mock de console para tests más limpios
-global.console = {
-  ...console,
-  error: vi.fn(),
-  warn: vi.fn(),
-  log: vi.fn()
-}

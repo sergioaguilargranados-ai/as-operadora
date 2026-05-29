@@ -1,16 +1,17 @@
-# 🌎 AS OPERADORA - Sistema de Gestión de Viajes y Eventos
+# 🌎 AS OPERADORA — Sistema de Gestión de Viajes y Eventos
 
-**Última actualización:** 04 de Enero de 2026 - 23:55 CST
-**Versión:** v2.174
-**Actualizado por:** AI Assistant
+**Última actualización:** 28 de Mayo de 2026  
+**Versión:** v2.344  
+**Actualizado por:** Equipo Antigravity + Amadeus Group
 
-![Version](https://img.shields.io/badge/version-2.173-blue.svg)
+![Version](https://img.shields.io/badge/version-2.344-blue.svg)
 ![Production](https://img.shields.io/badge/live-app.asoperadora.com-success.svg)
 ![Status](https://img.shields.io/badge/status-production--live-green.svg)
-![Deploy](https://img.shields.io/badge/deploy-vercel--success-brightgreen.svg)
-![Progress](https://img.shields.io/badge/progress-96%25-brightgreen.svg)
+![Deploy](https://img.shields.io/badge/deploy-vercel-brightgreen.svg)
+![PWA](https://img.shields.io/badge/PWA-ready-blueviolet.svg)
+![Multi--Tenant](https://img.shields.io/badge/multi--tenant-white--label-orange.svg)
 
-> **Sistema completo de gestión de viajes corporativos con módulos de pagos, seguridad, documentos y reportes avanzados**
+> **Plataforma SaaS multi-tenant de gestión de viajes con CRM, RRHH, tours MegaTravel, sistema de comisiones, PWA y arquitectura White-Label.**
 
 ---
 
@@ -19,170 +20,208 @@
 | Servicio | URL | Descripción |
 |----------|-----|-------------|
 | 🌐 **Producción** | [app.asoperadora.com](https://app.asoperadora.com) | Aplicación en vivo (Vercel) |
-| 💻 **Desarrollo** | [localhost:3000](http://localhost:3000) | Entorno local (SAME) |
+| 🏷️ **White-Label** | [mmta.app.asoperadora.com](https://mmta.app.asoperadora.com) | Tenant M&M Travel Agency |
+| 💻 **Desarrollo** | [localhost:3000](http://localhost:3000) | Entorno local |
 | 📂 **Repositorio** | [GitHub](https://github.com/sergioaguilargranados-ai/operadora-dev) | Código fuente |
-| 🗄️ **Base de datos** | Neon PostgreSQL | ep-green-sky-afxrsbva... |
+| 🗄️ **Base de datos** | Neon PostgreSQL | Serverless con branching |
 
-**🚀 Flujo de trabajo:** SAME → GitHub (push automático) → Vercel (deploy automático) → app.asoperadora.com
+**🚀 Flujo:** Código → GitHub → Vercel (auto-deploy) → app.asoperadora.com
 
 ---
 
 ## 📋 Tabla de Contenidos
 
-- [Características Principales](#-características-principales)
+- [Arquitectura](#-arquitectura)
+- [Módulos del Sistema](#-módulos-del-sistema)
 - [Tecnologías](#-tecnologías)
-- [Instalación Rápida](#-instalación-rápida)
+- [Instalación](#-instalación-rápida)
 - [Configuración](#-configuración)
 - [Estructura del Proyecto](#-estructura-del-proyecto)
-- [Módulos](#-módulos)
 - [API Documentation](#-api-documentation)
 - [Testing](#-testing)
 - [Deployment](#-deployment)
-- [Seguridad](#-seguridad)
-- [Contribuir](#-contribuir)
-- [Licencia](#-licencia)
+- [Documentación Técnica](#-documentación-técnica)
 
 ---
 
-## ✨ Características Principales
+## 🏗 Arquitectura
 
-### 🏢 **Sistema Corporativo Completo (100%)**
-- ✅ Dashboard con estadísticas en tiempo real
-- ✅ Workflow de aprobaciones multi-nivel
-- ✅ Gestión de empleados y departamentos
-- ✅ Políticas de viaje configurables
-- ✅ Reportes avanzados con filtros
-- ✅ Centro de costos
-- ✅ Exportación Excel/PDF
+```
+┌─────────────────────────────────────────────────────┐
+│                   FRONTEND (Next.js 15)              │
+│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌────────┐ │
+│  │Dashboard │ │  Tours   │ │   CRM    │ │  RRHH  │ │
+│  │Corporate │ │ Catálogo │ │ Clientes │ │Empleado│ │
+│  └──────────┘ └──────────┘ └──────────┘ └────────┘ │
+├─────────────────────────────────────────────────────┤
+│           MIDDLEWARE (Edge — Tenant Detection)       │
+├─────────────────────────────────────────────────────┤
+│                API ROUTES (Next.js App Router)       │
+│  ┌─────────┐ ┌──────────┐ ┌──────────┐ ┌────────┐ │
+│  │  Auth   │ │ Bookings │ │ Payments │ │  Cron  │ │
+│  │Google+  │ │ Quotes   │ │Stripe/PP │ │ Jobs   │ │
+│  └─────────┘ └──────────┘ └──────────┘ └────────┘ │
+├─────────────────────────────────────────────────────┤
+│              SERVICES (42 servicios)                 │
+│  TenantService • CRMService • HRService • etc.     │
+├─────────────────────────────────────────────────────┤
+│              DATABASE (Neon PostgreSQL)              │
+│  60+ tablas • Multi-tenant • Row-level isolation    │
+└─────────────────────────────────────────────────────┘
+```
 
-### 💳 **Sistema de Pagos (90%)**
-- ✅ Integración Stripe (tarjetas de crédito/débito)
-- ✅ Integración PayPal
-- ✅ Webhooks automáticos
-- ✅ Reembolsos
-- ✅ Subscripciones recurrentes
-- ✅ Dashboard de transacciones
-- ✅ Conciliación bancaria
+### Multi-Tenant / White-Label
+- **Detección automática** por `custom_domain` o slug del `company_name`
+- **Personalización**: colores, logo, favicon, slogan, markup de precios
+- **Contexto**: `WhiteLabelContext` → inyecta branding al frontend
+- **Aislamiento**: `tenant_id` en todas las tablas de datos
 
-### 🔐 **Seguridad Avanzada (95%)**
-- ✅ Encriptación AES-256 para datos sensibles
-- ✅ URLs firmadas con expiración
-- ✅ Rate limiting por IP
-- ✅ CORS estricto
-- ✅ Content Security Policy (CSP)
-- ✅ Sanitización de inputs (XSS, SQL injection)
-- ✅ Audit logs completos
-- ✅ Autenticación JWT
+---
 
-### 📄 **Gestión de Documentos (90%)**
-- ✅ Upload seguro a Vercel Blob
-- ✅ Validación de tipo y tamaño
-- ✅ URLs temporales firmadas
-- ✅ Soporte: JPG, PNG, WEBP, PDF
-- ✅ Audit logs automáticos
+## ✨ Módulos del Sistema
 
-### ✈️ **Búsqueda y Reservas (80%)**
-- ✅ Búsqueda multi-proveedor
-- ✅ Vuelos, hoteles, paquetes
-- ✅ Filtros avanzados
-- ✅ Validación de políticas en tiempo real
-- ✅ Sistema de favoritos
+### 🏢 Corporativo (100%)
+- Dashboard con KPIs en tiempo real
+- Workflow de aprobaciones multi-nivel
+- Gestión de empleados y departamentos
+- Políticas de viaje configurables
+- Reportes y exportación Excel/PDF
+
+### 🗺️ Tours MegaTravel (100%)
+- **325 paquetes** sincronizados vía scraping
+- Itinerarios completos (scraping Cheerio + Puppeteer)
+- Catálogo con sidebar de filtros (país, ciudad, precio, duración, región)
+- Detalle con itinerario día a día, includes, galería
+- Cotización vía WhatsApp/email
+- Sincronización automática vía cron (`/api/cron/megatravel-sync`)
+
+### 📧 Centro de Comunicación (100%)
+- **14 templates HTML** de email (bienvenida, reserva, pago, etc.)
+- **3 proveedores** con fallback: Resend → SendGrid → SMTP
+- 3 cron jobs: recordatorios cotización, pre-viaje, encuesta post-viaje
+- Registro en `message_deliveries` (Centro de Comunicación)
+
+### 🏷️ White-Label / Multi-Empresa (100%)
+- Tenant AS Operadora (corporate) + M&M Travel Agency (agency)
+- `white_label_config`: colores, markup, meta tags, soporte
+- Sistema de comisiones por agencia
+- Solicitudes de agencia (`agency_applications`)
+- Dashboard de agencia y dashboard de agente
+
+### 👥 CRM (95%)
+- Pipeline de leads con etapas Kanban
+- Seguimiento de actividades y tareas
+- Campañas de marketing
+- Métricas y reportes
+- IA predictiva y scoring
+- Integraciones WhatsApp/SMS
+
+### 👨‍💼 RRHH (90%)
+- Directorio de empleados multi-tipo (administrativo, agente, guía)
+- Contratos laborales con vencimiento
+- Solicitudes de ausencia/vacaciones
+- Documentos de empleado con alertas de vencimiento
+- Licencias de agente con seguimiento
+- Cron de alertas automáticas (`/api/cron/hr-alerts`)
+
+### 💳 Pagos (90%)
+- Stripe (tarjetas crédito/débito)
+- PayPal
+- MercadoPago
+- Webhooks automáticos
+- Dashboard de transacciones
+
+### 🔐 Seguridad (95%)
+- Encriptación AES-256
+- JWT + Google OAuth + One-Tap
+- Rate limiting por IP
+- CORS + CSP + HSTS
+- Sanitización de inputs
+- Audit logs completos
+
+### 📱 PWA (100% infraestructura)
+- `manifest.json` con shortcuts y iconos
+- Service Worker con estrategias Network-First / Cache-First
+- Componentes: `InstallPrompt`, `OfflineIndicator`
+- Página `/offline` para uso sin conexión
+- Meta tags iOS (apple-touch-icon, status-bar)
+
+### 📄 Documentos (90%)
+- Upload seguro a Vercel Blob
+- URLs firmadas con expiración
+- Soporte: JPG, PNG, WEBP, PDF
+- Documentos de clientes y empleados
 
 ---
 
 ## 🛠 Tecnologías
 
-### **Frontend**
-- [Next.js 15](https://nextjs.org/) - App Router
-- [React 18](https://react.dev/) - UI Library
-- [TypeScript](https://www.typescriptlang.org/) - Type Safety
-- [Tailwind CSS](https://tailwindcss.com/) - Styling
-- [shadcn/ui](https://ui.shadcn.com/) - UI Components
-- [Recharts](https://recharts.org/) - Charts & Analytics
+### Frontend
+| Tecnología | Uso |
+|---|---|
+| Next.js 15 | App Router, SSR, Edge |
+| React 18 | UI Library |
+| TypeScript | Type Safety |
+| Tailwind CSS | Styling |
+| shadcn/ui | UI Components |
+| Framer Motion | Animaciones |
+| Recharts | Gráficas y analytics |
 
-### **Backend**
-- [Next.js API Routes](https://nextjs.org/docs/app/building-your-application/routing/route-handlers) - RESTful APIs
-- [PostgreSQL](https://www.postgresql.org/) - Database (Neon)
-- [Bun](https://bun.sh/) - Package Manager & Runtime
+### Backend
+| Tecnología | Uso |
+|---|---|
+| Next.js API Routes | RESTful APIs |
+| PostgreSQL (Neon) | Base de datos serverless |
+| Edge Runtime | Middleware tenant detection |
 
-### **Integraciones**
-- [Stripe](https://stripe.com/) - Procesamiento de pagos
-- [PayPal](https://www.paypal.com/) - Pagos alternativos
-- [Vercel Blob](https://vercel.com/docs/storage/vercel-blob) - Almacenamiento de documentos
-- [SendGrid](https://sendgrid.com/) - Emails transaccionales
-- [Amadeus API](https://developers.amadeus.com/) - Búsqueda de vuelos
-
-### **Seguridad**
-- AES-256 Encryption
-- JWT Authentication
-- Rate Limiting
-- CORS & CSP Headers
-- Input Sanitization
-- Audit Logging
-
-### **Testing**
-- [Vitest](https://vitest.dev/) - Unit Testing
-- [@testing-library/react](https://testing-library.com/) - Component Testing
-- Happy DOM - DOM Testing
+### Integraciones
+| Servicio | Uso |
+|---|---|
+| Stripe | Pagos con tarjeta |
+| PayPal | Pagos alternativos |
+| MercadoPago | Pagos LATAM |
+| Resend / SendGrid | Emails transaccionales |
+| Vercel Blob | Almacenamiento documentos |
+| Google OAuth | Autenticación social |
+| MegaTravel | Catálogo de tours (scraping) |
+| Civitatis | Tours opcionales |
+| Facturama | Facturación electrónica (preparado) |
 
 ---
 
 ## 🚀 Instalación Rápida
 
-### **Requisitos Previos**
-- Node.js 18.17 o superior
-- Bun 1.0 o superior (recomendado)
-- PostgreSQL 14 o superior (Neon recomendado)
+### Requisitos Previos
+- Node.js 18.17+
+- npm 9+ (o bun)
+- PostgreSQL (Neon recomendado)
 - Git
 
-### **Paso 1: Clonar Repositorio**
+### Paso 1: Clonar
 ```bash
-git clone https://github.com/tu-usuario/asoperadora.git
-cd asoperadora
+git clone https://github.com/sergioaguilargranados-ai/operadora-dev.git
+cd operadora-dev
 ```
 
-### **Paso 2: Instalar Dependencias**
+### Paso 2: Instalar Dependencias
 ```bash
-bun install
-# o
 npm install
 ```
 
-### **Paso 3: Configurar Variables de Entorno**
+### Paso 3: Configurar Variables
 ```bash
 cp .env.example .env.local
+# Editar .env.local con tus credenciales
 ```
 
-Edita `.env.local` con tus credenciales:
+### Paso 4: Ejecutar Migraciones
 ```bash
-# Base de Datos (OBLIGATORIO)
-DATABASE_URL=postgresql://user:password@host:5432/database
-
-# Seguridad (OBLIGATORIO)
-JWT_SECRET=<genera-con-openssl-rand-base64-32>
-ENCRYPTION_SECRET_KEY=<genera-con-openssl-rand-base64-32>
-
-# Stripe (OBLIGATORIO para pagos)
-NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_...
-STRIPE_SECRET_KEY=sk_test_...
-STRIPE_WEBHOOK_SECRET=whsec_...
-
-# Vercel Blob (OBLIGATORIO para documentos)
-BLOB_READ_WRITE_TOKEN=vercel_blob_rw_...
+# Las migraciones están en migrations/ (001 a 043)
+node scripts/ejecutar-migraciones.js
 ```
 
-### **Paso 4: Ejecutar Migraciones**
+### Paso 5: Iniciar
 ```bash
-psql $DATABASE_URL -f migrations/001_initial_schema.sql
-psql $DATABASE_URL -f migrations/002_cost_centers.sql
-psql $DATABASE_URL -f migrations/003_payment_transactions.sql
-psql $DATABASE_URL -f migrations/004_documents.sql
-```
-
-### **Paso 5: Iniciar Servidor de Desarrollo**
-```bash
-bun dev
-# o
 npm run dev
 ```
 
@@ -192,21 +231,35 @@ Abre [http://localhost:3000](http://localhost:3000) 🎉
 
 ## ⚙️ Configuración
 
-### **Configuración Completa**
+### Variables Críticas (`.env.local`)
 
-Ver [`.same/SETUP-COMPLETO.md`](.same/SETUP-COMPLETO.md) para instrucciones detalladas.
+```bash
+# Base de Datos (OBLIGATORIO)
+DATABASE_URL=postgresql://...
 
-### **Servicios Externos Requeridos**
+# Autenticación (OBLIGATORIO)
+JWT_SECRET=...
+NEXTAUTH_SECRET=...
+GOOGLE_CLIENT_ID=...
+GOOGLE_CLIENT_SECRET=...
 
-#### **Críticos (Sin estos NO funciona):**
-1. **Neon Database** - https://neon.tech
-2. **Stripe** - https://stripe.com
-3. **Vercel Blob** - https://vercel.com
+# Pagos
+STRIPE_SECRET_KEY=sk_...
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_...
 
-#### **Opcionales:**
-- PayPal - https://paypal.com
-- SendGrid - https://sendgrid.com
-- Amadeus API - https://developers.amadeus.com
+# Emails
+RESEND_API_KEY=re_...           # Opción 1 (recomendada)
+SENDGRID_API_KEY=SG....         # Opción 2
+SMTP_HOST=mail.asoperadora.com  # Opción 3
+
+# Almacenamiento
+BLOB_READ_WRITE_TOKEN=vercel_blob_rw_...
+
+# Cron Jobs
+CRON_SECRET=...
+```
+
+Ver `.env.example` para la lista completa (~180 variables documentadas).
 
 ---
 
@@ -214,290 +267,201 @@ Ver [`.same/SETUP-COMPLETO.md`](.same/SETUP-COMPLETO.md) para instrucciones deta
 
 ```
 operadora-dev/
-├── .same/                     # Documentación y guías
-│   ├── SETUP-COMPLETO.md     # Guía de configuración completa
-│   ├── RESUMEN-FINAL-v82.md  # Resumen ejecutivo
-│   └── todos.md              # Tareas pendientes
-│
-├── migrations/                # Migraciones SQL
-│   ├── 001_initial_schema.sql
-│   ├── 002_cost_centers.sql
-│   ├── 003_payment_transactions.sql
-│   └── 004_documents.sql
-│
+├── docs/                        # Documentación AG- (contexto, histórico, integraciones)
+├── migrations/                  # 43 migraciones SQL
+├── scripts/                     # Scripts de utilidad y diagnóstico
+├── public/                      # Assets estáticos + PWA (manifest, sw.js, iconos)
 ├── src/
-│   ├── app/                   # Next.js App Router
-│   │   ├── api/              # API Routes
-│   │   ├── dashboard/        # Dashboards
-│   │   └── ...               # Páginas
-│   │
-│   ├── components/           # Componentes React
-│   │   ├── ui/              # shadcn/ui components
-│   │   └── ...
-│   │
-│   ├── services/            # Lógica de negocio
-│   │   ├── StripeService.ts
-│   │   ├── PayPalService.ts
-│   │   ├── EncryptionService.ts
-│   │   └── ...
-│   │
-│   ├── middleware/          # Middlewares
-│   │   ├── rateLimiter.ts
-│   │   └── security.ts
-│   │
-│   └── utils/               # Utilidades
-│       └── sanitization.ts
-│
-├── tests/                    # Tests
-│   ├── unit/
-│   └── setup.ts
-│
-├── .env.example             # Variables de entorno de ejemplo
-├── package.json
-└── README.md
+│   ├── app/                     # Next.js App Router
+│   │   ├── api/                # ~50 endpoints API
+│   │   │   ├── auth/           # Login, registro, Google OAuth
+│   │   │   ├── cron/           # hr-alerts, email-reminders, megatravel-sync
+│   │   │   ├── payments/       # Stripe, PayPal, MercadoPago
+│   │   │   ├── tenant/         # Detección y config de tenant
+│   │   │   └── tours/          # Quotes de tours
+│   │   ├── dashboard/          # Corporate, Agency, Agent dashboards
+│   │   ├── tours/              # Catálogo de tours con sidebar
+│   │   ├── tours/[code]/       # Detalle de tour
+│   │   ├── crm/                # Pipeline, clientes, campañas
+│   │   ├── rrhh/               # Módulo de recursos humanos
+│   │   └── offline/            # Página PWA offline
+│   ├── components/              # ~40 componentes React
+│   │   ├── ui/                 # shadcn/ui base
+│   │   └── pwa/                # PWA components
+│   ├── contexts/                # AuthContext, WhiteLabelContext
+│   ├── cron/                    # Lógica de cron jobs
+│   ├── lib/                     # Helpers (db, emailHelper, auth)
+│   ├── services/                # 42 servicios de negocio
+│   │   ├── TenantService.ts
+│   │   ├── CRMService.ts
+│   │   ├── HRService.ts
+│   │   ├── MegaTravelScrapingService.ts
+│   │   ├── MegaTravelSyncService.ts
+│   │   └── ... (42 total)
+│   └── templates/email/         # 15 templates HTML de email
+├── tests/                       # Tests unitarios (Vitest)
+├── operadora-mobile/            # App móvil Expo/React Native (stand-by)
+├── .env.example                 # ~180 variables documentadas
+├── vercel.json                  # Config deploy + 3 cron jobs
+└── package.json
 ```
-
----
-
-## 📦 Módulos
-
-### **1. Corporativo** (`src/app/dashboard/corporate/*`)
-- Gestión de empleados
-- Políticas de viaje
-- Aprobaciones
-- Reportes
-- Centro de costos
-
-### **2. Pagos** (`src/app/api/payments/*`)
-- Stripe Integration
-- PayPal Integration
-- Webhooks
-- Dashboard de transacciones
-
-### **3. Seguridad** (`src/services/*`, `src/middleware/*`)
-- Encriptación AES-256
-- Rate limiting
-- Sanitización
-- Audit logs
-
-### **4. Documentos** (`src/app/api/documents/*`)
-- Upload seguro
-- URLs firmadas
-- Validación
 
 ---
 
 ## 📚 API Documentation
 
-### **Autenticación**
-
-```bash
+### Autenticación
+```
 POST /api/auth/login
 POST /api/auth/register
+POST /api/auth/google          # OAuth + One-Tap
+GET  /api/auth/me
 ```
 
-### **Búsqueda**
-
-```bash
-GET /api/search?origin=MEX&destination=JFK&departure=2024-12-20
+### Tours
+```
+GET  /api/groups               # Catálogo de tours (con filtros)
+GET  /api/tours/packages       # Paquetes (formato sidebar)
+POST /api/tours/quote          # Crear cotización
 ```
 
-### **Reservas**
-
-```bash
-GET /api/bookings
-POST /api/bookings
-GET /api/bookings/[id]
-PUT /api/bookings/[id]
+### CRM
+```
+GET  /api/crm/leads
+POST /api/crm/leads
+GET  /api/crm/pipeline
+GET  /api/crm/campaigns
 ```
 
-### **Pagos**
+### RRHH
+```
+GET  /api/rrhh/employees
+POST /api/rrhh/employees
+GET  /api/rrhh/contracts
+GET  /api/rrhh/leaves
+```
 
-```bash
+### Pagos
+```
 POST /api/payments/stripe/create-payment-intent
-POST /api/payments/stripe/confirm-payment
 POST /api/payments/paypal/create-order
-POST /api/payments/paypal/capture-order
-GET /api/payments
+GET  /api/payments
 ```
 
-### **Corporativo**
-
-```bash
-GET /api/corporate/employees
-POST /api/corporate/employees
-GET /api/corporate/stats
-GET /api/corporate/reports/expenses
+### Tenant / White-Label
+```
+POST /api/tenant/detect
+GET  /api/tenant/config
 ```
 
-Ver documentación completa en [`.same/API-DOCUMENTATION.md`](.same/API-DOCUMENTATION.md)
+### Cron Jobs
+```
+GET  /api/cron/email-reminders     # Diario 10:00 AM CST
+GET  /api/cron/megatravel-sync     # Diario 3:00 AM CST
+GET  /api/cron/hr-alerts           # Diario 9:00 AM CST
+```
 
 ---
 
 ## 🧪 Testing
 
-### **Ejecutar Tests**
-
 ```bash
-# Todos los tests
-bun test
-
-# Con UI interactiva
-bun test:ui
+# Ejecutar tests
+npm test
 
 # Con coverage
-bun test:coverage
+npm run test:coverage
 
-# Solo ejecutar una vez
-bun test:run
+# Solo una vez
+npm run test:run
 ```
 
-### **Tests Disponibles**
-
-- ✅ 35+ tests unitarios
+### Tests Disponibles
 - ✅ EncryptionService
 - ✅ Sanitization utilities
-- ⏳ Tests de integración (agregar según necesidad)
-- ⏳ Tests E2E (agregar según necesidad)
-
-### **Coverage Objetivo**
-- Actual: 20%
-- Objetivo: 80%
+- ✅ WhiteLabel E2E (24 tests via scripts)
+- ✅ Email system verification
+- ✅ Tours data integrity
 
 ---
 
 ## 🚢 Deployment
 
-### **Opción A: Vercel (Recomendado)**
+### Vercel (Producción)
 
 ```bash
-# Install Vercel CLI
-npm i -g vercel
-
-# Login
-vercel login
-
-# Deploy
-vercel --prod
+# Automático vía GitHub push
+git push origin main
+# → Vercel detecta cambio → Build → Deploy → app.asoperadora.com
 ```
 
-### **Opción B: Docker**
+### Variables en Vercel
+Configurar en Vercel → Settings → Environment Variables todas las variables de `.env.example`.
 
-```bash
-# Build
-docker build -t asoperadora .
-
-# Run
-docker run -p 3000:3000 --env-file .env.local asoperadora
-```
-
-### **Opción C: VPS/Cloud Server**
-
-```bash
-git clone <repo>
-cd operadora-dev
-bun install
-bun build
-
-# Con PM2
-pm2 start ecosystem.config.js
-```
-
-Ver guía completa en [`.same/SETUP-COMPLETO.md`](.same/SETUP-COMPLETO.md#7-deployment)
+### Cron Jobs
+Definidos en `vercel.json`:
+- `email-reminders`: 0 16 * * * (10:00 AM CST)
+- `megatravel-sync`: 0 9 * * * (3:00 AM CST)
+- `hr-alerts`: 0 15 * * * (9:00 AM CST)
 
 ---
 
-## 🔒 Seguridad
+## 📖 Documentación Técnica
 
-### **Implementado**
+Todos los documentos técnicos están en `docs/` con prefijo `AG-`:
 
-- ✅ Encriptación AES-256 para datos sensibles
-- ✅ JWT Authentication
-- ✅ Rate limiting por IP
-- ✅ CORS estricto
-- ✅ Content Security Policy (CSP)
-- ✅ X-Frame-Options: DENY
-- ✅ HSTS (producción)
-- ✅ Sanitización de inputs (XSS, SQL injection)
-- ✅ Audit logs completos
-
-### **Generar Claves Secretas**
-
-```bash
-# JWT Secret
-openssl rand -base64 32
-
-# Encryption Secret
-openssl rand -base64 32
-```
+| Documento | Contenido |
+|---|---|
+| `AG-Contexto-Proyecto.md` | Visión general, arquitectura, estado |
+| `AG-Historico-Cambios.md` | Control de versiones detallado |
+| `AG-Informe-Multi-Empresa-MarcaBlanca.md` | Arquitectura White-Label |
+| `AG-Centro-Comunicacion-Omnicanal-COMPLETO.md` | Sistema de emails y mensajería |
+| `AG-Implementacion-Scraping-Completo-v2.262.md` | Scraping MegaTravel |
+| `AG-Analisis-Funcional-Movil-260118.md` | Plan de app móvil |
+| `AG-Testing-RRHH.md` | Plan de pruebas RRHH |
 
 ---
 
-## 📊 Estado del Proyecto
-
-### **Progreso General: 98%** ✅
+## 📊 Estado del Proyecto — v2.344
 
 | Módulo | Progreso | Estado |
 |--------|----------|--------|
 | Sistema Corporativo | 100% | ✅ Completo |
-| Sistema de Pagos | 90% | ✅ Funcional |
+| Tours MegaTravel | 100% | ✅ 325 paquetes |
+| White-Label | 100% | ✅ Multi-tenant |
+| Emails | 100% | ✅ 14 templates |
+| PWA | 100% | ✅ Infraestructura |
+| CRM | 95% | ✅ Funcional |
 | Seguridad | 95% | ✅ Funcional |
+| RRHH | 90% | ✅ Funcional |
+| Pagos | 90% | ✅ Funcional |
 | Documentos | 90% | ✅ Funcional |
-| Testing | 20% | ⏳ En progreso |
-| Documentación | 100% | ✅ Completo |
+| App Móvil | 10% | ⏳ Stand-by (PWA activa) |
+| Testing | 25% | ⏳ En progreso |
 
-### **Métricas**
-
-- **Total líneas de código:** ~27,000+
-- **Servicios:** 15/15 (100% ✅)
-- **APIs:** 48/50 (96%)
-- **Páginas:** 18/20 (90%)
-- **Tests:** 35+ escritos
-
----
-
-## 🤝 Contribuir
-
-### **Proceso**
-
-1. Fork el proyecto
-2. Crea una rama (`git checkout -b feature/AmazingFeature`)
-3. Commit tus cambios (`git commit -m '✨ Add some AmazingFeature'`)
-4. Push a la rama (`git push origin feature/AmazingFeature`)
-5. Abre un Pull Request
-
-### **Convenciones**
-
-- **Commits:** Usar [Conventional Commits](https://www.conventionalcommits.org/)
-- **Tests:** Escribir tests para nuevas features
-- **Documentation:** Actualizar README y docs según sea necesario
+### Métricas
+- **Líneas de código:** ~80,000+
+- **Servicios:** 42
+- **APIs:** ~50 endpoints
+- **Templates email:** 14 + base
+- **Migraciones:** 43
+- **Tablas BD:** 60+
 
 ---
 
 ## 📝 Licencia
 
-Este proyecto está bajo la Licencia MIT - ver el archivo [LICENSE](LICENSE) para detalles.
+Proyecto privado — Propiedad de AS Operadora de Viajes.
 
 ---
 
 ## 📞 Soporte
 
-- **Documentación:** [`.same/`](.same/) folder
+- **Documentación:** `docs/` (prefijo AG-)
 - **Email:** support@asoperadora.com
-- **Issues:** [GitHub Issues](https://github.com/tu-usuario/asoperadora/issues)
+- **WhatsApp:** +52 720 815 6804
 
 ---
 
-## 🙏 Agradecimientos
-
-- [Next.js](https://nextjs.org/)
-- [Vercel](https://vercel.com/)
-- [shadcn/ui](https://ui.shadcn.com/)
-- [Stripe](https://stripe.com/)
-- Toda la comunidad open source
-
----
-
-**Hecho con ❤️ por el equipo de AS Operadora**
-
-**Última actualización:** Diciembre 15, 2025 | **Versión:** 2.82
+**Hecho con ❤️ por el equipo de AS Operadora**  
+**Última actualización:** Mayo 28, 2026 | **Versión:** v2.344

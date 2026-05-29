@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="384" height="384" viewBox="0 0 384 384">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0066FF"/>
+      <stop offset="100%" style="stop-color:#0044CC"/>
+    </linearGradient>
+  </defs>
+  <rect x="0" y="0" width="384" height="384" rx="69.12" fill="url(#bg)"/>
+  <text x="50%" y="45%" text-anchor="middle" dominant-baseline="middle" font-family="Arial, Helvetica, sans-serif" font-weight="bold" font-size="108" fill="white">AS</text>
+  <text x="50%" y="68%" text-anchor="middle" dominant-baseline="middle" font-family="Arial, Helvetica, sans-serif" font-weight="500" font-size="38" fill="rgba(255,255,255,0.8)">VIAJANDO</text>
+</svg>

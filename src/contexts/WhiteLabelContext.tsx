@@ -214,7 +214,7 @@ export function WhiteLabelProvider({ children }: { children: ReactNode }) {
             tenantId: tenant.id,
             tenantType: tenant.tenant_type,
             companyName: tenant.company_name,
-            slogan: '', // Can be extended later
+            slogan: (tenant as any).slogan || '', // Slogan personalizado del tenant
 
             logoUrl: tenant.logo_url,
             faviconUrl: wlConfig?.favicon_url || null,

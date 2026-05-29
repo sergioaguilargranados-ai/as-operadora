@@ -1,13 +1,40 @@
 # 📋 AG-Histórico de Cambios - AS Operadora
 
-**Última actualización:** 07 de Mayo de 2026 - 13:00 CST  
-**Versión actual:** v2.343  
+**Última actualización:** 28 de Mayo de 2026 - 22:27 CST  
+**Versión actual:** v2.344  
 **Actualizado por:** AntiGravity AI Assistant  
 **Propósito:** Documento maestro del proyecto para trabajo con agentes AntiGravity
 
 ---
 
 ## 📅 HISTORIAL DE CAMBIOS
+
+### v2.344 - 28 de Mayo de 2026 - 22:27 CST
+
+**🚀 Completada Fase 7: Data Seeding RRHH y Aclaración de Ambientes**
+
+**Objetivo:** Poblado inicial del módulo de Recursos Humanos y documentación de estrategia de versionado y despliegue.
+
+**Cambios Backend:**
+- ✅ **Data Seeding:** Creado script `scripts/seed_hr.ts` que inyectó datos realistas en la base de datos de producción (Neon PostgreSQL).
+- ✅ **Datos RRHH Creados:** 3 departamentos, 5 posiciones, 10 empleados con datos de México (RFC, CURP, NSS), 10 contratos activos, registros de asistencia de 5 días, solicitudes de ausencia y 1 pipeline de reclutamiento activo.
+- ✅ **Configuración DB:** El script maneja correctamente la conexión a base de datos externa cargando variables desde `.env.local` y mapeando la columna `company_name`.
+
+**Cambios de Configuración de Proyecto (Documentación):**
+- ✅ **Ambiente de Pruebas y Liberación:** Se ha formalizado en `AG-Contexto-Proyecto.md` que el repositorio `operadora-dev` será utilizado como **ambiente de pruebas y liberación oficial**.
+- ✅ **Repositorio Legacy:** El repositorio `as-operadora` se marca estrictamente como legacy/producción anterior, desaconsejando nuevos push hacia él para despliegues de pruebas.
+- ✅ **Actualización Contexto:** Instrucciones claras sobre `git remote` y flujos de despliegue para usar `operadora-dev` como fuente de la verdad para liberaciones.
+
+**Archivos Modificados:**
+- `docs/AG-Contexto-Proyecto.md`
+- `docs/AG-Historico-Cambios.md`
+- `task.md`
+
+**Archivos Creados:**
+- `scripts/seed_hr.ts`
+
+---
+
 
 ### v2.343 - 07 de Mayo de 2026 - 13:00 CST
 

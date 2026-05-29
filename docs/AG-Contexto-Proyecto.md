@@ -15,9 +15,9 @@
 Sergio Aguilar Granados
 
 ### Repositorio Git
-- **Repositorio principal (activo):** `https://github.com/sergioaguilargranados-ai/operadora-dev.git`
-- **Repositorio legacy (pruebas anteriores):** `https://github.com/sergioaguilargranados-ai/as-operadora.git` — NO usar para nuevos cambios
-- **Deploy:** Automático vía Git push → Vercel
+- **Ambiente de Pruebas / Liberación:** `https://github.com/sergioaguilargranados-ai/operadora-dev.git`
+- **Repositorio Producción Legacy:** `https://github.com/sergioaguilargranados-ai/as-operadora.git`
+- **Deploy:** Liberaciones en ambiente de pruebas sobre `operadora-dev`
 
 ### Objetivo
 Sistema completo de gestión de viajes corporativos con búsqueda, reservas, aprobaciones, pagos, reportes y dashboard ejecutivo. Competir con plataformas como Expedia con funcionalidades superiores.
@@ -72,46 +72,45 @@ La fecha y hora tiempo del CDMX
 
 | Repositorio | Propósito | URL | Estado |
 |-------------|-----------|-----|--------|
-| **operadora-dev** | Desarrollo/Backup | https://github.com/sergioaguilargranados-ai/operadora-dev | USAR ESTE REPOSITORIO 
-| **as-operadora** | Producción | https://github.com/sergioaguilargranados-ai/as-operadora | no usar |
+| **operadora-dev** | Ambiente de Pruebas / Liberación | https://github.com/sergioaguilargranados-ai/operadora-dev | **USAR ESTE REPOSITORIO** |
+| **as-operadora** | Producción (Legacy) | https://github.com/sergioaguilargranados-ai/as-operadora | No usar |
 
 **Estrategia Actual Correcta:**
-- **as-operadora** → www.as-ope-viajes.company (actual) cambiará a www.asoperadora.com  
-- Todos los cambios deben ir dirigidos a este repositorio (`as-operadora`).
-- El repositorio `operadora-dev` queda como respaldo o entorno de desarrollo secundario.
+- Tenemos diferentes ambientes. El repositorio **`operadora-dev` está marcado como ambiente de pruebas y es aquí donde liberaremos**.
+- Todos los cambios deben ir dirigidos a este repositorio (`operadora-dev`).
 
 **⚠️ IMPORTANTE - Configuración de Git Remote:**
 
-Para desplegar en producción, el remote debe ser `as-operadora`:
+Para desplegar en el ambiente de pruebas, el remote debe ser `operadora-dev`:
 
 ```bash
 # Verificar configuración
 git remote -v
 
-# Debe existir el remote 'as-operadora' (o 'origin' apuntando a as-operadora)
-# as-operadora    https://...as-operadora.git (fetch)
-# as-operadora    https://...as-operadora.git (push)
+# Debe existir el remote apuntando a operadora-dev
+# origin    https://...operadora-dev.git (fetch)
+# origin    https://...operadora-dev.git (push)
 ```
 
-**Flujo de trabajo para hacer cambios:**
+**Flujo de trabajo para hacer cambios y liberar en pruebas:**
 
 ```bash
 # 1. Hacer cambios y commit
 git add .
 git commit -m "vX.XXX - Descripción"
 
-# 2. Push SOLAMENTE a as-operadora (Producción)
-git push as-operadora main
+# 2. Push SOLAMENTE a operadora-dev (Ambiente de Pruebas / Liberación)
+git push origin main
 ```
 
-**Razón:** Centralizar el despliegue en el nuevo dominio y repositorio oficial.
+**Razón:** Centralizar las liberaciones de prueba en el repositorio `operadora-dev` tal como solicitó el cliente.
 
 ### Proyectos Vercel
 
 | Proyecto | Repo | URL | Ambiente |
 |----------|------|-----|----------|
-| **AS Operadora** | as-operadora | www.as-ope-viajes.company | ✅ PRODUCCIÓN | no usar
-| **Operadora Dev** | operadora-dev | app.asoperadora.com | desarrollo | usar este 
+| **AS Operadora** | as-operadora | www.as-ope-viajes.company | PRODUCCIÓN (Legacy) |
+| **Operadora Dev** | operadora-dev | app.asoperadora.com | **PRUEBAS / LIBERACIÓN** |
 
 ---
 
@@ -568,20 +567,19 @@ node -e "require('dotenv').config({path:'.env.local'}); console.log(process.env.
 **Causa:** Vercel intenta compilar la app móvil.
 **Solución:** Excluir `operadora-mobile` en `.vercelignore` y `tsconfig.json`.
 
-### Error: "Cambios no se despliegan en producción (www.as-ope-viajes.company)"
-**Causa:** Se hizo push al repositorio incorrecto (`operadora-dev`).
-**Contexto:** El único repositorio que despliega a producción es **`as-operadora`**.
+### Error: "Cambios no se despliegan en el ambiente de pruebas"
+**Causa:** Se hizo push al repositorio incorrecto (`as-operadora`).
+**Contexto:** El repositorio que despliega al ambiente de pruebas donde liberaremos es **`operadora-dev`**.
 **Síntomas:**
-- `git push` exitoso pero sin cambios en www.as-ope-viajes.company
-- Los cambios están en el repo `operadora-dev` pero no en `as-operadora`
+- `git push` exitoso pero sin cambios en app.asoperadora.com
 **Solución:**
 ```bash
-# Push explícito al repositorio de producción
-git push as-operadora main
+# Push explícito al repositorio de liberación
+git push origin main
 ```
 **Importante:**
 - Siempre verificar con `git remote -v`
-- Asegurar que `as-operadora` esté configurado como remote
+- Asegurar que `operadora-dev` esté configurado como remote origin
 ---
 
 ## 📈 PRÓXIMOS PASOS

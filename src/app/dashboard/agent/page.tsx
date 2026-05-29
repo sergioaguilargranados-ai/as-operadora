@@ -91,8 +91,8 @@ function AgentDashboardContent() {
     const [reviews, setReviews] = useState<any[]>([])
     const [reviewStats, setReviewStats] = useState<any>(null)
 
-    // TODO: Obtener del contexto de autenticación
-    const agentId = searchParams.get('agent_id') || '1'
+    // Prioridad: query param (admin navega desde agencia) > usuario autenticado > fallback
+    const agentId = searchParams.get('agent_id') || user?.agent_id?.toString() || '1'
 
     useEffect(() => {
         if (!isAuthenticated) {

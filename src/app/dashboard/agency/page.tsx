@@ -118,8 +118,8 @@ export default function AgencyDashboardPage() {
     const [commFilterDateFrom, setCommFilterDateFrom] = useState('')
     const [commFilterDateTo, setCommFilterDateTo] = useState('')
 
-    // TODO: Obtener del contexto de autenticación
-    const agencyId = 2 // M&MTravelAgency ID temporal
+    // Obtener el ID de agencia del usuario autenticado, con fallback para desarrollo
+    const agencyId = user?.tenant_id || 2
 
     useEffect(() => {
         if (!isAuthenticated) {
@@ -313,7 +313,7 @@ export default function AgencyDashboardPage() {
                         <Building2 className="w-5 h-5" />
                         Dashboard de Agencia
                     </h1>
-                    <p className="text-sm text-muted-foreground">M&M Travel Agency</p>
+                    <p className="text-sm text-muted-foreground">{user?.company_name || 'Mi Agencia'}</p>
                 </div>
             </PageHeader>
 

@@ -65,6 +65,7 @@ export async function GET(request: NextRequest) {
                     id: tenant.id,
                     tenant_type: tenant.tenant_type,
                     company_name: tenant.company_name,
+                    slogan: tenant.slogan || null,
                     logo_url: tenant.logo_url,
                     primary_color: tenant.primary_color,
                     secondary_color: tenant.secondary_color,
@@ -84,7 +85,10 @@ export async function GET(request: NextRequest) {
                     meta_title: whiteLabelConfig.meta_title,
                     meta_description: whiteLabelConfig.meta_description,
                     facebook_url: whiteLabelConfig.facebook_url,
-                    instagram_url: whiteLabelConfig.instagram_url
+                    instagram_url: whiteLabelConfig.instagram_url,
+                    markup_percentage: whiteLabelConfig.markup_percentage ?? null,
+                    markup_fixed: whiteLabelConfig.markup_fixed ?? null,
+                    markup_type: whiteLabelConfig.markup_type ?? null
                 } : null
             }
         })
