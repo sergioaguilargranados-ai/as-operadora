@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { PageHeader } from '@/components/PageHeader'
 import { useToast } from '@/hooks/use-toast'
+import { PushNotificationManager } from '@/components/pwa/PushNotificationManager'
 import {
   FileText,
   DollarSign,
@@ -95,6 +96,9 @@ function DashboardContent() {
       </PageHeader>
 
       <main className="container mx-auto px-4 py-8 max-w-7xl">
+        <div className="mb-6">
+          <PushNotificationManager variant="switch" />
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <Card className="p-6">
             <div className="flex items-center justify-between mb-2">
