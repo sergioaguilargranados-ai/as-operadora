@@ -91,6 +91,11 @@ export class FeatureService {
         role: string,
         platform: Platform = 'web'
     ): Promise<boolean> {
+        // En entorno de desarrollo (o local), forzamos TODAS las banderas activas para facilitar pruebas integrales.
+        if (process.env.NODE_ENV === 'development') {
+            return true;
+        }
+
         try {
             // Primero verificar si está habilitado globalmente
             const featureResult = await pool.query(`
@@ -150,6 +155,12 @@ export class FeatureService {
         platform: Platform = 'web'
     ): Promise<string[]> {
         try {
+            // En desarrollo, retornar todos los códigos de feature disponibles
+            if (process.env.NODE_ENV === 'development') {
+                const all = await pool.query('SELECT code FROM features');
+                return all.rows.map((r: any) => r.code);
+            }
+
             const platformColumn = platform === 'web' ? 'web_enabled' : 'mobile_enabled';
 
             const result = await pool.query(`
