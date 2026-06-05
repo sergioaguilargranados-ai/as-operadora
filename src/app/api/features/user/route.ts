@@ -3,6 +3,7 @@
 // Build: 27 Ene 2026 - v2.233
 
 import { NextRequest, NextResponse } from 'next/server';
+export const dynamic = 'force-dynamic';
 import { FeatureService, Platform } from '@/services/FeatureService';
 import { verifyToken } from '@/services/AuthService';
 

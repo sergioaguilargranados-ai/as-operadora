@@ -2,6 +2,7 @@
 // Build: 28 Ene 2026 - v2.237
 
 import { NextRequest, NextResponse } from 'next/server'
+export const dynamic = 'force-dynamic'
 import { Pool } from 'pg'
 
 const pool = new Pool({
