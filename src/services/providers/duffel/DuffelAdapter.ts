@@ -1,4 +1,4 @@
-// Build: 03 Jun 2026 - 16:30 CST - v2.342
+// Build: 05 Jun 2026 - 20:11 CST - v2.344c - Fix TS DuffelAdapter SDK v4 types
 
 import { Duffel } from '@duffel/api';
 import { IProveedorVuelo, ParametrosBusquedaVuelo, RespuestaBusqueda } from '@/types/providers';
@@ -21,7 +21,9 @@ export class DuffelAdapter implements IProveedorVuelo {
     try {
       // 1. Mapear parámetros internos al formato de Duffel
       // Duffel espera un array de 'slices' (ej. ida, vuelta) y pasajeros
-      const slices = [
+      // Nota: el SDK v4 define arrival_time/departure_time como requeridos en el tipo,
+      // pero la API REST los acepta sin ellos. Usamos 'as any' para evitar el error de TS.
+      const slices: any[] = [
         {
           origin: params.origenIata,
           destination: params.destinoIata,
@@ -37,7 +39,7 @@ export class DuffelAdapter implements IProveedorVuelo {
         });
       }
 
-      const passengers = [];
+      const passengers: any[] = [];
       for (let i = 0; i < params.pasajeros.adultos; i++) passengers.push({ type: 'adult' });
       for (let i = 0; i < params.pasajeros.ninos; i++) passengers.push({ type: 'child' });
       for (let i = 0; i < params.pasajeros.bebes; i++) passengers.push({ type: 'infant_without_seat' });
@@ -46,9 +48,9 @@ export class DuffelAdapter implements IProveedorVuelo {
       const response = await this.client.offerRequests.create({
         slices,
         passengers,
-        cabin_class: params.clase || 'economy',
-        return_offers: true, // Que de una vez nos regrese las ofertas
-      });
+        cabin_class: (params.clase || 'economy') as any,
+        return_offers: true,
+      } as any);
 
       // 3. Mapear respuestas de Duffel al formato unificado de AS Operadora
       const vuelosUnificados: VueloUnificado[] = response.data.offers.map(offer => {
