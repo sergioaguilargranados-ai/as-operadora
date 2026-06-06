@@ -1,5 +1,5 @@
 // BrandFooter.tsx - Footer dinámico con branding del tenant actual
-// Build: 07 May 2026 - 13:00 CST - v2.343 - Fix Token MegaTravel Scraping + Auth Resilience
+// Build: 06 Jun 2026 - 10:40 CST - v2.345 - Fix buscador hoteles en home (HOME_SEARCH_HOTELS habilitado)
 
 'use client';
 
@@ -92,7 +92,7 @@ export function BrandFooter() {
                         </p>
                     )}
                     <p className="text-xs mt-2 opacity-50">
-                        v2.344 | 28 May 2026 22:43 CST
+                        v2.345
                     </p>
                 </div>
             </div>

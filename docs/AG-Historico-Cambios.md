@@ -1,13 +1,32 @@
 # 📋 AG-Histórico de Cambios - AS Operadora
 
-**Última actualización:** 28 de Mayo de 2026 - 22:27 CST  
-**Versión actual:** v2.344  
+**Última actualización:** 06 de Junio de 2026 - 10:40 CST  
+**Versión actual:** v2.345  
 **Actualizado por:** AntiGravity AI Assistant  
 **Propósito:** Documento maestro del proyecto para trabajo con agentes AntiGravity
 
 ---
 
 ## 📅 HISTORIAL DE CAMBIOS
+
+### v2.345 - 06 de Junio de 2026 - 10:40 CST
+
+**🔧 Fix: Buscador de Hoteles en Home — Habilitado correctamente**
+
+**Problema:** Al dar clic en la pestaña "Hoteles" del buscador principal y presionar "Buscar", aparecía el mensaje "Búsqueda de hoteles próximamente" en lugar del formulario de búsqueda. El buscador estaba completamente implementado pero el setting `HOME_SEARCH_HOTELS` tenía valor `'false'` en la tabla `app_settings` de la base de datos.
+
+**Causa raíz:** El setting se inicializa en `'false'` por el script `add-home-settings.js`. No se había activado manualmente después del setup.
+
+**Corrección aplicada:**
+- ✅ Actualizado `HOME_SEARCH_HOTELS = 'true'` en tabla `app_settings` (Neon PostgreSQL)
+- ✅ Script creado: `scripts/enable-hotel-search.js` para referencia futura
+
+**Archivos modificados:**
+- `scripts/enable-hotel-search.js` — Script de habilitación (nuevo, referencia)
+- `src/components/BrandFooter.tsx` — Bump versión v2.345
+- `docs/AG-Historico-Cambios.md` — Esta entrada
+
+---
 
 ### v2.344 - 28 de Mayo de 2026 - 22:27 CST
 
