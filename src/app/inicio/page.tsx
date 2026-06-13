@@ -61,7 +61,7 @@ export default function InicioLanding() {
         {/* Imagen a la derecha */}
         <div className="absolute right-0 top-0 bottom-0 w-full lg:w-[60%] z-0 h-full">
           <img 
-            src={data?.hero_video_url || "/inicio/WhatsApp_Image_2026-06-12_at_11.15.55_AM.jpeg"} 
+            src="/inicio/WhatsApp_Image_2026-06-12_at_11.15.55_AM.jpeg"
             alt="Santorini" 
             className="w-full h-full object-cover"
           />
@@ -74,10 +74,10 @@ export default function InicioLanding() {
         <div className="container mx-auto px-4 lg:px-8 relative z-10 flex pt-12 lg:pt-0">
           <div className="w-full lg:w-[50%] lg:pr-8">
             <h1 className={`text-5xl md:text-6xl lg:text-[4.5rem] font-medium text-black mb-6 leading-[1.1] tracking-tight ${playfair.className}`}>
-              {data?.hero_title || "Viajes y eventos diseñados para inspirar, conectar y crecer."}
+              Viajes y eventos diseñados para inspirar, conectar y crecer.
             </h1>
             <p className="text-sm md:text-base text-gray-800 mb-12 max-w-lg font-normal leading-relaxed">
-              {data?.hero_subtitle || "Soluciones para viajeros, agencias de viajes, agencias de eventos y empresas con atención personalizada y experiencias memorables en cada destino."}
+              Soluciones para viajeros, agencias de viajes, agencias de eventos y empresas con atención personalizada y experiencias memorables en cada destino.
             </p>
 
             <div className="flex flex-wrap items-center gap-2">
