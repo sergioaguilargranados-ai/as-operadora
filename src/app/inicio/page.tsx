@@ -101,7 +101,7 @@ export default function InicioLanding() {
       </section>
 
       {/* ¿CÓMO PODEMOS AYUDARTE? */}
-      <section className="py-24 bg-white border-t border-gray-100">
+      <section className="py-12 bg-white border-t border-gray-100">
         <div className="container mx-auto px-4 lg:px-8">
           <h3 className="text-xs font-bold tracking-[0.2em] text-center text-gray-500 mb-16 uppercase">¿CÓMO PODEMOS AYUDARTE?</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -166,7 +166,7 @@ export default function InicioLanding() {
       </section>
 
       {/* DESTINOS QUE TE ESPERAN */}
-      <section className="py-24 bg-white border-t border-gray-100">
+      <section className="py-12 bg-white border-t border-gray-100">
         <div className="container mx-auto px-4 lg:px-8">
           <div className="text-center mb-16">
             <h3 className="text-xs font-bold tracking-[0.2em] text-gray-500 mb-4 uppercase">DESTINOS QUE TE ESPERAN</h3>
@@ -198,7 +198,7 @@ export default function InicioLanding() {
       </section>
 
       {/* NUESTROS SERVICIOS */}
-      <section className="py-24 bg-white border-t border-gray-100">
+      <section className="py-12 bg-white border-t border-gray-100">
         <div className="container mx-auto px-4 lg:px-8">
           <div className="text-center mb-16">
             <h3 className="text-xs font-bold tracking-[0.2em] text-gray-500 mb-4 uppercase">NUESTROS SERVICIOS</h3>
@@ -234,7 +234,7 @@ export default function InicioLanding() {
       </section>
 
       {/* BENEFICIOS ROW */}
-      <section className="py-16 bg-white border-t border-gray-100">
+      <section className="py-8 bg-white border-t border-gray-100">
         <div className="container mx-auto px-4 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {[

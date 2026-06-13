@@ -83,7 +83,7 @@ export function Logo({ className = "", forceDefault = false, size = 'md' }: Logo
         A<span className="text-5xl md:text-6xl">S</span>
       </span>
       
-      <div className="h-10 w-[1px] bg-gray-300"></div>
+      <div className="h-10 w-[2px] bg-gray-300"></div>
       
       <div className="flex flex-col justify-center">
         <span className="text-[10px] md:text-[11px] tracking-[0.2em] font-bold leading-tight text-black">

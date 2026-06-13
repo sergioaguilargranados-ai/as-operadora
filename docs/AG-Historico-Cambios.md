@@ -1,13 +1,33 @@
 # 📋 AG-Histórico de Cambios - AS Operadora
 
-**Última actualización:** 12 de Junio de 2026 - 23:22 CST  
-**Versión actual:** v2.347  
+**Última actualización:** 13 de Junio de 2026 - 01:10 CST  
+**Versión actual:** v2.348  
 **Actualizado por:** AntiGravity AI Assistant  
 **Propósito:** Documento maestro del proyecto para trabajo con agentes AntiGravity
 
 ---
 
 ## 📅 HISTORIAL DE CAMBIOS
+
+### v2.348 - 13 de Junio de 2026 - 01:10 CST
+
+**🎨 Style: Afinación Visual de Landing Page y Proporciones**
+
+**Objetivo:** Ajustes precisos (pixel-perfect) para igualar la propuesta de diseño, solucionando layouts que se rompían y espaciados innecesarios.
+
+**Cambios implementados:**
+- ✅ Aumento de grosor en divisor del Logo (`w-[2px]`) y ajuste en tamaño de la fuente para mejor proporción visual.
+- ✅ Reducción masiva de márgenes entre las secciones ("Destinos", "Servicios", "Beneficios") para que se vea más compacto según el mockup.
+- ✅ Control flex-wrap sobre la fila de botones en el Hero para garantizar visualización correcta en desktop, y se ajustó el layout del contenedor a 70% de ancho.
+- ✅ Reducción leve del título principal para balancearlo en la primera pantalla.
+
+**Archivos modificados:**
+- `src/app/inicio/page.tsx`
+- `src/components/Logo.tsx`
+- `chats/AG-sesion-260613-Rediseno-Landing-Page.md` — Nueva sesión documentada
+- `docs/AG-Historico-Cambios.md` — Esta entrada
+
+---
 
 ### v2.347 - 12 de Junio de 2026 - 23:22 CST
 
