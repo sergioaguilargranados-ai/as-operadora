@@ -4,7 +4,7 @@ import { IProveedorHotel, ParametrosBusquedaHotel, RespuestaBusqueda } from '@/t
 import { HotelUnificado, OfertaHotelUnificada } from '@/types/unified-travel';
 
 export class RatehawkAdapter implements IProveedorHotel {
-  nombreProveedor = 'ratehawk';
+  nombreProveedor = 'ratehawk' as const;
   private apiKey: string;
   private keyId: string;
   private baseUrl: string;

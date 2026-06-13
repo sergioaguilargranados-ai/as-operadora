@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import webpush from 'web-push';
+const webpush = require('web-push');
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/authOptions';
 

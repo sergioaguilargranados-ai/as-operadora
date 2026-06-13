@@ -11,11 +11,11 @@ import { Logo } from "@/components/Logo"
 import { useAuth } from "@/contexts/AuthContext"
 import { ContentModal } from "@/components/admin/ContentModal"
 import { VideoUrlEditor } from "@/components/admin/VideoUrlEditor"
-import { LandingContentManager } from "@/components/admin/LandingContentManager"
+import { ExpoContentManager } from "@/components/admin/ExpoContentManager"
 import {
   Plus, Edit, Trash2, DollarSign, Calendar, Plane, Hotel, Package,
   Home, Globe, CheckCircle2, AlertCircle, X, RefreshCw,
-  Image as ImageIcon, Search, Eye, Save, ExternalLink, ChevronDown, ChevronUp, AlertTriangle, Star
+  Image as ImageIcon, Search, Eye, Save, ExternalLink, ChevronDown, ChevronUp, AlertTriangle
 } from "lucide-react"
 
 export default function AdminContentPage() {
@@ -456,8 +456,8 @@ export default function AdminContentPage() {
               MegaTravel
             </TabsTrigger>
             <TabsTrigger value="expo" className="flex items-center gap-2">
-              <Star className="w-4 h-4" />
-              Landing Principal
+              <Globe className="w-4 h-4" />
+              Landing Expo
             </TabsTrigger>
           </TabsList>
 
@@ -943,14 +943,56 @@ export default function AdminContentPage() {
                                   <ExternalLink className="w-3.5 h-3.5" /> Ver en MegaTravel →
                                 </a>
                                 <div className="flex gap-2">
-                                  <input
-                                    type="text"
-                                    placeholder="Pega aquí la URL de la imagen..."
-                                    value={inputUrl}
-                                    onChange={(e) => setTourImgInputs(prev => ({ ...prev, [tour.code]: e.target.value }))}
-                                    onClick={(e) => e.stopPropagation()}
-                                    className="flex-1 px-3 py-2 rounded-lg border text-sm focus:ring-2 focus:ring-blue-500"
-                                  />
+                                  <div className="flex-1 flex gap-2">
+                                    <input
+                                      type="text"
+                                      placeholder="Pega aquí la URL de la imagen..."
+                                      value={inputUrl}
+                                      onChange={(e) => setTourImgInputs(prev => ({ ...prev, [tour.code]: e.target.value }))}
+                                      onClick={(e) => e.stopPropagation()}
+                                      className="flex-1 px-3 py-2 rounded-lg border text-sm focus:ring-2 focus:ring-blue-500"
+                                    />
+                                    <input
+                                      type="file"
+                                      accept="image/*"
+                                      className="hidden"
+                                      id={`file-upload-${tour.code}`}
+                                      onChange={async (e) => {
+                                        const file = e.target.files?.[0];
+                                        if (!file) return;
+                                        setTourImgSaving(prev => ({ ...prev, [tour.code]: true }));
+                                        try {
+                                          const formData = new FormData();
+                                          formData.append('file', file);
+                                          const res = await fetch('/api/admin/upload-image', {
+                                            method: 'POST',
+                                            body: formData
+                                          });
+                                          const data = await res.json();
+                                          if (data.success) {
+                                            setTourImgInputs(prev => ({ ...prev, [tour.code]: data.url }));
+                                            showToast('✅ Imagen subida correctamente', 'success');
+                                          } else {
+                                            showToast(`❌ Error: ${data.error}`, 'error');
+                                          }
+                                        } catch (err) {
+                                          showToast('❌ Error de conexión', 'error');
+                                        }
+                                        setTourImgSaving(prev => ({ ...prev, [tour.code]: false }));
+                                      }}
+                                    />
+                                    <Button 
+                                      variant="outline" 
+                                      type="button"
+                                      className="px-3"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        document.getElementById(`file-upload-${tour.code}`)?.click();
+                                      }}
+                                    >
+                                      Subir foto
+                                    </Button>
+                                  </div>
                                 </div>
                                 <div className="flex items-center gap-2">
                                   {inputUrl && (
@@ -1005,13 +1047,13 @@ export default function AdminContentPage() {
             </Card>
           </TabsContent>
 
-          {/* LANDING PRINCIPAL TAB */}
+          {/* EXPO TAB */}
           <TabsContent value="expo">
             <Card className="p-6">
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-bold">Landing Page Principal (/inicio)</h2>
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold">Landing Page Promocional (Expo)</h2>
               </div>
-              <LandingContentManager showToast={showToast} />
+              <ExpoContentManager showToast={showToast} />
             </Card>
           </TabsContent>
 

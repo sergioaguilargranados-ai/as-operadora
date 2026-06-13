@@ -5,7 +5,7 @@ import { IProveedorHotel, ParametrosBusquedaHotel, RespuestaBusqueda } from '@/t
 import { HotelUnificado, OfertaHotelUnificada } from '@/types/unified-travel';
 
 export class HotelbedsAdapter implements IProveedorHotel {
-  nombreProveedor = 'hotelbeds';
+  nombreProveedor = 'hotelbeds' as const;
   private apiKey: string;
   private secret: string;
   private baseUrl: string;

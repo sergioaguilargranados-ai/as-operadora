@@ -6,7 +6,7 @@ import { VueloUnificado, ItinerarioVuelo, SegmentoVuelo } from '@/types/unified-
 
 export class DuffelAdapter implements IProveedorVuelo {
   nombreProveedor = 'duffel';
-  private client: Duffel;
+  private client: any;
 
   constructor() {
     // Es importante usar una variable de entorno. En desarrollo podemos fallback a una de prueba.
@@ -53,15 +53,15 @@ export class DuffelAdapter implements IProveedorVuelo {
       } as any);
 
       // 3. Mapear respuestas de Duffel al formato unificado de AS Operadora
-      const vuelosUnificados: VueloUnificado[] = response.data.offers.map(offer => {
+      const vuelosUnificados: VueloUnificado[] = response.data.offers.map((offer: any) => {
         return {
           id: offer.id,
           proveedor: this.nombreProveedor,
           referenciaProveedor: offer.id,
           precioTotal: parseFloat(offer.total_amount),
           moneda: offer.total_currency,
-          itinerarios: offer.slices.map(slice => {
-            const segmentos: SegmentoVuelo[] = slice.segments.map(segment => ({
+          itinerarios: offer.slices.map((slice: any) => {
+            const segmentos: SegmentoVuelo[] = slice.segments.map((segment: any) => ({
               origen: { iataCode: segment.origin.iata_code },
               destino: { iataCode: segment.destination.iata_code },
               fechaSalida: segment.departing_at,
