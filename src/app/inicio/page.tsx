@@ -60,23 +60,23 @@ export default function InicioLanding() {
         {/* Imagen a la derecha */}
         <div className="absolute right-0 top-0 bottom-0 w-full lg:w-[60%] z-0 h-full">
           <img 
-            src="/inicio/WhatsApp_Image_2026-06-12_at_11.15.55_AM.jpeg"
-            alt="Santorini" 
+            src={data?.hero_video_url || "/inicio/WhatsApp_Image_2026-06-12_at_11.15.55_AM.jpeg"} 
+            alt="Hero image" 
             className="w-full h-full object-cover"
           />
-          {/* Degradado para transición suave hacia el blanco de la izquierda */}
+          {/* Overlay gradiente suave desde la izquierda */}
           <div className="absolute inset-0 bg-gradient-to-r from-white via-white/70 to-transparent lg:w-[60%] hidden lg:block"></div>
-          {/* Para móviles, un degradado inferior */}
-          <div className="absolute inset-0 bg-gradient-to-t from-white via-white/80 to-transparent lg:hidden"></div>
+          {/* Overlay oscuro móvil */}
+          <div className="absolute inset-0 bg-white/80 lg:hidden"></div>
         </div>
 
         <div className="container mx-auto px-4 lg:px-8 relative z-10 flex pt-32 lg:pt-32 pb-12">
           <div className="w-full lg:w-[70%] xl:w-[65%] lg:pr-8">
             <h1 className={`text-5xl md:text-6xl lg:text-[4rem] font-medium text-black mb-6 leading-[1.1] tracking-tight ${playfair.className} max-w-2xl`}>
-              Viajes y eventos diseñados para inspirar, conectar y crecer.
+              {data?.hero_title || "Viajes y eventos diseñados para inspirar, conectar y crecer."}
             </h1>
             <p className="text-sm md:text-base text-gray-800 mb-12 max-w-lg font-normal leading-relaxed">
-              Soluciones para viajeros, agencias de viajes, agencias de eventos y empresas con atención personalizada y experiencias memorables en cada destino.
+              {data?.hero_subtitle || "Soluciones para viajeros, agencias de viajes, agencias de eventos y empresas con atención personalizada y experiencias memorables en cada destino."}
             </p>
 
             <div className="flex flex-wrap lg:flex-nowrap items-center gap-2 lg:gap-3">
