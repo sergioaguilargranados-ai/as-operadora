@@ -182,7 +182,7 @@ function RegistroForm() {
       {/* Lado Derecho: Imagen Decorativa */}
       <div className="hidden lg:block w-1/2 bg-gray-100 relative overflow-hidden">
         <img 
-          src="/inicio/13WhatsApp Image 2026-06-12 at 12.23.41 PM.jpeg" 
+          src="/inicio/13WhatsApp_Image_2026-06-12_at_12.23.41_PM.jpeg" 
           alt="Decoración" 
           className="absolute inset-0 w-full h-full object-cover"
         />

@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Playfair_Display, Inter } from 'next/font/google';
 import { Plane, Building, Users, Briefcase, ChevronRight, Shield, Star, HeartHandshake, Globe } from 'lucide-react';
+import { Logo } from '@/components/Logo';
+import { BrandFooter } from '@/components/BrandFooter';
 
 const playfair = Playfair_Display({ subsets: ['latin'], weight: ['400', '600', '700', '800'] });
 const inter = Inter({ subsets: ['latin'], weight: ['300', '400', '500', '600', '700'] });
@@ -53,9 +55,7 @@ export default function InicioLanding() {
       {/* HEADER */}
       <header className="fixed w-full top-0 z-50 bg-white/90 backdrop-blur-md border-b border-gray-100 shadow-sm">
         <div className="container mx-auto px-4 lg:px-8 h-20 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className={`text-2xl font-bold ${playfair.className}`}>AS Operadora</span>
-          </div>
+          <Logo forceDefault />
           <button 
             onClick={() => handleRegister('Viajero')}
             className="bg-black text-white px-6 py-2.5 rounded-full font-medium hover:bg-gray-800 transition-colors"
@@ -69,7 +69,7 @@ export default function InicioLanding() {
       <section className="relative pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden bg-[#F4F4F6]">
         <div className="absolute inset-0 z-0">
           <img 
-            src={data?.hero_video_url || "/inicio/WhatsApp Image 2026-06-12 at 11.15.55 AM.jpeg"} 
+            src={data?.hero_video_url || "/inicio/WhatsApp_Image_2026-06-12_at_11.15.55_AM.jpeg"} 
             alt="Hero Background" 
             className="w-full h-full object-cover opacity-90"
           />
@@ -133,11 +133,11 @@ export default function InicioLanding() {
           <h2 className={`text-3xl md:text-5xl font-bold text-center mb-16 ${playfair.className}`}>Destinos que te esperan</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6">
             {[
-              { name: "América", img: "1WhatsApp Image 2026-06-12 at 11.15.55 AM.jpeg" },
-              { name: "Europa", img: "3WhatsApp Image 2026-06-12 at 11.15.55 AM.jpeg" },
-              { name: "África", img: "4WhatsApp Image 2026-06-12 at 11.15.55 AM.jpeg" },
-              { name: "Asia", img: "5WhatsApp Image 2026-06-12 at 11.15.55 AM.jpeg" },
-              { name: "Oceanía", img: "11WhatsApp Image 2026-06-12 at 11.15.57 AM.jpeg" }
+              { name: "América", img: "1WhatsApp_Image_2026-06-12_at_11.15.55_AM.jpeg" },
+              { name: "Europa", img: "3WhatsApp_Image_2026-06-12_at_11.15.55_AM.jpeg" },
+              { name: "África", img: "4WhatsApp_Image_2026-06-12_at_11.15.55_AM.jpeg" },
+              { name: "Asia", img: "5WhatsApp_Image_2026-06-12_at_11.15.55_AM.jpeg" },
+              { name: "Oceanía", img: "11WhatsApp_Image_2026-06-12_at_11.15.57_AM.jpeg" }
             ].map((dest, i) => (
               <div key={i} className="relative rounded-3xl overflow-hidden aspect-[3/4] group cursor-pointer">
                 <img src={`/inicio/${dest.img}`} alt={dest.name} className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
@@ -155,9 +155,9 @@ export default function InicioLanding() {
           <h2 className={`text-3xl md:text-5xl font-bold text-center mb-16 ${playfair.className}`}>Nuestros Servicios</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {[
-              { title: "Viajes Vacacionales", img: "6WhatsApp Image 2026-06-12 at 11.15.56 AM.jpeg" },
-              { title: "Grupos y Convenciones", img: "7WhatsApp Image 2026-06-12 at 11.15.56 AM.jpeg" },
-              { title: "Operación para Agencias", img: "8WhatsApp Image 2026-06-12 at 11.15.56 AM.jpeg" }
+              { title: "Viajes Vacacionales", img: "6WhatsApp_Image_2026-06-12_at_11.15.56_AM.jpeg" },
+              { title: "Grupos y Convenciones", img: "7WhatsApp_Image_2026-06-12_at_11.15.56_AM.jpeg" },
+              { title: "Operación para Agencias", img: "8WhatsApp_Image_2026-06-12_at_11.15.56_AM.jpeg" }
             ].map((serv, i) => (
               <div key={i} className="rounded-3xl overflow-hidden bg-[#F4F4F6] group">
                 <div className="h-64 overflow-hidden relative">
@@ -217,11 +217,8 @@ export default function InicioLanding() {
         </div>
       </section>
 
-      {/* FOOTER BASICO */}
-      <footer className="py-8 bg-white border-t border-gray-100 text-center text-gray-500 text-sm">
-        <p>© {new Date().getFullYear()} AS Operadora de Viajes y Eventos. Todos los derechos reservados.</p>
-        <p className="mt-2 text-xs opacity-50">v2.347 | Build: 12 Jun 2026, 23:22 CST</p>
-      </footer>
+      {/* FOOTER OFICIAL */}
+      <BrandFooter />
     </div>
   );
 }
