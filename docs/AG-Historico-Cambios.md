@@ -1,13 +1,24 @@
 # 📋 AG-Histórico de Cambios - AS Operadora
 
-**Última actualización:** 13 de Junio de 2026 - 01:10 CST  
-**Versión actual:** v2.348  
+**Última actualización:** 13 de Junio de 2026 - 11:18 CST  
+**Versión actual:** v2.350  
 **Actualizado por:** AntiGravity AI Assistant  
 **Propósito:** Documento maestro del proyecto para trabajo con agentes AntiGravity
 
 ---
 
 ## 📅 HISTORIAL DE CAMBIOS
+
+### v2.350 - 13 de Junio de 2026 - 11:18 CST
+
+**🛠️ Feat: Actualización Completa del Módulo de Gestión de Contenidos (CMS)**
+
+**Objetivo:** Permitir al administrador editar dinámicamente **todas** las nuevas secciones de la Landing Page sin depender de código "hardcodeado".
+
+**Cambios implementados:**
+- ✅ Ampliación del panel `LandingContentManager.tsx` para agregar todas las nuevas áreas: ¿Cómo podemos ayudarte?, Destinos, Servicios, Beneficios, y Aliado de Negocios.
+- ✅ Reestructuración del JSON en la tabla de base de datos NeonDB para almacenar los textos y rutas de imágenes dinámicas por categoría.
+- ✅ Conexión entre la base de datos y `src/app/inicio/page.tsx` para consumir e inyectar toda esta información en el frontend, usando `||` para dar un valor de retorno en caso de campos vacíos.
 
 ### v2.348 - 13 de Junio de 2026 - 01:10 CST
 
