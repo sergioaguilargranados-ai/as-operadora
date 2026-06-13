@@ -908,11 +908,35 @@ export const sendPriceAlertEmail = async (data: {
 
         return await sendEmail({
             to: data.email,
-            subject: `📉 ¡Bajó el precio! ${data.origin} → ${data.destination}`,
+            subject: `🔥 ¡Bajó el precio! ${data.origin} ✈️ ${data.destination}`,
             html
         });
     } catch (error) {
         console.error('Error enviando alerta de precio:', error);
+        return false;
+    }
+};
+
+// 16. Welcome para Landing Page Permanente
+export const sendLandingWelcomeEmail = async (data: {
+    name: string;
+    email: string;
+    type?: string;
+}): Promise<boolean> => {
+    try {
+        const html = renderTemplate('landing-welcome', {
+            CUSTOMER_NAME: data.name,
+            EMAIL: data.email,
+            SUBJECT: 'Recepción de Solicitud de Registro - AS Operadora'
+        });
+
+        return await sendEmail({
+            to: data.email,
+            subject: 'Recepción de Solicitud de Registro - AS Operadora',
+            html
+        });
+    } catch (error) {
+        console.error('Error enviando correo de bienvenida de landing:', error);
         return false;
     }
 };
