@@ -35,6 +35,8 @@ export default function InicioLanding() {
     return <div className="min-h-screen flex items-center justify-center bg-white">Cargando...</div>;
   }
 
+  const sj = data?.sections_json ? (typeof data.sections_json === 'string' ? JSON.parse(data.sections_json) : data.sections_json) : {};
+
   return (
     <div className={`min-h-screen bg-white text-black ${inter.className}`}>
       {/* HEADER */}
@@ -103,36 +105,36 @@ export default function InicioLanding() {
       {/* ¿CÓMO PODEMOS AYUDARTE? */}
       <section className="py-12 bg-white border-t border-gray-100">
         <div className="container mx-auto px-4 lg:px-8">
-          <h3 className="text-xs font-bold tracking-[0.2em] text-center text-gray-500 mb-16 uppercase">¿CÓMO PODEMOS AYUDARTE?</h3>
+          <h3 className="text-xs font-bold tracking-[0.2em] text-center text-gray-500 mb-16 uppercase">{sj?.ayudas?.title || "¿CÓMO PODEMOS AYUDARTE?"}</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {[
               { 
-                title: "Viajeros", 
-                img: "14WhatsApp_Image_2026-06-12_at_6.00.02_PM_(1).jpeg", 
+                title: sj?.ayudas?.items?.[0]?.title || "Viajeros", 
+                img: sj?.ayudas?.items?.[0]?.img || "14WhatsApp_Image_2026-06-12_at_6.00.02_PM_(1).jpeg", 
                 icon: Briefcase,
-                bullets: ["Paquetes personalizados", "Viajes grupales", "Cruceros"],
-                action: "Explorar viajes"
+                bullets: sj?.ayudas?.items?.[0]?.bullets || ["Paquetes personalizados", "Viajes grupales", "Cruceros"],
+                action: sj?.ayudas?.items?.[0]?.action || "Explorar viajes"
               },
               { 
-                title: "Agencias de Viajes", 
-                img: "8WhatsApp_Image_2026-06-12_at_11.15.56_AM.jpeg", 
+                title: sj?.ayudas?.items?.[1]?.title || "Agencias de Viajes", 
+                img: sj?.ayudas?.items?.[1]?.img || "8WhatsApp_Image_2026-06-12_at_11.15.56_AM.jpeg", 
                 icon: Plane,
-                bullets: ["Tarifas preferenciales", "Creación de grupos", "Soporte especializado 24/7"],
-                action: "Afiliar mi agencia de viajes"
+                bullets: sj?.ayudas?.items?.[1]?.bullets || ["Tarifas preferenciales", "Creación de grupos", "Soporte especializado 24/7"],
+                action: sj?.ayudas?.items?.[1]?.action || "Afiliar mi agencia de viajes"
               },
               { 
-                title: "Agencias de Eventos", 
-                img: "7WhatsApp_Image_2026-06-12_at_11.15.56_AM.jpeg", 
+                title: sj?.ayudas?.items?.[2]?.title || "Agencias de Eventos", 
+                img: sj?.ayudas?.items?.[2]?.img || "7WhatsApp_Image_2026-06-12_at_11.15.56_AM.jpeg", 
                 icon: Globe,
-                bullets: ["Organización integral", "Logística y producción", "Proveedores especializados"],
-                action: "Conocer más"
+                bullets: sj?.ayudas?.items?.[2]?.bullets || ["Organización integral", "Logística y producción", "Proveedores especializados"],
+                action: sj?.ayudas?.items?.[2]?.action || "Conocer más"
               },
               { 
-                title: "Empresas", 
-                img: "6WhatsApp_Image_2026-06-12_at_11.15.56_AM.jpeg", 
+                title: sj?.ayudas?.items?.[3]?.title || "Empresas", 
+                img: sj?.ayudas?.items?.[3]?.img || "6WhatsApp_Image_2026-06-12_at_11.15.56_AM.jpeg", 
                 icon: Briefcase,
-                bullets: ["Viajes incentivos", "Congresos y ferias", "Integración de equipos"],
-                action: "Solicitar propuesta"
+                bullets: sj?.ayudas?.items?.[3]?.bullets || ["Viajes incentivos", "Congresos y ferias", "Integración de equipos"],
+                action: sj?.ayudas?.items?.[3]?.action || "Solicitar propuesta"
               }
             ].map((item, i) => (
               <div key={i} className="flex flex-col group">
@@ -148,7 +150,7 @@ export default function InicioLanding() {
                 <div className="px-2 pt-4">
                   <h4 className={`text-xl font-medium mb-4 ${playfair.className}`}>{item.title}</h4>
                   <ul className="space-y-2 mb-6 text-sm text-gray-600">
-                    {item.bullets.map((bullet, j) => (
+                    {item.bullets.map((bullet: string, j: number) => (
                       <li key={j} className="flex items-center gap-2">
                         <span className="w-1 h-1 bg-black rounded-full"></span>
                         {bullet}
@@ -169,18 +171,18 @@ export default function InicioLanding() {
       <section className="py-12 bg-white border-t border-gray-100">
         <div className="container mx-auto px-4 lg:px-8">
           <div className="text-center mb-16">
-            <h3 className="text-xs font-bold tracking-[0.2em] text-gray-500 mb-4 uppercase">DESTINOS QUE TE ESPERAN</h3>
-            <h2 className={`text-4xl md:text-5xl font-medium mb-4 ${playfair.className}`}>Descubre el mundo</h2>
-            <p className="text-sm text-gray-500 max-w-lg mx-auto">Cada continente, experiencias únicas y momentos que recordarás siempre.</p>
+            <h3 className="text-xs font-bold tracking-[0.2em] text-gray-500 mb-4 uppercase">{sj?.destinos?.title || "DESTINOS QUE TE ESPERAN"}</h3>
+            <h2 className={`text-4xl md:text-5xl font-medium mb-4 ${playfair.className}`}>{sj?.destinos?.heading || "Descubre el mundo"}</h2>
+            <p className="text-sm text-gray-500 max-w-lg mx-auto">{sj?.destinos?.desc || "Cada continente, experiencias únicas y momentos que recordarás siempre."}</p>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6">
             {[
-              { name: "América", desc: "Naturaleza, cultura y aventura", img: "1WhatsApp_Image_2026-06-12_at_11.15.55_AM.jpeg" },
-              { name: "Europa", desc: "Historia, arte y elegancia", img: "3WhatsApp_Image_2026-06-12_at_11.15.55_AM.jpeg" },
-              { name: "África", desc: "Vida salvaje y paisajes únicos", img: "4WhatsApp_Image_2026-06-12_at_11.15.55_AM.jpeg" },
-              { name: "Asia", desc: "Tradición, modernidad e inspiración", img: "5WhatsApp_Image_2026-06-12_at_11.15.55_AM.jpeg" },
-              { name: "Oceanía", desc: "Playas, ciudades y naturaleza excepcional", img: "11WhatsApp_Image_2026-06-12_at_11.15.57_AM.jpeg" }
+              { name: sj?.destinos?.items?.[0]?.name || "América", desc: sj?.destinos?.items?.[0]?.desc || "Naturaleza, cultura y aventura", img: sj?.destinos?.items?.[0]?.img || "1WhatsApp_Image_2026-06-12_at_11.15.55_AM.jpeg" },
+              { name: sj?.destinos?.items?.[1]?.name || "Europa", desc: sj?.destinos?.items?.[1]?.desc || "Historia, arte y elegancia", img: sj?.destinos?.items?.[1]?.img || "3WhatsApp_Image_2026-06-12_at_11.15.55_AM.jpeg" },
+              { name: sj?.destinos?.items?.[2]?.name || "África", desc: sj?.destinos?.items?.[2]?.desc || "Vida salvaje y paisajes únicos", img: sj?.destinos?.items?.[2]?.img || "4WhatsApp_Image_2026-06-12_at_11.15.55_AM.jpeg" },
+              { name: sj?.destinos?.items?.[3]?.name || "Asia", desc: sj?.destinos?.items?.[3]?.desc || "Tradición, modernidad e inspiración", img: sj?.destinos?.items?.[3]?.img || "5WhatsApp_Image_2026-06-12_at_11.15.55_AM.jpeg" },
+              { name: sj?.destinos?.items?.[4]?.name || "Oceanía", desc: sj?.destinos?.items?.[4]?.desc || "Playas, ciudades y naturaleza excepcional", img: sj?.destinos?.items?.[4]?.img || "11WhatsApp_Image_2026-06-12_at_11.15.57_AM.jpeg" }
             ].map((dest, i) => (
               <div key={i} className="flex flex-col group cursor-pointer">
                 <div className="aspect-[4/3] rounded-sm overflow-hidden mb-4">
@@ -201,15 +203,15 @@ export default function InicioLanding() {
       <section className="py-12 bg-white border-t border-gray-100">
         <div className="container mx-auto px-4 lg:px-8">
           <div className="text-center mb-16">
-            <h3 className="text-xs font-bold tracking-[0.2em] text-gray-500 mb-4 uppercase">NUESTROS SERVICIOS</h3>
-            <h2 className={`text-4xl md:text-5xl font-medium ${playfair.className}`}>Soluciones para cada necesidad</h2>
+            <h3 className="text-xs font-bold tracking-[0.2em] text-gray-500 mb-4 uppercase">{sj?.servicios?.title || "NUESTROS SERVICIOS"}</h3>
+            <h2 className={`text-4xl md:text-5xl font-medium ${playfair.className}`}>{sj?.servicios?.heading || "Soluciones para cada necesidad"}</h2>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {[
-              { title: "Viajes Vacacionales", desc: "Experiencias diseñadas para disfrutar, descansar y crear recuerdos inolvidables.", img: "6WhatsApp_Image_2026-06-12_at_11.15.56_AM.jpeg", icon: Star },
-              { title: "Grupos y Convenciones", desc: "Organizamos eventos y viajes que conectan, motivan y generan impacto.", img: "7WhatsApp_Image_2026-06-12_at_11.15.56_AM.jpeg", icon: Users },
-              { title: "Operación para Agencias", desc: "Herramientas, tarifas competitivas y acompañamiento experto.", img: "8WhatsApp_Image_2026-06-12_at_11.15.56_AM.jpeg", icon: HeartHandshake }
+              { title: sj?.servicios?.items?.[0]?.title || "Viajes Vacacionales", desc: sj?.servicios?.items?.[0]?.desc || "Experiencias diseñadas para disfrutar, descansar y crear recuerdos inolvidables.", img: sj?.servicios?.items?.[0]?.img || "6WhatsApp_Image_2026-06-12_at_11.15.56_AM.jpeg", icon: Star },
+              { title: sj?.servicios?.items?.[1]?.title || "Grupos y Convenciones", desc: sj?.servicios?.items?.[1]?.desc || "Organizamos eventos y viajes que conectan, motivan y generan impacto.", img: sj?.servicios?.items?.[1]?.img || "7WhatsApp_Image_2026-06-12_at_11.15.56_AM.jpeg", icon: Users },
+              { title: sj?.servicios?.items?.[2]?.title || "Operación para Agencias", desc: sj?.servicios?.items?.[2]?.desc || "Herramientas, tarifas competitivas y acompañamiento experto.", img: sj?.servicios?.items?.[2]?.img || "8WhatsApp_Image_2026-06-12_at_11.15.56_AM.jpeg", icon: HeartHandshake }
             ].map((serv, i) => (
               <div key={i} className="flex flex-col group">
                 <div className="relative mb-6">
@@ -238,10 +240,10 @@ export default function InicioLanding() {
         <div className="container mx-auto px-4 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {[
-              { title: "Experiencias memorables", desc: "Diseñamos viajes cuidadosamente para cada necesidad y presupuesto.", icon: Star },
-              { title: "Atención personalizada", desc: "Un asesor te acompañará antes, durante y después de tu viaje.", icon: HeartHandshake },
-              { title: "Destinos selectos", desc: "Opciones nacionales e internacionales para cada tipo de viajero y empresa.", icon: Globe },
-              { title: "Protección de datos", desc: "Tu información está segura con tecnología y procesos certificados.", icon: Shield }
+              { title: sj?.beneficios?.items?.[0]?.title || "Experiencias memorables", desc: sj?.beneficios?.items?.[0]?.desc || "Diseñamos viajes cuidadosamente para cada necesidad y presupuesto.", icon: Star },
+              { title: sj?.beneficios?.items?.[1]?.title || "Atención personalizada", desc: sj?.beneficios?.items?.[1]?.desc || "Un asesor te acompañará antes, durante y después de tu viaje.", icon: HeartHandshake },
+              { title: sj?.beneficios?.items?.[2]?.title || "Destinos selectos", desc: sj?.beneficios?.items?.[2]?.desc || "Opciones nacionales e internacionales para cada tipo de viajero y empresa.", icon: Globe },
+              { title: sj?.beneficios?.items?.[3]?.title || "Protección de datos", desc: sj?.beneficios?.items?.[3]?.desc || "Tu información está segura con tecnología y procesos certificados.", icon: Shield }
             ].map((ben, i) => (
               <div key={i} className="flex items-start gap-4">
                 <div className="mt-1">
@@ -261,27 +263,27 @@ export default function InicioLanding() {
       <section className="bg-[#0f1115] text-white">
         <div className="flex flex-col lg:flex-row">
           <div className="w-full lg:w-1/2 p-12 lg:p-24 flex flex-col justify-center">
-            <h3 className="text-[10px] font-bold tracking-[0.2em] text-gray-400 mb-6 uppercase">PARA AGENCIAS DE VIAJES</h3>
-            <h2 className={`text-4xl md:text-5xl font-medium mb-6 ${playfair.className}`}>Tu aliado de negocios</h2>
+            <h3 className="text-[10px] font-bold tracking-[0.2em] text-gray-400 mb-6 uppercase">{sj?.aliado?.badge || "PARA AGENCIAS DE VIAJES"}</h3>
+            <h2 className={`text-4xl md:text-5xl font-medium mb-6 ${playfair.className}`}>{sj?.aliado?.title || "Tu aliado de negocios"}</h2>
             <p className="text-sm text-gray-300 mb-12 max-w-md leading-relaxed">
-              Trabajamos juntos para que tu agencia crezca más, con la tranquilidad de tener un equipo que te respalda.
+              {sj?.aliado?.desc || "Trabajamos juntos para que tu agencia crezca más, con la tranquilidad de tener un equipo que te respalda."}
             </p>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
               <div>
                 <Briefcase className="w-6 h-6 mb-3 text-gray-400" strokeWidth={1.5} />
-                <h4 className="text-xs font-semibold mb-2">Herramientas</h4>
-                <p className="text-[10px] text-gray-400 leading-relaxed">Plataforma fácil de usar para cotizar, reservar y administrar.</p>
+                <h4 className="text-xs font-semibold mb-2">{sj?.aliado?.items?.[0]?.title || "Herramientas"}</h4>
+                <p className="text-[10px] text-gray-400 leading-relaxed">{sj?.aliado?.items?.[0]?.desc || "Plataforma fácil de usar para cotizar, reservar y administrar."}</p>
               </div>
               <div>
                 <Star className="w-6 h-6 mb-3 text-gray-400" strokeWidth={1.5} />
-                <h4 className="text-xs font-semibold mb-2">Tarifas competitivas</h4>
-                <p className="text-[10px] text-gray-400 leading-relaxed">Acceso a tarifas preferenciales y promociones exclusivas para tu agencia.</p>
+                <h4 className="text-xs font-semibold mb-2">{sj?.aliado?.items?.[1]?.title || "Tarifas competitivas"}</h4>
+                <p className="text-[10px] text-gray-400 leading-relaxed">{sj?.aliado?.items?.[1]?.desc || "Acceso a tarifas preferenciales y promociones exclusivas para tu agencia."}</p>
               </div>
               <div>
                 <Users className="w-6 h-6 mb-3 text-gray-400" strokeWidth={1.5} />
-                <h4 className="text-xs font-semibold mb-2">Acompañamiento experto</h4>
-                <p className="text-[10px] text-gray-400 leading-relaxed">Soporte y capacitación constante para impulsar tu crecimiento.</p>
+                <h4 className="text-xs font-semibold mb-2">{sj?.aliado?.items?.[2]?.title || "Acompañamiento experto"}</h4>
+                <p className="text-[10px] text-gray-400 leading-relaxed">{sj?.aliado?.items?.[2]?.desc || "Soporte y capacitación constante para impulsar tu crecimiento."}</p>
               </div>
             </div>
 
@@ -293,7 +295,7 @@ export default function InicioLanding() {
           </div>
           
           <div className="w-full lg:w-1/2 min-h-[400px] relative">
-            <img src="/inicio/13WhatsApp_Image_2026-06-12_at_12.23.41_PM.jpeg" alt="Aliado de negocios" className="absolute inset-0 w-full h-full object-cover" />
+            <img src={`/inicio/${sj?.aliado?.img || "13WhatsApp_Image_2026-06-12_at_12.23.41_PM.jpeg"}`} alt={sj?.aliado?.title || "Aliado de negocios"} className="absolute inset-0 w-full h-full object-cover" />
             <div className="absolute inset-0 bg-gradient-to-r from-[#0f1115] to-transparent hidden lg:block"></div>
             <div className="absolute inset-0 bg-gradient-to-t from-[#0f1115] to-transparent lg:hidden"></div>
           </div>

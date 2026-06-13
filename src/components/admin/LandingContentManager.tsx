@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Save, Video, Layout } from "lucide-react";
+import { Save, Video, Layout, List, Map, Briefcase, Star, Users } from "lucide-react";
 
 export function LandingContentManager({ showToast }: { showToast: (msg: string, type: 'success' | 'error') => void }) {
   const [loading, setLoading] = useState(true);
@@ -63,7 +63,39 @@ export function LandingContentManager({ showToast }: { showToast: (msg: string, 
     }
   };
 
+  // Helper to update deeply nested sections
+  const updateSection = (sectionKey: string, field: string, value: any) => {
+    setContent(prev => ({
+      ...prev,
+      sections_json: {
+        ...prev.sections_json,
+        [sectionKey]: {
+          ...(prev.sections_json[sectionKey] || {}),
+          [field]: value
+        }
+      }
+    }));
+  };
+
+  const updateItem = (sectionKey: string, itemIndex: number, field: string, value: any) => {
+    setContent(prev => {
+      const sec = prev.sections_json[sectionKey] || { items: [] };
+      const items = [...(sec.items || [])];
+      if (!items[itemIndex]) items[itemIndex] = {};
+      items[itemIndex] = { ...items[itemIndex], [field]: value };
+      return {
+        ...prev,
+        sections_json: {
+          ...prev.sections_json,
+          [sectionKey]: { ...sec, items }
+        }
+      };
+    });
+  };
+
   if (loading) return <div>Cargando contenido de Landing...</div>;
+
+  const sj = content.sections_json || {};
 
   return (
     <div className="space-y-6">
@@ -71,11 +103,19 @@ export function LandingContentManager({ showToast }: { showToast: (msg: string, 
         <Layout className="w-5 h-5 flex-shrink-0 mt-0.5" />
         <div>
           <p className="font-semibold">Landing Principal (/inicio)</p>
-          <p>La nueva estructura de la Landing utiliza valores predeterminados (hardcoded) para mantener su diseño impecable (secciones de ayudas, destinos, servicios). Puedes usar esta sección para modificar el título, subtítulo e imagen principal del Hero.</p>
+          <p>Administra las imágenes y textos de todas las secciones de la página principal. Los íconos vectoriales del diseño se mantienen fijos para asegurar la calidad visual de la interfaz.</p>
         </div>
       </div>
 
-      <Card className="p-6">
+      <div className="flex justify-end sticky top-0 z-10 bg-white/80 backdrop-blur-sm py-2">
+        <Button onClick={handleSave} disabled={saving} className="bg-black text-white hover:bg-gray-800">
+          <Save className="w-4 h-4 mr-2" />
+          {saving ? 'Guardando...' : 'Guardar Cambios'}
+        </Button>
+      </div>
+
+      {/* HERO */}
+      <Card className="p-6 border-gray-200">
         <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
           <Video className="w-5 h-5" />
           Configuración Hero
@@ -108,12 +148,194 @@ export function LandingContentManager({ showToast }: { showToast: (msg: string, 
         </div>
       </Card>
 
-      <div className="flex justify-end">
-        <Button onClick={handleSave} disabled={saving} className="bg-black text-white hover:bg-gray-800">
-          <Save className="w-4 h-4 mr-2" />
-          {saving ? 'Guardando...' : 'Guardar Cambios'}
-        </Button>
-      </div>
+      {/* AYUDAS */}
+      <Card className="p-6 border-gray-200">
+        <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+          <List className="w-5 h-5" />
+          Sección: ¿Cómo podemos ayudarte?
+        </h3>
+        <div className="space-y-6">
+          <div>
+            <label className="text-sm font-medium mb-1 block">Título de Sección</label>
+            <Input value={sj?.ayudas?.title || ''} onChange={e => updateSection('ayudas', 'title', e.target.value)} />
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {(sj?.ayudas?.items || []).map((item: any, i: number) => (
+              <div key={i} className="border p-4 rounded-lg bg-gray-50 space-y-3">
+                <h4 className="font-semibold text-sm">Tarjeta {i + 1}</h4>
+                <div>
+                  <label className="text-xs font-medium block">Título</label>
+                  <Input className="text-xs" value={item.title || ''} onChange={e => updateItem('ayudas', i, 'title', e.target.value)} />
+                </div>
+                <div>
+                  <label className="text-xs font-medium block">Imagen (ruta)</label>
+                  <Input className="text-xs" value={item.img || ''} onChange={e => updateItem('ayudas', i, 'img', e.target.value)} />
+                </div>
+                <div>
+                  <label className="text-xs font-medium block">Viñetas (separar por coma)</label>
+                  <Input className="text-xs" value={(item.bullets || []).join(', ')} onChange={e => updateItem('ayudas', i, 'bullets', e.target.value.split(',').map((s:string)=>s.trim()))} />
+                </div>
+                <div>
+                  <label className="text-xs font-medium block">Texto Botón</label>
+                  <Input className="text-xs" value={item.action || ''} onChange={e => updateItem('ayudas', i, 'action', e.target.value)} />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </Card>
+
+      {/* DESTINOS */}
+      <Card className="p-6 border-gray-200">
+        <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+          <Map className="w-5 h-5" />
+          Sección: Destinos que te esperan
+        </h3>
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label className="text-sm font-medium block">Etiqueta</label>
+              <Input value={sj?.destinos?.title || ''} onChange={e => updateSection('destinos', 'title', e.target.value)} />
+            </div>
+            <div>
+              <label className="text-sm font-medium block">Título Principal</label>
+              <Input value={sj?.destinos?.heading || ''} onChange={e => updateSection('destinos', 'heading', e.target.value)} />
+            </div>
+            <div>
+              <label className="text-sm font-medium block">Descripción Corta</label>
+              <Input value={sj?.destinos?.desc || ''} onChange={e => updateSection('destinos', 'desc', e.target.value)} />
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
+            {(sj?.destinos?.items || []).map((item: any, i: number) => (
+              <div key={i} className="border p-4 rounded-lg bg-gray-50 space-y-3">
+                <h4 className="font-semibold text-sm">Destino {i + 1}</h4>
+                <div>
+                  <label className="text-xs font-medium block">Nombre</label>
+                  <Input className="text-xs" value={item.name || ''} onChange={e => updateItem('destinos', i, 'name', e.target.value)} />
+                </div>
+                <div>
+                  <label className="text-xs font-medium block">Descripción</label>
+                  <Input className="text-xs" value={item.desc || ''} onChange={e => updateItem('destinos', i, 'desc', e.target.value)} />
+                </div>
+                <div>
+                  <label className="text-xs font-medium block">Imagen (ruta)</label>
+                  <Input className="text-xs" value={item.img || ''} onChange={e => updateItem('destinos', i, 'img', e.target.value)} />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </Card>
+
+      {/* SERVICIOS */}
+      <Card className="p-6 border-gray-200">
+        <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+          <Briefcase className="w-5 h-5" />
+          Sección: Nuestros Servicios
+        </h3>
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="text-sm font-medium block">Etiqueta</label>
+              <Input value={sj?.servicios?.title || ''} onChange={e => updateSection('servicios', 'title', e.target.value)} />
+            </div>
+            <div>
+              <label className="text-sm font-medium block">Título Principal</label>
+              <Input value={sj?.servicios?.heading || ''} onChange={e => updateSection('servicios', 'heading', e.target.value)} />
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {(sj?.servicios?.items || []).map((item: any, i: number) => (
+              <div key={i} className="border p-4 rounded-lg bg-gray-50 space-y-3">
+                <h4 className="font-semibold text-sm">Servicio {i + 1}</h4>
+                <div>
+                  <label className="text-xs font-medium block">Título</label>
+                  <Input className="text-xs" value={item.title || ''} onChange={e => updateItem('servicios', i, 'title', e.target.value)} />
+                </div>
+                <div>
+                  <label className="text-xs font-medium block">Descripción</label>
+                  <Input className="text-xs" value={item.desc || ''} onChange={e => updateItem('servicios', i, 'desc', e.target.value)} />
+                </div>
+                <div>
+                  <label className="text-xs font-medium block">Imagen (ruta)</label>
+                  <Input className="text-xs" value={item.img || ''} onChange={e => updateItem('servicios', i, 'img', e.target.value)} />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </Card>
+
+      {/* BENEFICIOS */}
+      <Card className="p-6 border-gray-200">
+        <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+          <Star className="w-5 h-5" />
+          Sección: Beneficios
+        </h3>
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {(sj?.beneficios?.items || []).map((item: any, i: number) => (
+              <div key={i} className="border p-4 rounded-lg bg-gray-50 space-y-3">
+                <h4 className="font-semibold text-sm">Beneficio {i + 1}</h4>
+                <div>
+                  <label className="text-xs font-medium block">Título</label>
+                  <Input className="text-xs" value={item.title || ''} onChange={e => updateItem('beneficios', i, 'title', e.target.value)} />
+                </div>
+                <div>
+                  <label className="text-xs font-medium block">Descripción</label>
+                  <Input className="text-xs" value={item.desc || ''} onChange={e => updateItem('beneficios', i, 'desc', e.target.value)} />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </Card>
+
+      {/* ALIADO */}
+      <Card className="p-6 border-gray-200 mb-12">
+        <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+          <Users className="w-5 h-5" />
+          Sección: Aliado de Negocios
+        </h3>
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="text-sm font-medium block">Etiqueta (Badge)</label>
+              <Input value={sj?.aliado?.badge || ''} onChange={e => updateSection('aliado', 'badge', e.target.value)} />
+            </div>
+            <div>
+              <label className="text-sm font-medium block">Título Principal</label>
+              <Input value={sj?.aliado?.title || ''} onChange={e => updateSection('aliado', 'title', e.target.value)} />
+            </div>
+            <div>
+              <label className="text-sm font-medium block">Descripción general</label>
+              <Input value={sj?.aliado?.desc || ''} onChange={e => updateSection('aliado', 'desc', e.target.value)} />
+            </div>
+            <div>
+              <label className="text-sm font-medium block">Imagen Lateral (ruta)</label>
+              <Input value={sj?.aliado?.img || ''} onChange={e => updateSection('aliado', 'img', e.target.value)} />
+            </div>
+          </div>
+          <h4 className="font-semibold text-sm mt-4">Puntos Clave</h4>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {(sj?.aliado?.items || []).map((item: any, i: number) => (
+              <div key={i} className="border p-4 rounded-lg bg-gray-50 space-y-3">
+                <h4 className="font-semibold text-sm">Punto {i + 1}</h4>
+                <div>
+                  <label className="text-xs font-medium block">Título</label>
+                  <Input className="text-xs" value={item.title || ''} onChange={e => updateItem('aliado', i, 'title', e.target.value)} />
+                </div>
+                <div>
+                  <label className="text-xs font-medium block">Descripción</label>
+                  <Input className="text-xs" value={item.desc || ''} onChange={e => updateItem('aliado', i, 'desc', e.target.value)} />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </Card>
+      
     </div>
   );
 }
