@@ -76,19 +76,22 @@ export function Logo({ className = "", forceDefault = false, size = 'md' }: Logo
     )
   }
 
-  // Default: Logo AS Operadora (sin cambios del diseño original)
+  // Default: Logo AS Operadora (diseño según mockup)
   return (
-    <div className={`flex flex-col ${className}`}>
-      <div className="flex items-baseline gap-1">
-        <span className={`${s.text} font-bold tracking-tighter leading-none text-black`} style={{ fontFamily: 'Georgia, serif' }}>
-          A<span className={s.text}>S</span>
+    <div className={`flex items-center gap-3 ${className}`}>
+      <span className={`${s.text} font-normal tracking-tighter leading-none text-black`} style={{ fontFamily: 'Georgia, serif' }}>
+        A<span className={s.text}>S</span>
+      </span>
+      
+      <div className="h-8 w-[1px] bg-gray-300"></div>
+      
+      <div className="flex flex-col justify-center">
+        <span className="text-[10px] tracking-widest font-bold leading-tight mt-0.5 text-black">
+          OPERADORA DE
         </span>
-      </div>
-      <div className={`${s.sub} tracking-[0.15em] font-medium leading-tight mt-0.5 uppercase text-black`} style={{ fontFamily: 'Georgia, serif' }}>
-        AS OPERADORA DE VIAJES Y EVENTOS
-      </div>
-      <div className={`${s.sub} text-gray-700 leading-tight -mt-0.5`} style={{ fontFamily: 'Georgia, serif' }}>
-        AS Viajando
+        <span className="text-[10px] tracking-widest font-bold leading-tight text-black">
+          VIAJES Y EVENTOS
+        </span>
       </div>
     </div>
   )

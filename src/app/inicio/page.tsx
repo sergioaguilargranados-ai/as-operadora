@@ -1,15 +1,15 @@
 "use client"
 
 import React, { useEffect, useState } from 'react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Playfair_Display, Inter } from 'next/font/google';
-import { Plane, Building, Users, Briefcase, ChevronRight, Shield, Star, HeartHandshake, Globe } from 'lucide-react';
+import { Playfair_Display, Inter, Caveat } from 'next/font/google';
+import { Plane, Building, Users, Briefcase, ChevronRight, Shield, Star, HeartHandshake, Globe, ArrowRight, Menu } from 'lucide-react';
 import { Logo } from '@/components/Logo';
 import { BrandFooter } from '@/components/BrandFooter';
 
 const playfair = Playfair_Display({ subsets: ['latin'], weight: ['400', '600', '700', '800'] });
 const inter = Inter({ subsets: ['latin'], weight: ['300', '400', '500', '600', '700'] });
+const caveat = Caveat({ subsets: ['latin'], weight: ['400', '700'] });
 
 export default function InicioLanding() {
   const router = useRouter();
@@ -32,75 +32,69 @@ export default function InicioLanding() {
     router.push(`/inicio/registro?type=${encodeURIComponent(type)}`);
   };
 
-  // Helper for parsing JSON safely
-  const getSections = () => {
-    if (!data || !data.sections_json) return {};
-    try {
-      return typeof data.sections_json === 'string' 
-        ? JSON.parse(data.sections_json) 
-        : data.sections_json;
-    } catch {
-      return {};
-    }
-  };
-
-  const sections = getSections();
-
   if (loading) {
-    return <div className="min-h-screen flex items-center justify-center bg-[#F4F4F6]">Cargando...</div>;
+    return <div className="min-h-screen flex items-center justify-center bg-white">Cargando...</div>;
   }
 
   return (
-    <div className={`min-h-screen bg-white text-[#1C1C1E] ${inter.className}`}>
+    <div className={`min-h-screen bg-white text-black ${inter.className}`}>
       {/* HEADER */}
-      <header className="fixed w-full top-0 z-50 bg-white/90 backdrop-blur-md border-b border-gray-100 shadow-sm">
-        <div className="container mx-auto px-4 lg:px-8 h-20 flex items-center justify-between">
+      <header className="absolute w-full top-0 z-50 bg-transparent">
+        <div className="container mx-auto px-4 lg:px-8 h-24 flex items-center justify-between">
           <Logo forceDefault />
-          <button 
-            onClick={() => handleRegister('Viajero')}
-            className="bg-black text-white px-6 py-2.5 rounded-full font-medium hover:bg-gray-800 transition-colors"
-          >
-            Regístrate
-          </button>
+          <div className="flex items-center gap-4">
+            <button 
+              onClick={() => handleRegister('Viajero')}
+              className="bg-black text-white px-6 py-2 rounded font-medium hover:bg-gray-800 transition-colors text-sm"
+            >
+              Regístrate
+            </button>
+            <button className="p-2 hover:bg-gray-100 rounded-full transition-colors">
+              <Menu className="w-6 h-6 text-black" />
+            </button>
+          </div>
         </div>
       </header>
 
-      {/* HERO PRINCIPAL (DISEÑO SPLIT) */}
-      <section className="relative min-h-screen flex items-center bg-white pt-20">
-        <div className="absolute right-0 top-0 bottom-0 w-full lg:w-[55%] z-0">
+      {/* HERO PRINCIPAL (SPLIT LAYOUT) */}
+      <section className="relative min-h-[90vh] flex items-center bg-white pt-24 pb-12 lg:pt-0 lg:pb-0 overflow-hidden">
+        {/* Imagen a la derecha */}
+        <div className="absolute right-0 top-0 bottom-0 w-full lg:w-[60%] z-0 h-full">
           <img 
             src={data?.hero_video_url || "/inicio/WhatsApp_Image_2026-06-12_at_11.15.55_AM.jpeg"} 
-            alt="Hero Background" 
+            alt="Santorini" 
             className="w-full h-full object-cover"
           />
-          {/* Gradiente para difuminar la imagen hacia el blanco a la izquierda */}
-          <div className="absolute inset-0 bg-gradient-to-r from-white via-white/80 to-transparent lg:w-1/2"></div>
+          {/* Degradado para transición suave hacia el blanco de la izquierda */}
+          <div className="absolute inset-0 bg-gradient-to-r from-white via-white/70 to-transparent lg:w-[60%] hidden lg:block"></div>
+          {/* Para móviles, un degradado inferior */}
+          <div className="absolute inset-0 bg-gradient-to-t from-white via-white/80 to-transparent lg:hidden"></div>
         </div>
 
         <div className="container mx-auto px-4 lg:px-8 relative z-10 flex pt-12 lg:pt-0">
-          <div className="w-full lg:w-[60%] max-w-2xl bg-white/90 lg:bg-transparent p-6 lg:p-0 rounded-2xl lg:rounded-none backdrop-blur-sm lg:backdrop-blur-none">
-            <h1 className={`text-5xl md:text-6xl lg:text-7xl font-bold text-black mb-6 leading-tight tracking-tight ${playfair.className}`}>
-              Viajes y eventos diseñados para inspirar, conectar y crecer.
+          <div className="w-full lg:w-[50%] lg:pr-8">
+            <h1 className={`text-5xl md:text-6xl lg:text-[4.5rem] font-medium text-black mb-6 leading-[1.1] tracking-tight ${playfair.className}`}>
+              {data?.hero_title || "Viajes y eventos diseñados para inspirar, conectar y crecer."}
             </h1>
-            <p className="text-lg md:text-xl text-gray-700 mb-12 max-w-xl font-light leading-relaxed">
-              Soluciones para viajeros, agencias de viajes, agencias de eventos y empresas con atención personalizada y experiencias memorables en cada destino.
+            <p className="text-sm md:text-base text-gray-800 mb-12 max-w-lg font-normal leading-relaxed">
+              {data?.hero_subtitle || "Soluciones para viajeros, agencias de viajes, agencias de eventos y empresas con atención personalizada y experiencias memorables en cada destino."}
             </p>
 
-            <div className="flex flex-wrap gap-3">
-              <button onClick={() => handleRegister('Viajero')} className="bg-black text-white px-5 py-3 rounded-lg font-medium hover:bg-gray-800 transition-colors flex items-center gap-2 text-sm">
+            <div className="flex flex-wrap items-center gap-2">
+              <button onClick={() => handleRegister('Viajero')} className="bg-black text-white px-5 py-3 rounded text-xs font-semibold hover:bg-gray-800 transition-colors flex items-center gap-2">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg> Soy viajero
               </button>
-              <button onClick={() => handleRegister('Agencia de Viajes')} className="bg-white text-black border border-gray-300 px-5 py-3 rounded-lg font-medium hover:bg-gray-50 transition-colors flex items-center gap-2 text-sm shadow-sm">
+              <button onClick={() => handleRegister('Agencia de Viajes')} className="bg-white text-black border border-gray-300 px-5 py-3 rounded text-xs font-semibold hover:bg-gray-50 transition-colors flex items-center gap-2">
                 <Plane className="w-4 h-4" /> Soy agencia de viajes
               </button>
-              <button onClick={() => handleRegister('Agencia de Eventos')} className="bg-white text-black border border-gray-300 px-5 py-3 rounded-lg font-medium hover:bg-gray-50 transition-colors flex items-center gap-2 text-sm shadow-sm">
+              <button onClick={() => handleRegister('Agencia de Eventos')} className="bg-white text-black border border-gray-300 px-5 py-3 rounded text-xs font-semibold hover:bg-gray-50 transition-colors flex items-center gap-2">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg> Soy agencia de eventos
               </button>
-              <button onClick={() => handleRegister('Empresa')} className="bg-white text-black border border-gray-300 px-5 py-3 rounded-lg font-medium hover:bg-gray-50 transition-colors flex items-center gap-2 text-sm shadow-sm">
+              <button onClick={() => handleRegister('Empresa')} className="bg-white text-black border border-gray-300 px-5 py-3 rounded text-xs font-semibold hover:bg-gray-50 transition-colors flex items-center gap-2">
                 <Briefcase className="w-4 h-4" /> Soy empresa
               </button>
-              <button onClick={() => handleRegister('Proveedor')} className="bg-white text-black border border-gray-300 px-5 py-3 rounded-lg font-medium hover:bg-gray-50 transition-colors flex items-center gap-2 text-sm shadow-sm">
-                Soy proveedor
+              <button onClick={() => handleRegister('Proveedor')} className={`bg-white text-black border border-gray-300 px-5 py-3 rounded text-lg font-bold hover:bg-gray-50 transition-colors flex items-center gap-2 ${caveat.className}`}>
+                Soy Proveedor
               </button>
             </div>
           </div>
@@ -108,71 +102,62 @@ export default function InicioLanding() {
       </section>
 
       {/* ¿CÓMO PODEMOS AYUDARTE? */}
-      <section className="py-24 bg-white">
-        <div className="container mx-auto px-4">
-          <h2 className={`text-3xl md:text-5xl font-bold text-center mb-16 ${playfair.className}`}>¿Cómo podemos ayudarte?</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+      <section className="py-24 bg-white border-t border-gray-100">
+        <div className="container mx-auto px-4 lg:px-8">
+          <h3 className="text-xs font-bold tracking-[0.2em] text-center text-gray-500 mb-16 uppercase">¿CÓMO PODEMOS AYUDARTE?</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {[
-              { title: "Viajeros", desc: "Experiencias únicas y personalizadas para tus vacaciones soñadas.", icon: Plane },
-              { title: "Agencias de Viajes", desc: "Plataforma B2B, comisiones atractivas y soporte prioritario.", icon: Briefcase },
-              { title: "Agencias de Eventos", desc: "Coordinación logística, tarifas grupales y atención especializada.", icon: Users },
-              { title: "Empresas", desc: "Gestión de viajes corporativos, control de gastos y beneficios exclusivos.", icon: Building }
+              { 
+                title: "Viajeros", 
+                img: "14WhatsApp_Image_2026-06-12_at_6.00.02_PM_(1).jpeg", 
+                icon: Briefcase,
+                bullets: ["Paquetes personalizados", "Viajes grupales", "Cruceros"],
+                action: "Explorar viajes"
+              },
+              { 
+                title: "Agencias de Viajes", 
+                img: "8WhatsApp_Image_2026-06-12_at_11.15.56_AM.jpeg", 
+                icon: Plane,
+                bullets: ["Tarifas preferenciales", "Creación de grupos", "Soporte especializado 24/7"],
+                action: "Afiliar mi agencia de viajes"
+              },
+              { 
+                title: "Agencias de Eventos", 
+                img: "7WhatsApp_Image_2026-06-12_at_11.15.56_AM.jpeg", 
+                icon: Globe,
+                bullets: ["Organización integral", "Logística y producción", "Proveedores especializados"],
+                action: "Conocer más"
+              },
+              { 
+                title: "Empresas", 
+                img: "6WhatsApp_Image_2026-06-12_at_11.15.56_AM.jpeg", 
+                icon: Briefcase,
+                bullets: ["Viajes incentivos", "Congresos y ferias", "Integración de equipos"],
+                action: "Solicitar propuesta"
+              }
             ].map((item, i) => (
-              <div key={i} className="p-8 rounded-3xl bg-[#F4F4F6] hover:shadow-xl transition-shadow border border-gray-100 group">
-                <div className="w-14 h-14 bg-black text-white rounded-full flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                  <item.icon className="w-6 h-6" />
+              <div key={i} className="flex flex-col group">
+                <div className="relative mb-6">
+                  <div className="h-48 overflow-hidden rounded-sm">
+                    <img src={`/inicio/${item.img}`} alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                  </div>
+                  {/* Icono flotante */}
+                  <div className="absolute -bottom-6 left-6 w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-md">
+                    <item.icon className="w-5 h-5 text-black" strokeWidth={1.5} />
+                  </div>
                 </div>
-                <h3 className={`text-xl font-bold mb-4 ${playfair.className}`}>{item.title}</h3>
-                <p className="text-gray-600 leading-relaxed mb-6">{item.desc}</p>
-                <button onClick={() => handleRegister(item.title)} className="text-black font-semibold flex items-center gap-1 hover:gap-2 transition-all">
-                  Conocer más <ChevronRight className="w-4 h-4" />
-                </button>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* DESTINOS QUE TE ESPERAN */}
-      <section className="py-24 bg-[#F4F4F6]">
-        <div className="container mx-auto px-4">
-          <h2 className={`text-3xl md:text-5xl font-bold text-center mb-16 ${playfair.className}`}>Destinos que te esperan</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6">
-            {[
-              { name: "América", img: "1WhatsApp_Image_2026-06-12_at_11.15.55_AM.jpeg" },
-              { name: "Europa", img: "3WhatsApp_Image_2026-06-12_at_11.15.55_AM.jpeg" },
-              { name: "África", img: "4WhatsApp_Image_2026-06-12_at_11.15.55_AM.jpeg" },
-              { name: "Asia", img: "5WhatsApp_Image_2026-06-12_at_11.15.55_AM.jpeg" },
-              { name: "Oceanía", img: "11WhatsApp_Image_2026-06-12_at_11.15.57_AM.jpeg" }
-            ].map((dest, i) => (
-              <div key={i} className="relative rounded-3xl overflow-hidden aspect-[3/4] group cursor-pointer">
-                <img src={`/inicio/${dest.img}`} alt={dest.name} className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
-                <h3 className={`absolute bottom-6 left-6 text-2xl font-bold text-white ${playfair.className}`}>{dest.name}</h3>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* NUESTROS SERVICIOS */}
-      <section className="py-24 bg-white">
-        <div className="container mx-auto px-4">
-          <h2 className={`text-3xl md:text-5xl font-bold text-center mb-16 ${playfair.className}`}>Nuestros Servicios</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {[
-              { title: "Viajes Vacacionales", img: "6WhatsApp_Image_2026-06-12_at_11.15.56_AM.jpeg" },
-              { title: "Grupos y Convenciones", img: "7WhatsApp_Image_2026-06-12_at_11.15.56_AM.jpeg" },
-              { title: "Operación para Agencias", img: "8WhatsApp_Image_2026-06-12_at_11.15.56_AM.jpeg" }
-            ].map((serv, i) => (
-              <div key={i} className="rounded-3xl overflow-hidden bg-[#F4F4F6] group">
-                <div className="h-64 overflow-hidden relative">
-                  <img src={`/inicio/${serv.img}`} alt={serv.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                </div>
-                <div className="p-8">
-                  <h3 className={`text-2xl font-bold mb-4 ${playfair.className}`}>{serv.title}</h3>
-                  <button onClick={() => handleRegister('Viajero')} className="text-black font-medium border-b border-black pb-1 hover:opacity-70 transition-opacity">
-                    Solicitar información
+                <div className="px-2 pt-4">
+                  <h4 className={`text-xl font-medium mb-4 ${playfair.className}`}>{item.title}</h4>
+                  <ul className="space-y-2 mb-6 text-sm text-gray-600">
+                    {item.bullets.map((bullet, j) => (
+                      <li key={j} className="flex items-center gap-2">
+                        <span className="w-1 h-1 bg-black rounded-full"></span>
+                        {bullet}
+                      </li>
+                    ))}
+                  </ul>
+                  <button onClick={() => handleRegister(item.title)} className="text-xs font-semibold flex items-center gap-1 hover:gap-2 transition-all uppercase tracking-wide">
+                    {item.action} <ArrowRight className="w-3 h-3" />
                   </button>
                 </div>
               </div>
@@ -181,44 +166,168 @@ export default function InicioLanding() {
         </div>
       </section>
 
-      {/* BENEFICIOS */}
-      <section className="py-24 bg-black text-white">
-        <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 text-center">
+      {/* DESTINOS QUE TE ESPERAN */}
+      <section className="py-24 bg-white border-t border-gray-100">
+        <div className="container mx-auto px-4 lg:px-8">
+          <div className="text-center mb-16">
+            <h3 className="text-xs font-bold tracking-[0.2em] text-gray-500 mb-4 uppercase">DESTINOS QUE TE ESPERAN</h3>
+            <h2 className={`text-4xl md:text-5xl font-medium mb-4 ${playfair.className}`}>Descubre el mundo</h2>
+            <p className="text-sm text-gray-500 max-w-lg mx-auto">Cada continente, experiencias únicas y momentos que recordarás siempre.</p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6">
             {[
-              { title: "Experiencias Memorables", icon: Star },
-              { title: "Atención Personalizada", icon: HeartHandshake },
-              { title: "Destinos Selectos", icon: Globe },
-              { title: "Protección de Datos", icon: Shield }
-            ].map((ben, i) => (
-              <div key={i} className="flex flex-col items-center">
-                <div className="w-20 h-20 bg-white/10 rounded-full flex items-center justify-center mb-6">
-                  <ben.icon className="w-10 h-10" />
+              { name: "América", desc: "Naturaleza, cultura y aventura", img: "1WhatsApp_Image_2026-06-12_at_11.15.55_AM.jpeg" },
+              { name: "Europa", desc: "Historia, arte y elegancia", img: "3WhatsApp_Image_2026-06-12_at_11.15.55_AM.jpeg" },
+              { name: "África", desc: "Vida salvaje y paisajes únicos", img: "4WhatsApp_Image_2026-06-12_at_11.15.55_AM.jpeg" },
+              { name: "Asia", desc: "Tradición, modernidad e inspiración", img: "5WhatsApp_Image_2026-06-12_at_11.15.55_AM.jpeg" },
+              { name: "Oceanía", desc: "Playas, ciudades y naturaleza excepcional", img: "11WhatsApp_Image_2026-06-12_at_11.15.57_AM.jpeg" }
+            ].map((dest, i) => (
+              <div key={i} className="flex flex-col group cursor-pointer">
+                <div className="aspect-[4/3] rounded-sm overflow-hidden mb-4">
+                  <img src={`/inicio/${dest.img}`} alt={dest.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
                 </div>
-                <h3 className={`text-xl font-bold ${playfair.className}`}>{ben.title}</h3>
+                <h4 className={`text-lg font-medium mb-1 ${playfair.className}`}>{dest.name}</h4>
+                <p className="text-xs text-gray-500 mb-3">{dest.desc}</p>
+                <div className="flex justify-end mt-auto">
+                  <ArrowRight className="w-4 h-4 text-gray-400 group-hover:text-black transition-colors" />
+                </div>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* CTA FINAL */}
-      <section className="py-32 bg-[#F4F4F6]">
-        <div className="container mx-auto px-4 text-center max-w-4xl">
-          <h2 className={`text-4xl md:text-6xl font-bold mb-10 ${playfair.className}`}>Tu próximo viaje comienza aquí</h2>
-          <div className="flex flex-wrap justify-center gap-4">
-            <button onClick={() => handleRegister('Viajero')} className="bg-black text-white px-8 py-4 rounded-full font-medium hover:bg-gray-800 transition-transform hover:scale-105">
-              Registrarme como viajero
-            </button>
-            <button onClick={() => handleRegister('Agencia de Viajes')} className="bg-white text-black border border-gray-200 px-8 py-4 rounded-full font-medium hover:bg-gray-50 transition-transform hover:scale-105">
-              Registrar mi agencia de viajes
-            </button>
-            <button onClick={() => handleRegister('Agencia de Eventos')} className="bg-white text-black border border-gray-200 px-8 py-4 rounded-full font-medium hover:bg-gray-50 transition-transform hover:scale-105">
-              Registrar mi agencia de eventos
-            </button>
-            <button onClick={() => handleRegister('Empresa')} className="bg-white text-black border border-gray-200 px-8 py-4 rounded-full font-medium hover:bg-gray-50 transition-transform hover:scale-105">
-              Solicitar propuesta empresarial
-            </button>
+      {/* NUESTROS SERVICIOS */}
+      <section className="py-24 bg-white border-t border-gray-100">
+        <div className="container mx-auto px-4 lg:px-8">
+          <div className="text-center mb-16">
+            <h3 className="text-xs font-bold tracking-[0.2em] text-gray-500 mb-4 uppercase">NUESTROS SERVICIOS</h3>
+            <h2 className={`text-4xl md:text-5xl font-medium ${playfair.className}`}>Soluciones para cada necesidad</h2>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {[
+              { title: "Viajes Vacacionales", desc: "Experiencias diseñadas para disfrutar, descansar y crear recuerdos inolvidables.", img: "6WhatsApp_Image_2026-06-12_at_11.15.56_AM.jpeg", icon: Star },
+              { title: "Grupos y Convenciones", desc: "Organizamos eventos y viajes que conectan, motivan y generan impacto.", img: "7WhatsApp_Image_2026-06-12_at_11.15.56_AM.jpeg", icon: Users },
+              { title: "Operación para Agencias", desc: "Herramientas, tarifas competitivas y acompañamiento experto.", img: "8WhatsApp_Image_2026-06-12_at_11.15.56_AM.jpeg", icon: HeartHandshake }
+            ].map((serv, i) => (
+              <div key={i} className="flex flex-col group">
+                <div className="relative mb-6">
+                  <div className="h-56 overflow-hidden rounded-sm">
+                    <img src={`/inicio/${serv.img}`} alt={serv.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                  </div>
+                  <div className="absolute -bottom-6 left-6 w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-md">
+                    <serv.icon className="w-5 h-5 text-black" strokeWidth={1.5} />
+                  </div>
+                </div>
+                <div className="px-2 pt-4">
+                  <h4 className={`text-xl font-medium mb-3 ${playfair.className}`}>{serv.title}</h4>
+                  <p className="text-sm text-gray-600 mb-4">{serv.desc}</p>
+                  <button onClick={() => handleRegister('Viajero')} className="text-xs font-semibold flex items-center gap-1 hover:gap-2 transition-all uppercase tracking-wide">
+                    Conoce más <ArrowRight className="w-3 h-3" />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* BENEFICIOS ROW */}
+      <section className="py-16 bg-white border-t border-gray-100">
+        <div className="container mx-auto px-4 lg:px-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {[
+              { title: "Experiencias memorables", desc: "Diseñamos viajes cuidadosamente para cada necesidad y presupuesto.", icon: Star },
+              { title: "Atención personalizada", desc: "Un asesor te acompañará antes, durante y después de tu viaje.", icon: HeartHandshake },
+              { title: "Destinos selectos", desc: "Opciones nacionales e internacionales para cada tipo de viajero y empresa.", icon: Globe },
+              { title: "Protección de datos", desc: "Tu información está segura con tecnología y procesos certificados.", icon: Shield }
+            ].map((ben, i) => (
+              <div key={i} className="flex items-start gap-4">
+                <div className="mt-1">
+                  <ben.icon className="w-8 h-8 text-black" strokeWidth={1} />
+                </div>
+                <div>
+                  <h4 className="text-sm font-semibold mb-1">{ben.title}</h4>
+                  <p className="text-xs text-gray-500 leading-relaxed">{ben.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* TU ALIADO DE NEGOCIOS (SECCIÓN OSCURA) */}
+      <section className="bg-[#0f1115] text-white">
+        <div className="flex flex-col lg:flex-row">
+          <div className="w-full lg:w-1/2 p-12 lg:p-24 flex flex-col justify-center">
+            <h3 className="text-[10px] font-bold tracking-[0.2em] text-gray-400 mb-6 uppercase">PARA AGENCIAS DE VIAJES</h3>
+            <h2 className={`text-4xl md:text-5xl font-medium mb-6 ${playfair.className}`}>Tu aliado de negocios</h2>
+            <p className="text-sm text-gray-300 mb-12 max-w-md leading-relaxed">
+              Trabajamos juntos para que tu agencia crezca más, con la tranquilidad de tener un equipo que te respalda.
+            </p>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+              <div>
+                <Briefcase className="w-6 h-6 mb-3 text-gray-400" strokeWidth={1.5} />
+                <h4 className="text-xs font-semibold mb-2">Herramientas</h4>
+                <p className="text-[10px] text-gray-400 leading-relaxed">Plataforma fácil de usar para cotizar, reservar y administrar.</p>
+              </div>
+              <div>
+                <Star className="w-6 h-6 mb-3 text-gray-400" strokeWidth={1.5} />
+                <h4 className="text-xs font-semibold mb-2">Tarifas competitivas</h4>
+                <p className="text-[10px] text-gray-400 leading-relaxed">Acceso a tarifas preferenciales y promociones exclusivas para tu agencia.</p>
+              </div>
+              <div>
+                <Users className="w-6 h-6 mb-3 text-gray-400" strokeWidth={1.5} />
+                <h4 className="text-xs font-semibold mb-2">Acompañamiento experto</h4>
+                <p className="text-[10px] text-gray-400 leading-relaxed">Soporte y capacitación constante para impulsar tu crecimiento.</p>
+              </div>
+            </div>
+
+            <div>
+              <button onClick={() => handleRegister('Agencia de Viajes')} className="bg-white text-black px-6 py-3 rounded text-xs font-semibold hover:bg-gray-200 transition-colors flex items-center gap-2">
+                Conocer más <ArrowRight className="w-3 h-3" />
+              </button>
+            </div>
+          </div>
+          
+          <div className="w-full lg:w-1/2 min-h-[400px] relative">
+            <img src="/inicio/13WhatsApp_Image_2026-06-12_at_12.23.41_PM.jpeg" alt="Aliado de negocios" className="absolute inset-0 w-full h-full object-cover" />
+            <div className="absolute inset-0 bg-gradient-to-r from-[#0f1115] to-transparent hidden lg:block"></div>
+            <div className="absolute inset-0 bg-gradient-to-t from-[#0f1115] to-transparent lg:hidden"></div>
+          </div>
+        </div>
+      </section>
+
+      {/* CTA FOOTER */}
+      <section className="bg-[#1C1C1E] text-white py-12">
+        <div className="container mx-auto px-4 lg:px-8">
+          <div className="flex flex-col lg:flex-row items-center justify-between gap-8">
+            <h2 className={`text-3xl md:text-4xl font-medium ${playfair.className}`}>Tu próximo viaje<br/>comienza aquí.</h2>
+            
+            <div className="flex flex-wrap justify-end gap-3 lg:gap-4">
+              <button onClick={() => handleRegister('Viajero')} className="bg-transparent text-white border border-gray-600 px-4 py-2 rounded text-[10px] font-medium hover:bg-white/10 transition-colors flex items-center gap-2">
+                <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg> 
+                Registrarme<br/>como viajero
+              </button>
+              <button onClick={() => handleRegister('Agencia de Viajes')} className="bg-transparent text-white border border-gray-600 px-4 py-2 rounded text-[10px] font-medium hover:bg-white/10 transition-colors flex items-center gap-2">
+                <Plane className="w-3 h-3" /> 
+                Registrar<br/>mi agencia<br/>de viajes
+              </button>
+              <button onClick={() => handleRegister('Agencia de Eventos')} className="bg-transparent text-white border border-gray-600 px-4 py-2 rounded text-[10px] font-medium hover:bg-white/10 transition-colors flex items-center gap-2">
+                <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg> 
+                Registrar<br/>mi agencia<br/>de eventos
+              </button>
+              <button onClick={() => handleRegister('Empresa')} className="bg-transparent text-white border border-gray-600 px-4 py-2 rounded text-[10px] font-medium hover:bg-white/10 transition-colors flex items-center gap-2">
+                <Briefcase className="w-3 h-3" /> 
+                Solicitar propuesta<br/>empresarial
+              </button>
+              <button onClick={() => handleRegister('Proveedor')} className={`bg-transparent text-white border border-white px-4 py-2 rounded text-lg font-bold hover:bg-white/10 transition-colors flex items-center gap-2 ${caveat.className}`}>
+                Reg. como<br/>proveedor
+              </button>
+            </div>
           </div>
         </div>
       </section>
