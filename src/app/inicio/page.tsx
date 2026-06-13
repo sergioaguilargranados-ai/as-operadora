@@ -72,7 +72,7 @@ export default function InicioLanding() {
 
         <div className="container mx-auto px-4 lg:px-8 relative z-10 flex pt-32 lg:pt-32 pb-12">
           <div className="w-full lg:w-[70%] xl:w-[65%] lg:pr-8">
-            <h1 className={`text-5xl md:text-6xl lg:text-[4.5rem] font-medium text-black mb-6 leading-[1.1] tracking-tight ${playfair.className} max-w-2xl`}>
+            <h1 className={`text-5xl md:text-6xl lg:text-[4rem] font-medium text-black mb-6 leading-[1.1] tracking-tight ${playfair.className} max-w-2xl`}>
               Viajes y eventos diseñados para inspirar, conectar y crecer.
             </h1>
             <p className="text-sm md:text-base text-gray-800 mb-12 max-w-lg font-normal leading-relaxed">

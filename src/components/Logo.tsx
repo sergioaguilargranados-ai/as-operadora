@@ -79,17 +79,17 @@ export function Logo({ className = "", forceDefault = false, size = 'md' }: Logo
   // Default: Logo AS Operadora (diseño según mockup)
   return (
     <div className={`flex items-center gap-3 ${className}`}>
-      <span className={`${s.text} font-normal tracking-tighter leading-none text-black`} style={{ fontFamily: 'Georgia, serif' }}>
-        A<span className={s.text}>S</span>
+      <span className="text-5xl md:text-6xl font-normal tracking-tighter leading-none text-black" style={{ fontFamily: 'Georgia, serif' }}>
+        A<span className="text-5xl md:text-6xl">S</span>
       </span>
       
-      <div className="h-8 w-[1px] bg-gray-300"></div>
+      <div className="h-10 w-[1px] bg-gray-300"></div>
       
       <div className="flex flex-col justify-center">
-        <span className="text-[10px] tracking-widest font-bold leading-tight mt-0.5 text-black">
+        <span className="text-[10px] md:text-[11px] tracking-[0.2em] font-bold leading-tight text-black">
           OPERADORA DE
         </span>
-        <span className="text-[10px] tracking-widest font-bold leading-tight text-black">
+        <span className="text-[10px] md:text-[11px] tracking-[0.2em] font-bold leading-tight text-black">
           VIAJES Y EVENTOS
         </span>
       </div>
