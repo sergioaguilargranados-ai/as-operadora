@@ -1,13 +1,33 @@
 # 📋 AG-Histórico de Cambios - AS Operadora
 
-**Última actualización:** 06 de Junio de 2026 - 10:40 CST  
-**Versión actual:** v2.345  
+**Última actualización:** 12 de Junio de 2026 - 23:22 CST  
+**Versión actual:** v2.347  
 **Actualizado por:** AntiGravity AI Assistant  
 **Propósito:** Documento maestro del proyecto para trabajo con agentes AntiGravity
 
 ---
 
 ## 📅 HISTORIAL DE CAMBIOS
+
+### v2.347 - 12 de Junio de 2026 - 23:22 CST
+
+**🚀 Feat: Landing Page Principal y Conexión a CRM**
+
+**Objetivo:** Modernización del punto de entrada principal y automatización del flujo de nuevos prospectos.
+
+**Cambios implementados:**
+- ✅ Se convirtió la antigua Landing "Expo" en la Landing Page Principal (`/inicio`).
+- ✅ Interfaz gráfica rediseñada con colores blanco/negro minimalista y tipografías premium.
+- ✅ Integración del formulario de registro directamente hacia `crm_contacts` en base de datos.
+- ✅ Despliegue automático de correo electrónico de bienvenida indicando tiempo de espera de 30 días para prospectos.
+
+**Archivos modificados:**
+- `src/app/inicio/page.tsx`
+- `src/app/api/crm/register/route.ts`
+- `src/components/BrandFooter.tsx` — Bump versión v2.347
+- `docs/AG-Historico-Cambios.md` — Esta entrada
+
+---
 
 ### v2.345 - 06 de Junio de 2026 - 10:40 CST
 

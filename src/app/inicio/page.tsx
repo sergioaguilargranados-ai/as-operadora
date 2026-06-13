@@ -220,6 +220,7 @@ export default function InicioLanding() {
       {/* FOOTER BASICO */}
       <footer className="py-8 bg-white border-t border-gray-100 text-center text-gray-500 text-sm">
         <p>© {new Date().getFullYear()} AS Operadora de Viajes y Eventos. Todos los derechos reservados.</p>
+        <p className="mt-2 text-xs opacity-50">v2.347 | Build: 12 Jun 2026, 23:22 CST</p>
       </footer>
     </div>
   );

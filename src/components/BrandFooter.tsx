@@ -1,5 +1,5 @@
 // BrandFooter.tsx - Footer dinámico con branding del tenant actual
-// Build: 10 Jun 2026 - 16:55 CST - v2.346 - Landing Page Expo y Registro
+// Build: 12 Jun 2026 - 23:23 CST - v2.347 - Landing Page Principal y Registro CRM
 
 'use client';
 
@@ -92,7 +92,7 @@ export function BrandFooter() {
                         </p>
                     )}
                     <p className="text-xs mt-2 opacity-50">
-                        v2.346
+                        v2.347 | Build: 12 Jun 2026, 23:23 CST
                     </p>
                 </div>
             </div>
