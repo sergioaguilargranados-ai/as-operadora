@@ -65,38 +65,44 @@ export default function InicioLanding() {
         </div>
       </header>
 
-      {/* HERO PRINCIPAL */}
-      <section className="relative pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden bg-[#F4F4F6]">
-        <div className="absolute inset-0 z-0">
+      {/* HERO PRINCIPAL (DISEÑO SPLIT) */}
+      <section className="relative min-h-screen flex items-center bg-white pt-20">
+        <div className="absolute right-0 top-0 bottom-0 w-full lg:w-[55%] z-0">
           <img 
             src={data?.hero_video_url || "/inicio/WhatsApp_Image_2026-06-12_at_11.15.55_AM.jpeg"} 
             alt="Hero Background" 
-            className="w-full h-full object-cover opacity-90"
+            className="w-full h-full object-cover"
           />
-          <div className="absolute inset-0 bg-black/40"></div>
+          {/* Gradiente para difuminar la imagen hacia el blanco a la izquierda */}
+          <div className="absolute inset-0 bg-gradient-to-r from-white via-white/80 to-transparent lg:w-1/2"></div>
         </div>
-        
-        <div className="container relative z-10 mx-auto px-4 text-center">
-          <h1 className={`text-4xl md:text-6xl lg:text-7xl font-bold text-white mb-6 leading-tight ${playfair.className}`}>
-            {data?.hero_title || "Descubre el mundo con expertos"}
-          </h1>
-          <p className="text-lg md:text-xl text-white/90 mb-12 max-w-3xl mx-auto font-light">
-            {data?.hero_subtitle || "Soluciones integrales de viaje para cada necesidad. Únete a la red más exclusiva."}
-          </p>
 
-          <div className="flex flex-wrap justify-center gap-4 max-w-4xl mx-auto">
-            <button onClick={() => handleRegister('Viajero')} className="bg-white text-black px-8 py-4 rounded-full font-semibold hover:bg-gray-100 transition-transform hover:scale-105 flex items-center gap-2">
-              <Plane className="w-5 h-5" /> Soy viajero
-            </button>
-            <button onClick={() => handleRegister('Agencia de Viajes')} className="bg-black/80 backdrop-blur-md text-white border border-white/20 px-8 py-4 rounded-full font-semibold hover:bg-black transition-transform hover:scale-105 flex items-center gap-2">
-              <Briefcase className="w-5 h-5" /> Soy agencia de viajes
-            </button>
-            <button onClick={() => handleRegister('Agencia de Eventos')} className="bg-black/80 backdrop-blur-md text-white border border-white/20 px-8 py-4 rounded-full font-semibold hover:bg-black transition-transform hover:scale-105 flex items-center gap-2">
-              <Users className="w-5 h-5" /> Soy agencia de eventos
-            </button>
-            <button onClick={() => handleRegister('Empresa')} className="bg-black/80 backdrop-blur-md text-white border border-white/20 px-8 py-4 rounded-full font-semibold hover:bg-black transition-transform hover:scale-105 flex items-center gap-2">
-              <Building className="w-5 h-5" /> Soy empresa
-            </button>
+        <div className="container mx-auto px-4 lg:px-8 relative z-10 flex pt-12 lg:pt-0">
+          <div className="w-full lg:w-[60%] max-w-2xl bg-white/90 lg:bg-transparent p-6 lg:p-0 rounded-2xl lg:rounded-none backdrop-blur-sm lg:backdrop-blur-none">
+            <h1 className={`text-5xl md:text-6xl lg:text-7xl font-bold text-black mb-6 leading-tight tracking-tight ${playfair.className}`}>
+              Viajes y eventos diseñados para inspirar, conectar y crecer.
+            </h1>
+            <p className="text-lg md:text-xl text-gray-700 mb-12 max-w-xl font-light leading-relaxed">
+              Soluciones para viajeros, agencias de viajes, agencias de eventos y empresas con atención personalizada y experiencias memorables en cada destino.
+            </p>
+
+            <div className="flex flex-wrap gap-3">
+              <button onClick={() => handleRegister('Viajero')} className="bg-black text-white px-5 py-3 rounded-lg font-medium hover:bg-gray-800 transition-colors flex items-center gap-2 text-sm">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg> Soy viajero
+              </button>
+              <button onClick={() => handleRegister('Agencia de Viajes')} className="bg-white text-black border border-gray-300 px-5 py-3 rounded-lg font-medium hover:bg-gray-50 transition-colors flex items-center gap-2 text-sm shadow-sm">
+                <Plane className="w-4 h-4" /> Soy agencia de viajes
+              </button>
+              <button onClick={() => handleRegister('Agencia de Eventos')} className="bg-white text-black border border-gray-300 px-5 py-3 rounded-lg font-medium hover:bg-gray-50 transition-colors flex items-center gap-2 text-sm shadow-sm">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg> Soy agencia de eventos
+              </button>
+              <button onClick={() => handleRegister('Empresa')} className="bg-white text-black border border-gray-300 px-5 py-3 rounded-lg font-medium hover:bg-gray-50 transition-colors flex items-center gap-2 text-sm shadow-sm">
+                <Briefcase className="w-4 h-4" /> Soy empresa
+              </button>
+              <button onClick={() => handleRegister('Proveedor')} className="bg-white text-black border border-gray-300 px-5 py-3 rounded-lg font-medium hover:bg-gray-50 transition-colors flex items-center gap-2 text-sm shadow-sm">
+                Soy proveedor
+              </button>
+            </div>
           </div>
         </div>
       </section>
