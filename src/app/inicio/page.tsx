@@ -2,14 +2,12 @@
 
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Playfair_Display, Inter, Caveat } from 'next/font/google';
 import { Plane, Building, Users, Briefcase, ChevronRight, Shield, Star, HeartHandshake, Globe, ArrowRight, Menu } from 'lucide-react';
 import { Logo } from '@/components/Logo';
 import { BrandFooter } from '@/components/BrandFooter';
 
 const playfair = Playfair_Display({ subsets: ['latin'], weight: ['400', '600', '700', '800'] });
 const inter = Inter({ subsets: ['latin'], weight: ['300', '400', '500', '600', '700'] });
-const caveat = Caveat({ subsets: ['latin'], weight: ['400', '700'] });
 
 export default function InicioLanding() {
   const router = useRouter();
@@ -93,8 +91,8 @@ export default function InicioLanding() {
               <button onClick={() => handleRegister('Empresa')} className="bg-white text-black border border-gray-300 px-5 py-3 rounded text-xs font-semibold hover:bg-gray-50 transition-colors flex items-center gap-2">
                 <Briefcase className="w-4 h-4" /> Soy empresa
               </button>
-              <button onClick={() => handleRegister('Proveedor')} className={`bg-white text-black border border-gray-300 px-5 py-3 rounded text-lg font-bold hover:bg-gray-50 transition-colors flex items-center gap-2 ${caveat.className}`}>
-                Soy Proveedor
+              <button onClick={() => handleRegister('Proveedor')} className="bg-white text-black border border-gray-300 px-5 py-3 rounded text-xs font-semibold hover:bg-gray-50 transition-colors flex items-center gap-2">
+                <Globe className="w-4 h-4" /> Soy proveedor
               </button>
             </div>
           </div>
@@ -324,8 +322,9 @@ export default function InicioLanding() {
                 <Briefcase className="w-3 h-3" /> 
                 Solicitar propuesta<br/>empresarial
               </button>
-              <button onClick={() => handleRegister('Proveedor')} className={`bg-transparent text-white border border-white px-4 py-2 rounded text-lg font-bold hover:bg-white/10 transition-colors flex items-center gap-2 ${caveat.className}`}>
-                Reg. como<br/>proveedor
+              <button onClick={() => handleRegister('Proveedor')} className="bg-transparent text-white border border-gray-600 px-4 py-2 rounded text-[10px] font-medium hover:bg-white/10 transition-colors flex items-center gap-2">
+                <Globe className="w-3 h-3" /> 
+                Registrarse<br/>como proveedor
               </button>
             </div>
           </div>
