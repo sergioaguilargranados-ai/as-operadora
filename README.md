@@ -1,10 +1,10 @@
 # 🌎 AS OPERADORA — Sistema de Gestión de Viajes y Eventos
 
-**Última actualización:** 28 de Mayo de 2026  
-**Versión:** v2.344  
+**Última actualización:** 13 de Junio de 2026  
+**Versión:** v2.351  
 **Actualizado por:** Equipo Antigravity + Amadeus Group
 
-![Version](https://img.shields.io/badge/version-2.344-blue.svg)
+![Version](https://img.shields.io/badge/version-2.351-blue.svg)
 ![Production](https://img.shields.io/badge/live-app.asoperadora.com-success.svg)
 ![Status](https://img.shields.io/badge/status-production--live-green.svg)
 ![Deploy](https://img.shields.io/badge/deploy-vercel-brightgreen.svg)
