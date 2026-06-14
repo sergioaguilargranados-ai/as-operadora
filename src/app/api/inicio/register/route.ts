@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { query } from '@/lib/db';
-import { sendEmail } from '@/lib/emailHelper';
+import { sendLandingWelcomeEmail } from '@/lib/emailHelper';
 
 export async function POST(request: Request) {
   try {
@@ -38,25 +38,14 @@ export async function POST(request: Request) {
       [final_name, final_phone, final_agency, website, social_media, email, final_job]
     );
 
-    // Enviar correo de bienvenida si hay un email
+    // Enviar correo de bienvenida con formato corporativo si hay un email
     if (email) {
-      const emailHtml = `
-<p>Hola, ${final_name}.</p>
-<p>Gracias por registrarte en AS Operadora de Viajes y Eventos.</p>
-<p>Hemos recibido correctamente tu solicitud de registro y la informaci&oacute;n proporcionada ha sido enviada a nuestro equipo para su revisi&oacute;n.</p>
-<p>Nuestro proceso de validaci&oacute;n puede tomar hasta 30 d&iacute;as naturales. Durante este periodo verificaremos la informaci&oacute;n recibida para brindarte la mejor atenci&oacute;n y habilitar los servicios que correspondan a tu perfil.</p>
-<p>Una vez concluida la revisi&oacute;n, recibir&aacute;s una notificaci&oacute;n por correo electr&oacute;nico con la resoluci&oacute;n de tu solicitud y los pasos a seguir.</p>
-<p>Agradecemos tu inter&eacute;s en formar parte de AS Operadora de Viajes y Eventos. Estamos comprometidos en ofrecer soluciones confiables para viajeros, agencias de viajes, agencias de eventos y empresas.</p>
-<p>Atentamente,<br>
-<strong>AS Operadora de Viajes y Eventos</strong></p>
-      `;
-
-      await sendEmail({
-        to: email,
-        subject: 'Confirmación de registro - AS Operadora',
-        html: emailHtml
+      await sendLandingWelcomeEmail({
+        name: final_name,
+        email: email,
+        type: final_job
       }).catch(err => {
-        console.error('Error al enviar el correo de registro:', err);
+        console.error('Error al enviar el correo corporativo de registro:', err);
       });
     }
 
