@@ -44,7 +44,7 @@ export function ImageUploadInput({ value, onChange, placeholder, className }: Im
             if (data.success) {
               onChange(data.url);
             } else {
-              alert(`Error: ${data.error}`);
+              alert(`Error: ${data.error}\nDetalles: ${data.details || 'Sin detalles'}\nToken Blob Existe: ${data.hasToken ? 'Sí' : 'No'}`);
             }
           } catch (err) {
             alert('Error de conexión al subir archivo');

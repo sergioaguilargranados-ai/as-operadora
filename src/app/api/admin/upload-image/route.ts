@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
   } catch (error: any) {
     console.error('Error uploading image:', error)
     return NextResponse.json(
-      { success: false, error: 'Error al subir la imagen', details: error.message },
+      { success: false, error: 'Error al subir la imagen', details: error.message, hasToken: !!process.env.BLOB_READ_WRITE_TOKEN },
       { status: 500 }
     )
   }
