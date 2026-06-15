@@ -65,6 +65,17 @@ export default function RootLayout({
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="msapplication-TileColor" content="#0066FF" />
         <meta name="msapplication-tap-highlight" content="no" />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              window.pwaDeferredPrompt = null;
+              window.addEventListener('beforeinstallprompt', (e) => {
+                e.preventDefault();
+                window.pwaDeferredPrompt = e;
+              });
+            `,
+          }}
+        />
         <Script
           crossOrigin="anonymous"
           src="//unpkg.com/same-runtime/dist/index.global.js"

@@ -45,8 +45,11 @@ export function InstallPrompt() {
     const handler = (e: Event) => {
       e.preventDefault()
       setDeferredPrompt(e as BeforeInstallPromptEvent)
-      // Mostrar después de 5 segundos de navegación
       setTimeout(() => setShowBanner(true), 5000)
+    }
+
+    if (typeof window !== 'undefined' && (window as any).pwaDeferredPrompt) {
+      handler((window as any).pwaDeferredPrompt)
     }
 
     window.addEventListener('beforeinstallprompt', handler)
