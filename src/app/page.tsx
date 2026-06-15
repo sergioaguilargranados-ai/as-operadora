@@ -6,6 +6,7 @@ import { Playfair_Display, Inter } from 'next/font/google';
 import { Plane, Building, Users, Briefcase, ChevronRight, Shield, Star, HeartHandshake, Globe, ArrowRight, Menu } from 'lucide-react';
 import { Logo } from '@/components/Logo';
 import { BrandFooter } from '@/components/BrandFooter';
+import { PwaInstallButton } from '@/components/pwa/PwaInstallButton';
 
 const playfair = Playfair_Display({ subsets: ['latin'], weight: ['400', '600', '700', '800'] });
 const inter = Inter({ subsets: ['latin'], weight: ['300', '400', '500', '600', '700'] });
@@ -330,6 +331,10 @@ export default function InicioLanding() {
                 Registrarse<br/>como proveedor
               </button>
             </div>
+          </div>
+          
+          <div className="mt-8 flex justify-end">
+            <PwaInstallButton />
           </div>
         </div>
       </section>
