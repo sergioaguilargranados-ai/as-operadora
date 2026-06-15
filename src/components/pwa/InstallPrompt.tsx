@@ -31,13 +31,15 @@ export function InstallPrompt() {
     const isIOSDevice = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream
     setIsIOS(isIOSDevice)
 
-    // Verificar si el usuario ya descartó el banner
+    // Verificar si el usuario ya descartó el banner (COMENTADO TEMPORALMENTE PARA PRUEBAS)
+    /*
     const dismissed = localStorage.getItem('pwa-install-dismissed')
     if (dismissed) {
       const dismissedDate = new Date(dismissed)
       const daysSinceDismissed = (Date.now() - dismissedDate.getTime()) / (1000 * 60 * 60 * 24)
       if (daysSinceDismissed < 7) return // No mostrar por 7 días después de descartar
     }
+    */
 
     // Para Android/Chrome — capturar el evento de instalación
     const handler = (e: Event) => {
