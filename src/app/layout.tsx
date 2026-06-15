@@ -93,7 +93,7 @@ export default function RootLayout({
               <CookieConsent />
               <WhatsAppWidget />
               <ChatWidget />
-              <GoogleOneTap />
+              {/* <GoogleOneTap /> Deshabilitado temporalmente hasta nuevo aviso */}
               <InstallPrompt />
             </FeaturesProvider>
           </WhiteLabelProvider>
