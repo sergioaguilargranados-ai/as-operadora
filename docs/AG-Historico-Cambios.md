@@ -3038,3 +3038,16 @@ ls -la /home/project/.git/HEAD && echo "âœ… Git OK"
 ### v2.342 - 13 de Junio de 2026 - 11:27 CST
 - Implementación de subida de fotos locales en la Gestión de Contenido, tanto para el Modal Principal (Banner, Promociones, Vuelos, Paquetes) como para la asignación de Imágenes a Tours.
 - Creación del endpoint /api/admin/upload-image para manejar la carga de archivos locales hacia Vercel Blob y local public fallback.
+
+### v2.343 - 15 de Junio de 2026 - 23:50 CST
+
+**Cambios:**
+- Se agregó el rol de "Proveedor" en el formulario de registro de Leads, incluyendo campo dinámico para el producto/servicio.
+- Se reestructuró la función de envío de correos (\sendLandingWelcomeEmail\) inyectando el código HTML internamente para evadir problemas de Vercel al compilar archivos estáticos de plantillas.
+- Se implementó debugging visual en la pantalla de éxito de registro para revelar errores ocultos de SMTP.
+- Se re-habilitó Resend como proveedor principal de correos para evadir el límite de "Maximum credits exceeded" (Error 451) del plan de alojamiento en SiteGround.
+
+**Lecciones Aprendidas:**
+- Vercel elimina los archivos que no son código de las rutas Edge/Serverless si no se configuran explícitamente en \
+ext.config.js\ y \path.join\. Hacer hardcode del HTML en variables es un workaround 100% efectivo.
+- Los servidores SMTP de hosting compartido (como SiteGround) tienen cuotas estrictas de envío que fallan silenciosamente a nivel API. Para correos transaccionales a escala en Vercel, servicios dedicados como Resend son imperativos.
