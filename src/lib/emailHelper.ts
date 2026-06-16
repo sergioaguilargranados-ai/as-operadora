@@ -133,7 +133,7 @@ const renderTemplate = (templateName: string, variables: Record<string, any>): s
 };
 
 // Enviar correo y guardar en Centro de Comunicación
-// Jerarquía: 1) Resend SDK  2) SendGrid SMTP  3) SMTP directo
+// Jerarquía modificada: 1) SMTP directo (SiteGround)  2) Resend SDK (Backup)
 export const sendEmail = async (options: {
     to: string;
     subject: string;
@@ -149,8 +149,30 @@ export const sendEmail = async (options: {
     let errorMsg: string | null = null
 
     try {
-        // ---- 1. Resend SDK (prioritario) ----
-        if ((process.env.RESEND_API_KEY || '').trim()) {
+        // ---- 1. SMTP Directo o SendGrid (Prioritario ahora) ----
+        const smtpHost = (process.env.SMTP_HOST || '').trim()
+        if (smtpHost || (process.env.SENDGRID_API_KEY || '').trim()) {
+            try {
+                const transporter = createTransporter()
+                const fromAddr = (process.env.SMTP_USER || 'registro@asoperadora.com').trim()
+                const result = await transporter.sendMail({
+                    from: `"AS Operadora" <${fromAddr}>`,
+                    to: options.to,
+                    subject: options.subject,
+                    html: options.html,
+                    text: options.text || options.subject
+                })
+                success = true
+                provider = (process.env.SENDGRID_API_KEY || '').trim() ? 'sendgrid' : 'smtp'
+                providerMsgId = result.messageId || providerMsgId
+            } catch (smtpErr: any) {
+                errorMsg = smtpErr?.message || 'SMTP falló, intentando fallback a Resend...'
+                console.error('❌ SMTP Error:', errorMsg)
+            }
+        }
+
+        // ---- 2. Fallback: Resend SDK (Backup) ----
+        if (!success && (process.env.RESEND_API_KEY || '').trim()) {
             const sent = await sendWithResend({
                 to: options.to,
                 subject: options.subject,
@@ -161,24 +183,8 @@ export const sendEmail = async (options: {
                 success = true
                 provider = 'resend'
             } else {
-                errorMsg = 'Resend falló, intentando fallback...'
+                errorMsg = 'Resend también falló.'
             }
-        }
-
-        // ---- 2. Fallback: nodemailer (SendGrid SMTP o SMTP directo) ----
-        if (!success) {
-            const transporter = createTransporter()
-            const fromAddr = (process.env.SENDGRID_FROM_EMAIL || process.env.SMTP_USER || 'noreply@asoperadora.com').trim()
-            const result = await transporter.sendMail({
-                from: `"AS Operadora" <${fromAddr}>`,
-                to: options.to,
-                subject: options.subject,
-                html: options.html,
-                text: options.text || options.subject
-            })
-            success = true
-            provider = (process.env.SENDGRID_API_KEY || '').trim() ? 'sendgrid' : 'smtp'
-            providerMsgId = result.messageId || providerMsgId
         }
 
         if (success) {
