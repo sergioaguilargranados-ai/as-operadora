@@ -173,8 +173,6 @@ export const sendEmail = async (options: {
         }
 
         // ---- 2. Fallback: Resend SDK (Backup) ----
-        // TEMPORALMENTE DESACTIVADO PARA FORZAR SMTP
-        /*
         if (!success && (process.env.RESEND_API_KEY || '').trim()) {
             const sent = await sendWithResend({
                 to: options.to,
@@ -189,7 +187,6 @@ export const sendEmail = async (options: {
                 errorMsg = 'Resend también falló.'
             }
         }
-        */
 
         if (!success) {
             console.error('❌ Todos los métodos de envío fallaron para:', options.to)

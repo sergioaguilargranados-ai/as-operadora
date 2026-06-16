@@ -72,17 +72,6 @@ function RegistroForm() {
             Hemos recibido tu información correctamente. Nuestro equipo validará tu perfil y en breve recibirás un correo electrónico con los siguientes pasos.
           </p>
           
-          {emailStatus === false && (
-             <div className="bg-red-50 text-red-600 p-4 rounded-xl mb-6 text-sm">
-                <strong>Debug Info:</strong> El correo no pudo enviarse. Falló silenciosamente.
-             </div>
-          )}
-          {emailStatus && emailStatus.error && (
-             <div className="bg-red-50 text-red-600 p-4 rounded-xl mb-6 text-sm">
-                <strong>Error Exacto de Vercel/SiteGround:</strong> {emailStatus.error}
-             </div>
-          )}
-
           <button 
             onClick={() => router.push('/')}
             className="bg-black text-white px-8 py-3 rounded-full font-medium hover:bg-gray-800 transition-colors w-full"
