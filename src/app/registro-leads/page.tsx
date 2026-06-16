@@ -3,7 +3,7 @@
 import React, { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Playfair_Display, Inter } from 'next/font/google';
-import { Building, Briefcase, Plane, Users, ArrowLeft, Loader2, CheckCircle2 } from 'lucide-react';
+import { Building, Briefcase, Plane, Users, ArrowLeft, Loader2, CheckCircle2, Globe } from 'lucide-react';
 
 const playfair = Playfair_Display({ subsets: ['latin'], weight: ['400', '600', '700'] });
 const inter = Inter({ subsets: ['latin'], weight: ['300', '400', '500', '600'] });
@@ -18,6 +18,7 @@ function RegistroForm() {
     email: '',
     phone: '',
     company: '',
+    providerProduct: '',
     type: initialType
   });
 
@@ -29,7 +30,8 @@ function RegistroForm() {
     { id: 'Viajero', icon: Plane },
     { id: 'Agencia de Viajes', icon: Briefcase },
     { id: 'Agencia de Eventos', icon: Users },
-    { id: 'Empresa', icon: Building }
+    { id: 'Empresa', icon: Building },
+    { id: 'Proveedor', icon: Globe }
   ];
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -147,7 +149,7 @@ function RegistroForm() {
               />
             </div>
 
-            {(formData.type === 'Agencia de Viajes' || formData.type === 'Agencia de Eventos' || formData.type === 'Empresa') && (
+            {(formData.type === 'Agencia de Viajes' || formData.type === 'Agencia de Eventos' || formData.type === 'Empresa' || formData.type === 'Proveedor') && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Nombre de la Empresa/Agencia *</label>
                 <input 
@@ -157,6 +159,20 @@ function RegistroForm() {
                   onChange={e => setFormData({...formData, company: e.target.value})}
                   className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-black focus:border-black outline-none transition-all"
                   placeholder="Mi Empresa S.A."
+                />
+              </div>
+            )}
+
+            {formData.type === 'Proveedor' && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">¿Qué producto o servicio provee? *</label>
+                <input 
+                  required
+                  type="text" 
+                  value={formData.providerProduct}
+                  onChange={e => setFormData({...formData, providerProduct: e.target.value})}
+                  className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-black focus:border-black outline-none transition-all"
+                  placeholder="Ej. Transporte, Alimentos, Tours..."
                 />
               </div>
             )}

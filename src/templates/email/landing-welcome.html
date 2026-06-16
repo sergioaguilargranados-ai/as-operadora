@@ -22,6 +22,20 @@
     Agradecemos tu interés en formar parte de AS Operadora de Viajes y Eventos. Estamos comprometidos en ofrecer soluciones confiables para viajeros, agencias de viajes, agencias de eventos y empresas.
 </div>
 
+<div class="info-box" style="margin: 20px 0; padding: 15px; background-color: #f3f4f6; border-radius: 8px;">
+    <strong>Resumen de tu solicitud:</strong><br><br>
+    <strong>Nombre:</strong> {{CUSTOMER_NAME}}<br>
+    <strong>Correo:</strong> {{EMAIL}}<br>
+    <strong>Teléfono:</strong> {{PHONE}}<br>
+    <strong>Perfil:</strong> {{TYPE}}<br>
+    {{#if COMPANY}}
+    <strong>Empresa/Agencia:</strong> {{COMPANY}}<br>
+    {{/if}}
+    {{#if PROVIDER_PRODUCT}}
+    <strong>Producto/Servicio:</strong> {{PROVIDER_PRODUCT}}<br>
+    {{/if}}
+</div>
+
 <div class="message" style="margin-top: 30px;">
     Atentamente,<br>
     <strong>AS Operadora de Viajes y Eventos</strong>

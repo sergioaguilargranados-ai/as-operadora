@@ -12,7 +12,8 @@ export async function POST(request: Request) {
       website, 
       social_media, 
       email, 
-      job_title, type
+      job_title, type,
+      providerProduct
     } = body;
     
     const final_name = contact_name || fullName;
@@ -43,7 +44,10 @@ export async function POST(request: Request) {
       await sendLandingWelcomeEmail({
         name: final_name,
         email: email,
-        type: final_job
+        type: final_job,
+        phone: final_phone,
+        company: final_agency,
+        providerProduct: providerProduct
       }).catch(err => {
         console.error('Error al enviar el correo corporativo de registro:', err);
       });

@@ -916,6 +916,201 @@ export const sendPriceAlertEmail = async (data: {
             SUBJECT: `📉 ¡Bajó el precio! ${data.origin} → ${data.destination}`
         });
 
+        discount?: number;
+        includes: string[];
+        link: string;
+    }>;
+    travelTips?: Array<{
+        title: string;
+        content: string;
+    }>;
+    upcomingDestinations?: Array<{
+        emoji: string;
+        name: string;
+        price: number;
+        currency: string;
+    }>;
+}): Promise<boolean> => {
+    try {
+        const html = renderTemplate('newsletter', {
+            CUSTOMER_NAME: data.name,
+            EMAIL: data.email,
+            MONTH: data.month,
+            YEAR: data.year,
+            FEATURED_DESTINATION: data.featuredDestination,
+            FEATURED_DESCRIPTION: data.featuredDescription,
+            FEATURED_IMAGE: data.featuredImage,
+            OFFERS: data.offers,
+            TRAVEL_TIPS: data.travelTips,
+            UPCOMING_DESTINATIONS: data.upcomingDestinations,
+            FACEBOOK_URL: 'https://facebook.com/asoperadora',
+            INSTAGRAM_URL: 'https://instagram.com/asoperadora',
+            TWITTER_URL: 'https://twitter.com/asoperadora',
+            SUBJECT: `Newsletter ${data.month} ${data.year} - AS Operadora`
+        });
+
+        return await sendEmail({
+            to: data.email,
+            subject: `📰 Newsletter ${data.month} ${data.year} - AS Operadora`,
+            html
+        });
+    } catch (error) {
+        console.error('Error enviando newsletter:', error);
+        return false;
+    }
+};
+
+// 13. Oferta Especial
+export const sendSpecialOfferEmail = async (data: {
+    name: string;
+    email: string;
+    offerTitle: string;
+    discountPercentage: number;
+    destination: string;
+    description: string;
+    availableDates: string;
+    duration: string;
+    includesSummary: string;
+    originalPrice: number;
+    specialPrice: number;
+    currency: string;
+    expiryDate: string;
+    spotsLeft: number;
+    inclusions: Array<{
+        icon: string;
+        title: string;
+        description: string;
+    }>;
+    promoCode: string;
+    bookingUrl: string;
+    offerImage?: string;
+    testimonials?: Array<{
+        quote: string;
+        name: string;
+        location: string;
+    }>;
+}): Promise<boolean> => {
+    try {
+        const html = renderTemplate('special-offer', {
+            CUSTOMER_NAME: data.name,
+            EMAIL: data.email,
+            OFFER_TITLE: data.offerTitle,
+            DISCOUNT_PERCENTAGE: data.discountPercentage,
+            DESTINATION: data.destination,
+            DESCRIPTION: data.description,
+            AVAILABLE_DATES: data.availableDates,
+            DURATION: data.duration,
+            INCLUDES_SUMMARY: data.includesSummary,
+            ORIGINAL_PRICE: new Intl.NumberFormat('es-MX', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }).format(data.originalPrice),
+            SPECIAL_PRICE: new Intl.NumberFormat('es-MX', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }).format(data.specialPrice),
+            CURRENCY: data.currency,
+            EXPIRY_DATE: data.expiryDate,
+            SPOTS_LEFT: data.spotsLeft,
+            INCLUSIONS: data.inclusions,
+            PROMO_CODE: data.promoCode,
+            BOOKING_URL: data.bookingUrl,
+            OFFER_IMAGE: data.offerImage,
+            TESTIMONIALS: data.testimonials,
+            SUBJECT: `🎉 ${data.offerTitle} - ${data.discountPercentage}% OFF`
+        });
+
+        return await sendEmail({
+            to: data.email,
+            subject: `🎉 ${data.offerTitle} - ${data.discountPercentage}% OFF`,
+            html
+        });
+    } catch (error) {
+        console.error('Error enviando oferta especial:', error);
+        return false;
+    }
+};
+
+// 14. Alerta de Precio
+export const sendPriceAlertEmail = async (data: {
+    name: string;
+    email: string;
+    destination: string;
+    origin: string;
+    travelDates: string;
+    passengers: number;
+    cabinClass?: string;
+    oldPrice: number;
+    newPrice: number;
+    savingsAmount: number;
+    savingsPercentage: number;
+    currency: string;
+    bookingUrl: string;
+    flightInfo?: {
+        outboundAirline: string;
+        outboundFlight: string;
+        outboundDeparture: string;
+        outboundArrival: string;
+        outboundStops: string;
+        returnAirline?: string;
+        returnFlight?: string;
+        returnDeparture?: string;
+        returnArrival?: string;
+        returnStops?: string;
+    };
+    priceHistory?: {
+        maxPrice: number;
+        avgPrice: number;
+    };
+}): Promise<boolean> => {
+    try {
+        const html = renderTemplate('price-alert', {
+            CUSTOMER_NAME: data.name,
+            EMAIL: data.email,
+            DESTINATION: data.destination,
+            ORIGIN: data.origin,
+            TRAVEL_DATES: data.travelDates,
+            PASSENGERS: data.passengers,
+            CABIN_CLASS: data.cabinClass,
+            OLD_PRICE: new Intl.NumberFormat('es-MX', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }).format(data.oldPrice),
+            NEW_PRICE: new Intl.NumberFormat('es-MX', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }).format(data.newPrice),
+            SAVINGS_AMOUNT: new Intl.NumberFormat('es-MX', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }).format(data.savingsAmount),
+            SAVINGS_PERCENTAGE: data.savingsPercentage,
+            CURRENCY: data.currency,
+            BOOKING_URL: data.bookingUrl,
+            FLIGHT_INFO: data.flightInfo ? true : false,
+            OUTBOUND_AIRLINE: data.flightInfo?.outboundAirline,
+            OUTBOUND_FLIGHT: data.flightInfo?.outboundFlight,
+            OUTBOUND_DEPARTURE: data.flightInfo?.outboundDeparture,
+            OUTBOUND_ARRIVAL: data.flightInfo?.outboundArrival,
+            OUTBOUND_STOPS: data.flightInfo?.outboundStops,
+            RETURN_FLIGHT: data.flightInfo?.returnFlight ? true : false,
+            RETURN_AIRLINE: data.flightInfo?.returnAirline,
+            RETURN_DEPARTURE: data.flightInfo?.returnDeparture,
+            RETURN_ARRIVAL: data.flightInfo?.returnArrival,
+            RETURN_STOPS: data.flightInfo?.returnStops,
+            PRICE_HISTORY: data.priceHistory ? true : false,
+            MAX_PRICE: data.priceHistory ? new Intl.NumberFormat('es-MX', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }).format(data.priceHistory.maxPrice) : '',
+            AVG_PRICE: data.priceHistory ? new Intl.NumberFormat('es-MX', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }).format(data.priceHistory.avgPrice) : '',
+            MANAGE_ALERTS_URL: `${process.env.NEXT_PUBLIC_APP_URL}/alertas`,
+            SUBJECT: `📉 ¡Bajó el precio! ${data.origin} → ${data.destination}`
+        });
+
         return await sendEmail({
             to: data.email,
             subject: `🔥 ¡Bajó el precio! ${data.origin} ✈️ ${data.destination}`,
@@ -932,11 +1127,18 @@ export const sendLandingWelcomeEmail = async (data: {
     name: string;
     email: string;
     type?: string;
+    phone?: string;
+    company?: string;
+    providerProduct?: string;
 }): Promise<boolean> => {
     try {
         const html = renderTemplate('landing-welcome', {
             CUSTOMER_NAME: data.name,
             EMAIL: data.email,
+            PHONE: data.phone || 'N/A',
+            TYPE: data.type || 'N/A',
+            COMPANY: data.company || '',
+            PROVIDER_PRODUCT: data.providerProduct || '',
             SUBJECT: 'Recepción de Solicitud de Registro - AS Operadora'
         });
 
