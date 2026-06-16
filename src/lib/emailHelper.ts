@@ -937,20 +937,62 @@ export const sendLandingWelcomeEmail = async (data: {
     providerProduct?: string;
 }): Promise<boolean> => {
     try {
-        const html = renderTemplate('landing-welcome', {
-            CUSTOMER_NAME: data.name,
-            EMAIL: data.email,
-            PHONE: data.phone || 'N/A',
-            TYPE: data.type || 'N/A',
-            COMPANY: data.company || '',
-            PROVIDER_PRODUCT: data.providerProduct || '',
-            SUBJECT: 'Recepción de Solicitud de Registro - AS Operadora'
-        });
+        const companyHtml = data.company ? `<strong>Empresa/Agencia:</strong> ${data.company}<br>` : '';
+        const providerHtml = data.providerProduct ? `<strong>Producto/Servicio:</strong> ${data.providerProduct}<br>` : '';
+        
+        const rawHtml = `
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #1f2937; line-height: 1.6; }
+    .header { background: #f8f9fa; padding: 20px; text-align: center; border-bottom: 1px solid #e5e7eb; }
+    .content { padding: 30px 20px; }
+    .info-box { background-color: #f9fafb; border-left: 4px solid #0066FF; padding: 20px; margin: 25px 0; border-radius: 4px; }
+    .footer { text-align: center; color: #6b7280; font-size: 12px; margin-top: 40px; border-top: 1px solid #e5e7eb; padding-top: 20px; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1 style="margin: 0; font-size: 24px; color: #000;">AS Operadora</h1>
+    <p style="margin: 5px 0 0; font-size: 12px; letter-spacing: 2px;">DE VIAJES Y EVENTOS</p>
+  </div>
+  <div class="content">
+    <div style="font-size: 20px; font-weight: 600; margin-bottom: 20px;">Hola, ${data.name}.</div>
+    <div style="margin-bottom: 20px;">Gracias por registrarte en AS Operadora de Viajes y Eventos.</div>
+    <div style="margin-bottom: 20px;">Hemos recibido correctamente tu solicitud de registro y la información proporcionada ha sido enviada a nuestro equipo para su revisión.</div>
+    
+    <div class="info-box">
+      Nuestro proceso de validación puede tomar hasta <strong>30 días naturales</strong>. Durante este periodo verificaremos la información recibida para brindarte la mejor atención.
+    </div>
+    
+    <div style="margin: 20px 0; padding: 15px; background-color: #f3f4f6; border-radius: 8px;">
+        <strong>Resumen de tu solicitud:</strong><br><br>
+        <strong>Nombre:</strong> ${data.name}<br>
+        <strong>Correo:</strong> ${data.email}<br>
+        <strong>Teléfono:</strong> ${data.phone || 'N/A'}<br>
+        <strong>Perfil:</strong> ${data.type || 'N/A'}<br>
+        ${companyHtml}
+        ${providerHtml}
+    </div>
+    
+    <div style="margin-top: 30px;">
+        Atentamente,<br>
+        <strong>AS Operadora de Viajes y Eventos</strong>
+    </div>
+  </div>
+  <div class="footer">
+    <p>Por favor, no respondas a este correo. Este es un mensaje generado automáticamente.</p>
+  </div>
+</body>
+</html>
+        `;
 
         return await sendEmail({
             to: data.email,
             subject: 'Recepción de Solicitud de Registro - AS Operadora',
-            html
+            html: rawHtml
         });
     } catch (error) {
         console.error('Error enviando correo de bienvenida de landing:', error);
