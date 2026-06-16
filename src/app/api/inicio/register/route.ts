@@ -25,6 +25,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: 'El nombre es requerido' }, { status: 400 });
     }
 
+    if (email) {
+      const existing = await query(`SELECT id FROM expo_leads WHERE email = $1 LIMIT 1`, [email]);
+      if (existing.rows.length > 0) {
+        return NextResponse.json({ success: false, error: 'Este correo electrónico ya está registrado.' }, { status: 400 });
+      }
+    }
+
     const result = await query(
       `INSERT INTO expo_leads (
         contact_name, 
@@ -53,6 +60,24 @@ export async function POST(request: Request) {
         console.error('Error al enviar el correo corporativo de registro:', err);
         return { error: err.message };
       });
+    }
+
+    // Agregar al CRM de contactos también
+    try {
+      const { crmService } = await import('@/services/CRMService');
+      await crmService.createContact({
+        full_name: final_name,
+        email: email,
+        phone: final_phone,
+        company: final_agency,
+        source: 'campaign', // o 'web'
+        source_detail: 'Registro Landing PWA',
+        contact_type: 'lead',
+        pipeline_stage: 'new',
+        notes: providerProduct ? `Provee: ${providerProduct}` : '',
+      });
+    } catch (crmError) {
+      console.error('Error al sincronizar con CRM:', crmError);
     }
 
     return NextResponse.json({ success: true, data: result.rows[0], emailSent: emailResult });

@@ -33,7 +33,7 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "AS Viajando",
+    title: "AS Operadora de Viajes",
   },
   formatDetection: {
     telephone: true,
@@ -61,7 +61,7 @@ export default function RootLayout({
         <link rel="apple-touch-icon" sizes="180x180" href="/icons/icon-192x192.png" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        <meta name="apple-mobile-web-app-title" content="AS Viajando" />
+        <meta name="apple-mobile-web-app-title" content="AS Operadora de Viajes" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="msapplication-TileColor" content="#0066FF" />
         <meta name="msapplication-tap-highlight" content="no" />

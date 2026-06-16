@@ -1,6 +1,6 @@
 {
   "name": "AS Operadora de Viajes y Eventos",
-  "short_name": "AS Viajando",
+  "short_name": "AS Operadora de Viajes",
   "description": "Descubre experiencias únicas. Hoteles, vuelos, tours, paquetes y más al mejor precio.",
   "start_url": "/",
   "display": "standalone",

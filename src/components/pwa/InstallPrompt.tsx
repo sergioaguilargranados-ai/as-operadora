@@ -109,7 +109,7 @@ export function InstallPrompt() {
 
             <div className="flex-1 min-w-0">
               <h3 className="font-bold text-gray-900 text-base">
-                Instalar AS Viajando
+                Instalar AS Operadora de Viajes
               </h3>
 
               {isIOS ? (

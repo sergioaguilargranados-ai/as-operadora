@@ -169,6 +169,7 @@ export default function LoginPage() {
             </Button>
           </form>
 
+          {/* Ocultado temporalmente por la promoción de registro en landing
           <div className="mt-6 text-center">
             <p className="text-sm text-muted-foreground">
               ¿No tienes una cuenta?{" "}
@@ -180,6 +181,7 @@ export default function LoginPage() {
               </Link>
             </p>
           </div>
+          */}
 
           {/* Ocultado temporalmente por proceso de registro de lista
           <div className="mt-8 pt-6 border-t">

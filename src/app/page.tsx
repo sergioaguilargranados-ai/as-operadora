@@ -46,6 +46,12 @@ export default function InicioLanding() {
           <Logo forceDefault />
           <div className="flex items-center gap-4">
             <button 
+              onClick={() => router.push('/login')}
+              className="text-black font-semibold text-sm hover:underline px-2"
+            >
+              Acceso
+            </button>
+            <button 
               onClick={() => handleRegister('Viajero')}
               className="bg-black text-white px-6 py-2 rounded font-medium hover:bg-gray-800 transition-colors text-sm"
             >
