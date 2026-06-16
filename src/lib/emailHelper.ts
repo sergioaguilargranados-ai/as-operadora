@@ -51,10 +51,11 @@ const createTransporter = () => {
         } as any);
     }
 
+    const smtpPort = parseInt((process.env.SMTP_PORT || '465').trim(), 10);
     return nodemailer.createTransport({
         host: (process.env.SMTP_HOST || '').trim(),
-        port: parseInt(process.env.SMTP_PORT || '465'),
-        secure: process.env.SMTP_PORT === '465',
+        port: smtpPort,
+        secure: smtpPort === 465,
         auth: {
             user: (process.env.SMTP_USER || '').trim(),
             pass: (process.env.SMTP_PASS || '').replace(/^"|"$/g, '').trim()
@@ -172,6 +173,8 @@ export const sendEmail = async (options: {
         }
 
         // ---- 2. Fallback: Resend SDK (Backup) ----
+        // TEMPORALMENTE DESACTIVADO PARA FORZAR SMTP
+        /*
         if (!success && (process.env.RESEND_API_KEY || '').trim()) {
             const sent = await sendWithResend({
                 to: options.to,
@@ -186,6 +189,7 @@ export const sendEmail = async (options: {
                 errorMsg = 'Resend también falló.'
             }
         }
+        */
 
         if (success) {
             console.log(`✅ Email enviado via ${provider} a: ${options.to}`)
