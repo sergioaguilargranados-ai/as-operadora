@@ -7,6 +7,11 @@ const withSerwist = require("@serwist/next").default({
 });
 
 const nextConfig = {
+  experimental: {
+    outputFileTracingIncludes: {
+      '/api/**/*': ['./src/templates/email/**/*'],
+    },
+  },
   eslint: {
     ignoreDuringBuilds: true,
   },
