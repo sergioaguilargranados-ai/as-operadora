@@ -5,7 +5,8 @@ import { Logo } from './Logo'
 import { UserMenu } from './UserMenu'
 import { Button } from './ui/button'
 import { ArrowLeft } from 'lucide-react'
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
+import { useAuth } from '@/contexts/AuthContext'
 
 interface PageHeaderProps {
   showBackButton?: boolean
@@ -23,12 +24,28 @@ export function PageHeader({
   children
 }: PageHeaderProps) {
   const router = useRouter()
+  const pathname = usePathname()
+  const { logout } = useAuth()
 
   const handleBack = () => {
     if (backButtonHref) {
       router.push(backButtonHref)
     } else {
       router.back()
+    }
+  }
+
+  const handleLogoClick = async (e: React.MouseEvent) => {
+    e.preventDefault()
+    
+    // Si ya estamos en el inicio del portal
+    if (pathname === '/portal' || pathname === '/dashboard') {
+      // Desconectar y mandar a la landing para evitar el loop del middleware
+      await logout()
+      router.push('/')
+    } else {
+      // Si estamos en otra página, regresar al inicio del portal
+      router.push('/dashboard')
     }
   }
 
@@ -47,9 +64,9 @@ export function PageHeader({
                 {backButtonText}
               </Button>
             )}
-            <Link href="/">
+            <a href="/" onClick={handleLogoClick} className="cursor-pointer">
               <Logo className="py-2" />
-            </Link>
+            </a>
           </div>
           <div className="flex items-center gap-3 md:gap-6 text-sm">
             {children}
