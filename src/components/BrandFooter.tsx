@@ -6,6 +6,7 @@
 import Link from 'next/link';
 import { useWhiteLabel } from '@/contexts/WhiteLabelContext';
 import { Logo } from './Logo';
+import { PwaInstallButton } from '@/components/pwa/PwaInstallButton';
 
 /**
  * Footer con branding dinámico.
@@ -84,16 +85,17 @@ export function BrandFooter() {
                         </ul>
                     </div>
                 </div>
-                <div className="border-t pt-8 text-sm text-muted-foreground text-center">
+                <div className="border-t pt-8 text-sm text-muted-foreground text-center flex flex-col items-center">
                     <p>{footerText}</p>
                     {isWhiteLabel && (
                         <p className="text-xs mt-2 opacity-60">
                             Powered by <Logo forceDefault size="sm" className="inline-flex ml-1" />
                         </p>
                     )}
-                    <p className="text-xs mt-2 opacity-50">
-                        v2.351
-                    </p>
+                    <div className="flex items-center justify-center gap-4 mt-2">
+                        <p className="text-xs opacity-50">v2.351</p>
+                        <PwaInstallButton />
+                    </div>
                 </div>
             </div>
         </footer>
