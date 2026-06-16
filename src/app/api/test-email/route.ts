@@ -38,11 +38,37 @@ export async function GET(request: NextRequest) {
                 await transporter.verify();
                 smtpResult = { status: 'OK', message: 'Conexión SMTP exitosa al servidor ' + smtpHost + ' en puerto ' + smtpPort };
             } else {
+                const rawHtml = `
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #1f2937; line-height: 1.6; }
+    .header { background: #f8f9fa; padding: 20px; text-align: center; border-bottom: 1px solid #e5e7eb; }
+    .content { padding: 30px 20px; }
+    .info-box { background-color: #f9fafb; border-left: 4px solid #0066FF; padding: 20px; margin: 25px 0; border-radius: 4px; }
+    .footer { text-align: center; color: #6b7280; font-size: 12px; margin-top: 40px; border-top: 1px solid #e5e7eb; padding-top: 20px; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1 style="margin: 0; font-size: 24px; color: #000;">AS Operadora</h1>
+    <p style="margin: 5px 0 0; font-size: 12px; letter-spacing: 2px;">DE VIAJES Y EVENTOS</p>
+  </div>
+  <div class="content">
+    <div style="font-size: 20px; font-weight: 600; margin-bottom: 20px;">Hola, Test.</div>
+    <div class="info-box">Prueba de Plantilla HTML desde Vercel.</div>
+  </div>
+</body>
+</html>`;
+
                 const info = await transporter.sendMail({
                     from: `"AS Operadora Test SMTP" <${smtpUser}>`,
                     to: to,
-                    subject: 'Prueba de Conexión SMTP',
-                    text: 'Si recibes este correo, la configuración SMTP es correcta.'
+                    subject: 'Prueba de Conexión SMTP con HTML',
+                    text: 'Si recibes este correo, la configuración SMTP y el HTML funcionan.',
+                    html: rawHtml
                 });
                 smtpResult = { status: 'OK', messageId: info.messageId, host: smtpHost, port: smtpPort };
             }

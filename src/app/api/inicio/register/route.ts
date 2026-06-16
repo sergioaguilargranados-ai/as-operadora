@@ -40,8 +40,9 @@ export async function POST(request: Request) {
     );
 
     // Enviar correo de bienvenida con formato corporativo si hay un email
+    let emailResult = null;
     if (email) {
-      await sendLandingWelcomeEmail({
+      emailResult = await sendLandingWelcomeEmail({
         name: final_name,
         email: email,
         type: final_job,
@@ -50,10 +51,11 @@ export async function POST(request: Request) {
         providerProduct: providerProduct
       }).catch(err => {
         console.error('Error al enviar el correo corporativo de registro:', err);
+        return false;
       });
     }
 
-    return NextResponse.json({ success: true, data: result.rows[0] });
+    return NextResponse.json({ success: true, data: result.rows[0], emailSent: emailResult });
   } catch (error: any) {
     console.error('Error saving expo lead:', error);
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
