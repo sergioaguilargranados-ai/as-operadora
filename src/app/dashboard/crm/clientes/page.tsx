@@ -73,6 +73,7 @@ const TYPE_TABS = [
     { key: 'all', label: 'Todos', icon: '📊' },
     { key: 'client', label: 'Clientes', icon: '👤' },
     { key: 'lead', label: 'Leads / Prospectos', icon: '🎯' },
+    { key: 'provider', label: 'Proveedores', icon: '📦' },
 ]
 
 // ═══════════════════════════════════════════

@@ -9,6 +9,7 @@ import {
     Calendar, Shield, Download, MoreVertical, Plus,
     User, Phone, Mail, MapPin, Loader2
 } from 'lucide-react'
+import { UploadDocumentModal } from '@/components/crm/UploadDocumentModal'
 
 interface ClientDocument {
     id: string
@@ -90,6 +91,7 @@ export default function ClientDocumentsPage() {
     const [filterStatus, setFilterStatus] = useState('all')
     const [filterCategory, setFilterCategory] = useState('all')
     const [selectedDoc, setSelectedDoc] = useState<ClientDocument | null>(null)
+    const [isUploadModalOpen, setIsUploadModalOpen] = useState(false)
 
     const fetchDocuments = useCallback(async () => {
         try {
@@ -231,7 +233,10 @@ export default function ClientDocumentsPage() {
                             <option value="travel">Viaje</option>
                             <option value="other">Otro</option>
                         </select>
-                        <button className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors">
+                        <button 
+                            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
+                            onClick={() => setIsUploadModalOpen(true)}
+                        >
                             <Plus className="w-4 h-4" />
                             Subir Documento
                         </button>
@@ -376,6 +381,14 @@ export default function ClientDocumentsPage() {
                     </div>
                 )}
             </main>
+            <UploadDocumentModal 
+                isOpen={isUploadModalOpen} 
+                onClose={() => setIsUploadModalOpen(false)} 
+                onSuccess={() => {
+                    setIsUploadModalOpen(false)
+                    fetchDocuments()
+                }} 
+            />
         </div>
     )
 }

@@ -91,13 +91,13 @@ export default function PredictivePage() {
             <PageHeader showBackButton={true} backButtonHref="/dashboard/crm">
                 <div className="flex items-center justify-between w-full">
                     <div>
-                        <h1 className="text-lg font-bold flex items-center gap-2 text-white">
-                            <Brain className="w-5 h-5 text-purple-400" />
+                        <h1 className="text-lg font-bold flex items-center gap-2 text-slate-800">
+                            <Brain className="w-5 h-5 text-purple-600" />
                             Scoring Predictivo
                         </h1>
                         <p className="text-xs text-gray-400">Predicción de conversión por análisis de patrones</p>
                     </div>
-                    <Button variant="ghost" size="sm" className="text-gray-400 hover:text-white" onClick={loadPredictions}>
+                    <Button variant="ghost" size="sm" className="text-gray-400 hover:text-slate-800" onClick={loadPredictions}>
                         <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
                     </Button>
                 </div>
@@ -107,19 +107,19 @@ export default function PredictivePage() {
 
                 {/* KPIs */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-                    <Card className="p-4 bg-slate-800/50 border-slate-700 backdrop-blur">
-                        <div className="text-3xl font-bold text-purple-400">{avgProbability}%</div>
+                    <Card className="p-4 bg-slate-50 border-slate-700 backdrop-blur">
+                        <div className="text-3xl font-bold text-purple-600">{avgProbability}%</div>
                         <div className="text-xs text-gray-400 mt-1">Prob. promedio</div>
                     </Card>
-                    <Card className="p-4 bg-slate-800/50 border-slate-700 backdrop-blur">
+                    <Card className="p-4 bg-slate-50 border-slate-700 backdrop-blur">
                         <div className="text-3xl font-bold text-green-400">{highProb}</div>
                         <div className="text-xs text-gray-400 mt-1">Alta probabilidad (60%+)</div>
                     </Card>
-                    <Card className="p-4 bg-slate-800/50 border-slate-700 backdrop-blur">
+                    <Card className="p-4 bg-slate-50 border-slate-700 backdrop-blur">
                         <div className="text-3xl font-bold text-red-400">{atRisk}</div>
                         <div className="text-xs text-gray-400 mt-1">En riesgo</div>
                     </Card>
-                    <Card className="p-4 bg-slate-800/50 border-slate-700 backdrop-blur">
+                    <Card className="p-4 bg-slate-50 border-slate-700 backdrop-blur">
                         <div className="text-3xl font-bold text-cyan-400">{avgDays}d</div>
                         <div className="text-xs text-gray-400 mt-1">Días promedio al cierre</div>
                     </Card>
@@ -129,7 +129,7 @@ export default function PredictivePage() {
                     {/* ═══════ LISTA DE PREDICCIONES ═══════ */}
                     <div className="flex-1">
                         <Card className="bg-slate-800/30 border-slate-700 overflow-hidden">
-                            <div className="px-4 py-3 bg-slate-800/50 border-b border-slate-700 flex items-center justify-between">
+                            <div className="px-4 py-3 bg-slate-50 border-b border-slate-700 flex items-center justify-between">
                                 <h2 className="text-sm font-semibold text-gray-200">
                                     🎯 Ranking de conversión ({predictions.length} contactos)
                                 </h2>
@@ -137,7 +137,7 @@ export default function PredictivePage() {
 
                             {loading ? (
                                 <div className="flex items-center justify-center py-20">
-                                    <Loader2 className="w-6 h-6 animate-spin text-purple-400" />
+                                    <Loader2 className="w-6 h-6 animate-spin text-purple-600" />
                                 </div>
                             ) : (
                                 <div className="divide-y divide-slate-700/50">
@@ -164,7 +164,7 @@ export default function PredictivePage() {
 
                                                 {/* Probabilidad */}
                                                 <div className="w-16 flex-shrink-0">
-                                                    <div className="text-lg font-bold text-white">{p.conversion_probability}%</div>
+                                                    <div className="text-lg font-bold text-slate-800">{p.conversion_probability}%</div>
                                                     <div className="w-full h-1.5 bg-slate-700 rounded-full overflow-hidden">
                                                         <div
                                                             className="h-full rounded-full transition-all"
@@ -221,7 +221,7 @@ export default function PredictivePage() {
                                 {/* Header */}
                                 <Card className="p-4 bg-gradient-to-br from-purple-900/50 to-slate-800/50 border-purple-700/50">
                                     <div className="text-center">
-                                        <div className="text-4xl font-bold text-white mb-1">
+                                        <div className="text-4xl font-bold text-slate-800 mb-1">
                                             {selectedPrediction.conversion_probability}%
                                         </div>
                                         <div className="text-xs text-purple-300">Probabilidad de conversión</div>
@@ -231,11 +231,11 @@ export default function PredictivePage() {
                                         </div>
                                     </div>
                                     <div className="grid grid-cols-2 gap-2 mt-4">
-                                        <div className="text-center p-2 bg-slate-800/50 rounded-lg">
+                                        <div className="text-center p-2 bg-slate-50 rounded-lg">
                                             <div className="text-sm font-bold text-cyan-400">{selectedPrediction.predicted_days_to_close || '—'}d</div>
                                             <div className="text-[9px] text-gray-400">Días al cierre</div>
                                         </div>
-                                        <div className="text-center p-2 bg-slate-800/50 rounded-lg">
+                                        <div className="text-center p-2 bg-slate-50 rounded-lg">
                                             <div className="text-sm font-bold text-amber-400">
                                                 {selectedPrediction.current_score} → {selectedPrediction.predicted_score}
                                             </div>
@@ -295,7 +295,7 @@ export default function PredictivePage() {
 
                                 {/* Acciones */}
                                 <Button
-                                    className="w-full bg-purple-600 hover:bg-purple-700 text-white text-xs rounded-lg"
+                                    className="w-full bg-purple-600 hover:bg-purple-700 text-slate-800 text-xs rounded-lg"
                                     onClick={() => router.push(`/dashboard/crm/contacts/${selectedPrediction.contact_id}`)}
                                 >
                                     <Eye className="w-3.5 h-3.5 mr-1" />

@@ -121,21 +121,21 @@ export default function ExecutiveDashboard() {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-indigo-950">
+        <div className="min-h-screen bg-slate-50">
             <PageHeader showBackButton={true} backButtonHref="/dashboard/crm">
                 <div className="flex items-center justify-between w-full">
                     <div>
-                        <h1 className="text-lg font-bold flex items-center gap-2 text-white">
-                            <Crown className="w-5 h-5 text-amber-400" />
+                        <h1 className="text-lg font-bold flex items-center gap-2 text-slate-800">
+                            <Crown className="w-5 h-5 text-amber-500" />
                             Dashboard Ejecutivo
                         </h1>
-                        <p className="text-xs text-slate-400">
+                        <p className="text-xs text-slate-500">
                             Vista gerencial del CRM • {PERIOD_LABELS[period]}
                         </p>
                     </div>
                     <div className="flex items-center gap-2">
                         <select
-                            className="h-7 px-2 text-xs rounded-lg border border-slate-600 bg-slate-800 text-white"
+                            className="h-8 px-3 text-sm rounded-lg border border-slate-200 bg-white text-slate-800"
                             value={period}
                             onChange={e => setPeriod(e.target.value)}
                         >
@@ -146,7 +146,7 @@ export default function ExecutiveDashboard() {
                         <Button
                             variant="ghost"
                             size="sm"
-                            className="text-slate-400 hover:text-white"
+                            className="text-slate-500 hover:text-slate-800"
                             onClick={fetchData}
                             disabled={loading}
                         >
@@ -158,7 +158,7 @@ export default function ExecutiveDashboard() {
 
             {loading && !data ? (
                 <div className="flex items-center justify-center py-20">
-                    <Loader2 className="w-8 h-8 animate-spin text-indigo-400" />
+                    <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
                 </div>
             ) : data ? (
                 <main className="container mx-auto px-4 py-5 max-w-6xl space-y-5">
@@ -230,8 +230,8 @@ export default function ExecutiveDashboard() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
                         {/* Pipeline por etapa */}
-                        <Card className="p-4 bg-slate-800/50 border-slate-700 backdrop-blur">
-                            <h3 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
+                        <Card className="p-4 bg-white border border-slate-200 shadow-sm">
+                            <h3 className="text-sm font-semibold text-slate-800 mb-3 flex items-center gap-2">
                                 <BarChart3 className="w-4 h-4 text-blue-400" />
                                 Pipeline por Etapa
                             </h3>
@@ -242,10 +242,10 @@ export default function ExecutiveDashboard() {
                                     const width = Math.max(2, (val / maxVal) * 100)
                                     return (
                                         <div key={stage.pipeline_stage} className="flex items-center gap-2">
-                                            <div className="w-20 text-[10px] text-slate-400 text-right flex-shrink-0">
+                                            <div className="w-20 text-[10px] text-slate-500 text-right flex-shrink-0">
                                                 {STAGE_LABELS[stage.pipeline_stage] || stage.pipeline_stage}
                                             </div>
-                                            <div className="flex-1 bg-slate-700/50 rounded-full h-5 relative overflow-hidden">
+                                            <div className="flex-1 bg-slate-100 rounded-full h-5 relative overflow-hidden">
                                                 <div
                                                     className="h-full rounded-full transition-all duration-500"
                                                     style={{
@@ -253,7 +253,7 @@ export default function ExecutiveDashboard() {
                                                         backgroundColor: STAGE_COLORS[stage.pipeline_stage] || '#64748b',
                                                     }}
                                                 />
-                                                <span className="absolute right-2 top-0.5 text-[9px] text-white/70">
+                                                <span className="absolute right-2 top-0.5 text-[9px] text-slate-800/70">
                                                     {num(stage.count)} • {fmt(stage.value)}
                                                 </span>
                                             </div>
@@ -264,8 +264,8 @@ export default function ExecutiveDashboard() {
                         </Card>
 
                         {/* Revenue por mes */}
-                        <Card className="p-4 bg-slate-800/50 border-slate-700 backdrop-blur">
-                            <h3 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
+                        <Card className="p-4 bg-white border border-slate-200 shadow-sm">
+                            <h3 className="text-sm font-semibold text-slate-800 mb-3 flex items-center gap-2">
                                 <TrendingUp className="w-4 h-4 text-emerald-400" />
                                 Revenue por Mes (6 meses)
                             </h3>
@@ -299,8 +299,8 @@ export default function ExecutiveDashboard() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
                         {/* Top Agentes */}
-                        <Card className="p-4 bg-slate-800/50 border-slate-700 backdrop-blur">
-                            <h3 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
+                        <Card className="p-4 bg-white border border-slate-200 shadow-sm">
+                            <h3 className="text-sm font-semibold text-slate-800 mb-3 flex items-center gap-2">
                                 <Award className="w-4 h-4 text-amber-400" />
                                 Top Agentes
                             </h3>
@@ -311,12 +311,12 @@ export default function ExecutiveDashboard() {
                                             <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${i === 0 ? 'bg-amber-500/20 text-amber-400' :
                                                     i === 1 ? 'bg-slate-400/20 text-slate-300' :
                                                         i === 2 ? 'bg-orange-500/20 text-orange-400' :
-                                                            'bg-slate-600/30 text-slate-400'
+                                                            'bg-slate-600/30 text-slate-500'
                                                 }`}>
                                                 {i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `#${i + 1}`}
                                             </div>
                                             <div className="flex-1 min-w-0">
-                                                <div className="text-xs text-white font-medium truncate">{agent.agent_name}</div>
+                                                <div className="text-xs text-slate-800 font-medium truncate">{agent.agent_name}</div>
                                                 <div className="text-[10px] text-slate-500">
                                                     {num(agent.total)} contactos • {num(agent.won)} ganados
                                                 </div>
@@ -334,8 +334,8 @@ export default function ExecutiveDashboard() {
                         </Card>
 
                         {/* Top Fuentes */}
-                        <Card className="p-4 bg-slate-800/50 border-slate-700 backdrop-blur">
-                            <h3 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
+                        <Card className="p-4 bg-white border border-slate-200 shadow-sm">
+                            <h3 className="text-sm font-semibold text-slate-800 mb-3 flex items-center gap-2">
                                 <Zap className="w-4 h-4 text-cyan-400" />
                                 Fuentes de Leads
                             </h3>
@@ -352,7 +352,7 @@ export default function ExecutiveDashboard() {
                                                         {num(src.total)} leads • {num(src.converted)} conv • {pct(src.conversion_rate)}
                                                     </span>
                                                 </div>
-                                                <div className="bg-slate-700/50 rounded-full h-2.5 overflow-hidden">
+                                                <div className="bg-slate-100 rounded-full h-2.5 overflow-hidden">
                                                     <div
                                                         className="h-full rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 transition-all"
                                                         style={{ width: `${width}%` }}
@@ -372,8 +372,8 @@ export default function ExecutiveDashboard() {
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
 
                         {/* Velocidad */}
-                        <Card className="p-4 bg-slate-800/50 border-slate-700 backdrop-blur">
-                            <h3 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
+                        <Card className="p-4 bg-white border border-slate-200 shadow-sm">
+                            <h3 className="text-sm font-semibold text-slate-800 mb-3 flex items-center gap-2">
                                 <Clock className="w-4 h-4 text-orange-400" />
                                 Velocidad de Cierre
                             </h3>
@@ -400,8 +400,8 @@ export default function ExecutiveDashboard() {
                         </Card>
 
                         {/* Actividad */}
-                        <Card className="p-4 bg-slate-800/50 border-slate-700 backdrop-blur">
-                            <h3 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
+                        <Card className="p-4 bg-white border border-slate-200 shadow-sm">
+                            <h3 className="text-sm font-semibold text-slate-800 mb-3 flex items-center gap-2">
                                 <Activity className="w-4 h-4 text-cyan-400" />
                                 Actividad del Período
                             </h3>
@@ -414,8 +414,8 @@ export default function ExecutiveDashboard() {
                         </Card>
 
                         {/* Quick Actions */}
-                        <Card className="p-4 bg-slate-800/50 border-slate-700 backdrop-blur">
-                            <h3 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
+                        <Card className="p-4 bg-white border border-slate-200 shadow-sm">
+                            <h3 className="text-sm font-semibold text-slate-800 mb-3 flex items-center gap-2">
                                 <Zap className="w-4 h-4 text-yellow-400" />
                                 Acciones Rápidas
                             </h3>
@@ -448,8 +448,8 @@ export default function ExecutiveDashboard() {
                     </div>
 
                     {/* ═══════════ ROW 6: STAGE DISTRIBUTION ═══════════ */}
-                    <Card className="p-4 bg-slate-800/50 border-slate-700 backdrop-blur">
-                        <h3 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
+                    <Card className="p-4 bg-white border border-slate-200 shadow-sm">
+                        <h3 className="text-sm font-semibold text-slate-800 mb-3 flex items-center gap-2">
                             <Target className="w-4 h-4 text-violet-400" />
                             Distribución del Pipeline
                         </h3>
@@ -461,7 +461,7 @@ export default function ExecutiveDashboard() {
                                 return (
                                     <div
                                         key={s.pipeline_stage}
-                                        className="h-full flex items-center justify-center text-white text-[8px] font-medium transition-all hover:opacity-80 cursor-default"
+                                        className="h-full flex items-center justify-center text-slate-800 text-[8px] font-medium transition-all hover:opacity-80 cursor-default"
                                         style={{
                                             width: `${pctValue}%`,
                                             backgroundColor: STAGE_COLORS[s.pipeline_stage] || '#64748b',
@@ -478,7 +478,7 @@ export default function ExecutiveDashboard() {
                             {data.stage_distribution.map(s => (
                                 <div key={s.pipeline_stage} className="flex items-center gap-1.5 text-[10px]">
                                     <div className="w-2 h-2 rounded-full" style={{ backgroundColor: STAGE_COLORS[s.pipeline_stage] || '#64748b' }} />
-                                    <span className="text-slate-400">
+                                    <span className="text-slate-500">
                                         {STAGE_LABELS[s.pipeline_stage] || s.pipeline_stage}: {num(s.count)}
                                     </span>
                                 </div>
@@ -487,7 +487,12 @@ export default function ExecutiveDashboard() {
                     </Card>
 
                 </main>
-            ) : null}
+            ) : (
+                <div className="flex flex-col items-center justify-center py-20 text-slate-500">
+                    <BarChart3 className="w-12 h-12 text-slate-300 mb-4" />
+                    <p>No se encontró información para el periodo seleccionado.</p>
+                </div>
+            )}
         </div>
     )
 }
@@ -499,21 +504,21 @@ export default function ExecutiveDashboard() {
 function HeroCard({ icon, label, value, color }: { icon: React.ReactNode; label: string; value: string; color: string }) {
     return (
         <div className={`p-4 rounded-xl bg-gradient-to-br ${color} shadow-lg`}>
-            <div className="flex items-center gap-2 text-white/80 mb-1">
+            <div className="flex items-center gap-2 text-slate-800/80 mb-1">
                 {icon}
                 <span className="text-[10px] font-medium uppercase tracking-wider">{label}</span>
             </div>
-            <div className="text-2xl font-bold text-white">{value}</div>
+            <div className="text-2xl font-bold text-slate-800">{value}</div>
         </div>
     )
 }
 
 function StatPill({ icon, label, value }: { icon: React.ReactNode; label: string; value: number }) {
     return (
-        <div className="flex items-center gap-2 bg-slate-800/60 border border-slate-700/50 rounded-xl px-3 py-2">
+        <div className="flex items-center gap-2 bg-white border border-slate-200 shadow-sm rounded-xl px-3 py-2">
             {icon}
             <div>
-                <div className="text-sm font-bold text-white">{value}</div>
+                <div className="text-sm font-bold text-slate-800">{value}</div>
                 <div className="text-[9px] text-slate-500">{label}</div>
             </div>
         </div>
@@ -523,10 +528,10 @@ function StatPill({ icon, label, value }: { icon: React.ReactNode; label: string
 function ActivityRow({ label, value, icon }: { label: string; value: number; icon: string }) {
     return (
         <div className="flex items-center justify-between py-1.5 border-b border-slate-700/30 last:border-0">
-            <span className="text-xs text-slate-400 flex items-center gap-1.5">
+            <span className="text-xs text-slate-500 flex items-center gap-1.5">
                 <span className="text-sm">{icon}</span> {label}
             </span>
-            <span className="text-sm font-bold text-white">{value}</span>
+            <span className="text-sm font-bold text-slate-800">{value}</span>
         </div>
     )
 }

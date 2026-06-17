@@ -12,7 +12,7 @@ import { useState } from 'react'
 
 const CRM_NAV_ITEMS = [
     { href: '/dashboard/crm', label: 'Dashboard', icon: LayoutDashboard, color: 'text-blue-600' },
-    { href: '/dashboard/clientes', label: 'Catálogo Clientes', icon: BookUser, color: 'text-emerald-600' },
+    { href: '/dashboard/crm/clientes', label: 'Catálogo Clientes', icon: BookUser, color: 'text-emerald-600' },
     { href: '/dashboard/crm/contacts', label: 'Contactos', icon: Users, color: 'text-blue-500' },
     { href: '/dashboard/crm/pipeline', label: 'Pipeline', icon: Target, color: 'text-purple-600' },
     { href: '/dashboard/crm/tasks', label: 'Tareas', icon: ListTodo, color: 'text-amber-600' },
@@ -111,7 +111,7 @@ export function CRMSidebar() {
                         variant="outline"
                         size="sm"
                         className="w-full text-[10px] h-7 rounded-lg border-emerald-200/50 bg-emerald-50/30 text-emerald-600 hover:bg-emerald-100/50"
-                        onClick={() => router.push('/dashboard/clientes')}
+                        onClick={() => router.push('/dashboard/crm/clientes')}
                     >
                         👤 Catálogo Clientes
                     </Button>

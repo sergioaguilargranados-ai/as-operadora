@@ -71,7 +71,7 @@ export async function POST(request: Request) {
         'Agencia de Viajes': 'agency',
         'Agencia de Eventos': 'agency',
         'Empresa': 'corporate',
-        'Proveedor': 'lead'
+        'Proveedor': 'provider'
       };
       await crmService.createContact({
         full_name: final_name,

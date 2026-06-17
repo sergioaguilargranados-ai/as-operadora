@@ -75,6 +75,7 @@ const TYPE_MAP: Record<string, { label: string; color: string }> = {
     client: { label: 'Cliente', color: '#10B981' },
     agency: { label: 'Agencia', color: '#8B5CF6' },
     corporate: { label: 'Corporativo', color: '#F59E0B' },
+    provider: { label: 'Proveedor', color: '#6366F1' },
 }
 
 // ═══════════════════════════════════════════
@@ -613,6 +614,7 @@ export default function ContactsPage() {
                                         <option value="client">Cliente</option>
                                         <option value="agency">Agencia</option>
                                         <option value="corporate">Corporativo</option>
+                                        <option value="provider">Proveedor</option>
                                     </select>
                                 </div>
                                 <div>
