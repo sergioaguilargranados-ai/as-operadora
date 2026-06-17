@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { PageHeader } from '@/components/PageHeader'
 import { useToast } from '@/hooks/use-toast'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'
 import {
     Users, UserPlus, Search, Filter, ChevronRight, ChevronLeft,
     Flame, Mail, Phone, MessageSquare, MapPin, Calendar,
@@ -117,7 +118,7 @@ function TypeBadge({ type }: { type: string }) {
     )
 }
 
-function ContactRow({ contact, onClick, onDelete, isAdmin }: { contact: Contact; onClick: () => void; onDelete: (id: number) => void; isAdmin: boolean }) {
+function ContactRow({ contact, onClick, onDelete, isAdmin }: { contact: Contact; onClick: () => void; onDelete: (contact: Contact) => void; isAdmin: boolean }) {
     const timeAgo = (d: string) => {
         if (!d) return '—'
         const secs = Math.floor((Date.now() - new Date(d).getTime()) / 1000)
@@ -125,13 +126,6 @@ function ContactRow({ contact, onClick, onDelete, isAdmin }: { contact: Contact;
         if (secs < 86400) return `${Math.floor(secs / 3600)}h`
         if (secs < 604800) return `${Math.floor(secs / 86400)}d`
         return new Date(d).toLocaleDateString('es-MX', { day: 'numeric', month: 'short' })
-    }
-
-    const handleDelete = (e: React.MouseEvent) => {
-        e.stopPropagation()
-        if (confirm(`¿Estás seguro de eliminar físicamente a ${contact.full_name}?`)) {
-            onDelete(contact.id)
-        }
     }
 
     return (
@@ -154,11 +148,26 @@ function ContactRow({ contact, onClick, onDelete, isAdmin }: { contact: Contact;
 
             {/* Name + Details */}
             <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                    <span className="text-sm font-semibold text-slate-800 truncate">{contact.full_name}</span>
+                <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-sm font-semibold text-slate-800">{contact.full_name}</span>
                     <TypeBadge type={contact.contact_type} />
+                    {contact.company && (
+                        <span className="text-xs text-slate-600 bg-slate-100 px-2 py-0.5 rounded-full font-medium flex items-center gap-1">
+                            <Building2 className="w-3 h-3" /> {contact.company}
+                        </span>
+                    )}
+                    {contact.position && (
+                        <span className="text-xs text-slate-500 bg-slate-50 border border-slate-200 px-2 py-0.5 rounded-full flex items-center gap-1">
+                            <Briefcase className="w-3 h-3" /> {contact.position}
+                        </span>
+                    )}
+                    {contact.notes?.includes('Provee:') && (
+                        <span className="text-xs text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full font-medium">
+                            {contact.notes}
+                        </span>
+                    )}
                 </div>
-                <div className="flex items-center gap-3 mt-0.5 text-xs text-slate-500">
+                <div className="flex items-center gap-3 mt-1.5 text-xs text-slate-500">
                     {contact.email && (
                         <span className="flex items-center gap-1 truncate">
                             <Mail className="w-3 h-3" /> {contact.email}
@@ -167,21 +176,6 @@ function ContactRow({ contact, onClick, onDelete, isAdmin }: { contact: Contact;
                     {contact.phone && (
                         <span className="flex items-center gap-1">
                             <Phone className="w-3 h-3" /> {contact.phone}
-                        </span>
-                    )}
-                    {contact.company && (
-                        <span className="flex items-center gap-1 text-slate-600 font-medium">
-                            <Building2 className="w-3 h-3" /> {contact.company}
-                        </span>
-                    )}
-                    {contact.position && (
-                        <span className="flex items-center gap-1 text-slate-500">
-                            <Briefcase className="w-3 h-3" /> {contact.position}
-                        </span>
-                    )}
-                    {contact.notes?.includes('Provee:') && (
-                        <span className="flex items-center gap-1 text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded text-[10px]">
-                            {contact.notes}
                         </span>
                     )}
                     {contact.interested_destination && (
@@ -225,7 +219,7 @@ function ContactRow({ contact, onClick, onDelete, isAdmin }: { contact: Contact;
                         variant="ghost" 
                         size="icon" 
                         className="h-8 w-8 text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors"
-                        onClick={handleDelete}
+                        onClick={(e) => { e.stopPropagation(); onDelete(contact); }}
                     >
                         <Trash2 className="w-4 h-4" />
                     </Button>
@@ -269,6 +263,10 @@ export default function ContactsPage() {
     })
     const [saving, setSaving] = useState(false)
 
+    // Delete confirmation state
+    const [contactToDelete, setContactToDelete] = useState<Contact | null>(null)
+    const [isDeleting, setIsDeleting] = useState(false)
+
     const LIMIT = 30
 
     const fetchContacts = useCallback(async () => {
@@ -303,20 +301,25 @@ export default function ContactsPage() {
         fetchContacts()
     }, [isAuthenticated, fetchContacts, router])
 
-    const handleDeleteContact = async (id: number) => {
+    const confirmDelete = async () => {
+        if (!contactToDelete) return
         try {
-            const res = await fetch(`/api/crm/contacts?id=${id}`, {
+            setIsDeleting(true)
+            const res = await fetch(`/api/crm/contacts?id=${contactToDelete.id}`, {
                 method: 'DELETE'
             })
             const data = await res.json()
             if (data.success) {
                 toast({ title: 'Contacto eliminado', description: 'El contacto ha sido eliminado permanentemente.' })
                 fetchContacts()
+                setContactToDelete(null)
             } else {
                 toast({ title: 'Error', description: data.error, variant: 'destructive' })
             }
         } catch {
             toast({ title: 'Error', description: 'Ocurrió un error al eliminar', variant: 'destructive' })
+        } finally {
+            setIsDeleting(false)
         }
     }
 
@@ -548,7 +551,7 @@ export default function ContactsPage() {
                                     key={contact.id}
                                     contact={contact}
                                     isAdmin={isAdmin}
-                                    onDelete={handleDeleteContact}
+                                    onDelete={setContactToDelete}
                                     onClick={() => router.push(`/dashboard/crm/contacts/${contact.id}`)}
                                 />
                             ))}
@@ -638,6 +641,26 @@ export default function ContactsPage() {
                     </Card>
                 </div>
             )}
+
+            <Dialog open={!!contactToDelete} onOpenChange={(open) => !open && setContactToDelete(null)}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Confirmar eliminación</DialogTitle>
+                        <DialogDescription>
+                            ¿Estás seguro de eliminar físicamente a <strong>{contactToDelete?.full_name}</strong>? Esta acción no se puede deshacer y borrará también todas sus tareas e interacciones.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter className="mt-4 gap-2 sm:gap-0">
+                        <Button variant="outline" onClick={() => setContactToDelete(null)}>
+                            Cancelar
+                        </Button>
+                        <Button variant="destructive" onClick={confirmDelete} disabled={isDeleting}>
+                            {isDeleting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Trash2 className="w-4 h-4 mr-2" />}
+                            Eliminar
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     )
 }
