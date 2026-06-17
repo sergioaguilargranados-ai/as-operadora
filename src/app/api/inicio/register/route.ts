@@ -65,14 +65,22 @@ export async function POST(request: Request) {
     // Agregar al CRM de contactos también
     try {
       const { crmService } = await import('@/services/CRMService');
+      const contactTypeMap: Record<string, string> = {
+        'Viajero': 'lead',
+        'Agencia de Viajes': 'agency',
+        'Agencia de Eventos': 'agency',
+        'Empresa': 'corporate',
+        'Proveedor': 'lead'
+      };
       await crmService.createContact({
         full_name: final_name,
         email: email,
         phone: final_phone,
         company: final_agency,
+        position: final_job,
         source: 'campaign', // o 'web'
         source_detail: 'Registro Landing PWA',
-        contact_type: 'lead',
+        contact_type: contactTypeMap[final_job] || 'lead',
         pipeline_stage: 'new',
         notes: providerProduct ? `Provee: ${providerProduct}` : '',
       });

@@ -89,3 +89,34 @@ export async function POST(request: NextRequest) {
         )
     }
 }
+
+export async function DELETE(request: NextRequest) {
+    try {
+        const sp = request.nextUrl.searchParams
+        const id = sp.get('id')
+
+        if (!id) {
+            return NextResponse.json(
+                { success: false, error: 'ID es requerido para eliminar' },
+                { status: 400 }
+            )
+        }
+
+        const success = await crmService.deleteContact(parseInt(id))
+
+        if (success) {
+            return NextResponse.json({ success: true, message: 'Contacto eliminado' })
+        } else {
+            return NextResponse.json(
+                { success: false, error: 'No se pudo eliminar o no existe' },
+                { status: 404 }
+            )
+        }
+    } catch (error) {
+        console.error('Error deleting CRM contact:', error)
+        return NextResponse.json(
+            { success: false, error: (error as Error).message },
+            { status: 500 }
+        )
+    }
+}

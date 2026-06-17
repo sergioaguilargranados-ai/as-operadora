@@ -8,12 +8,10 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { PageHeader } from '@/components/PageHeader'
 import { useToast } from '@/hooks/use-toast'
-import {
     Users, UserPlus, Search, Filter, ChevronRight, ChevronLeft,
     Flame, Mail, Phone, MessageSquare, MapPin, Calendar,
     ArrowUpDown, X, Download, Loader2, Eye, MoreHorizontal,
-    Target, TrendingUp, Star, Clock
-} from 'lucide-react'
+    Target, TrendingUp, Star, Clock, Briefcase, Building2, Trash2
 
 // ═══════════════════════════════════════════
 // TYPES
@@ -42,6 +40,8 @@ interface Contact {
     last_contact_at: string
     next_followup_at: string
     tags: string[]
+    position?: string
+    notes?: string
 }
 
 // ═══════════════════════════════════════════
@@ -115,7 +115,7 @@ function TypeBadge({ type }: { type: string }) {
     )
 }
 
-function ContactRow({ contact, onClick }: { contact: Contact; onClick: () => void }) {
+function ContactRow({ contact, onClick, onDelete, isAdmin }: { contact: Contact; onClick: () => void; onDelete: (id: number) => void; isAdmin: boolean }) {
     const timeAgo = (d: string) => {
         if (!d) return '—'
         const secs = Math.floor((Date.now() - new Date(d).getTime()) / 1000)
@@ -123,6 +123,13 @@ function ContactRow({ contact, onClick }: { contact: Contact; onClick: () => voi
         if (secs < 86400) return `${Math.floor(secs / 3600)}h`
         if (secs < 604800) return `${Math.floor(secs / 86400)}d`
         return new Date(d).toLocaleDateString('es-MX', { day: 'numeric', month: 'short' })
+    }
+
+    const handleDelete = (e: React.MouseEvent) => {
+        e.stopPropagation()
+        if (confirm(`¿Estás seguro de eliminar físicamente a ${contact.full_name}?`)) {
+            onDelete(contact.id)
+        }
     }
 
     return (
@@ -160,6 +167,21 @@ function ContactRow({ contact, onClick }: { contact: Contact; onClick: () => voi
                             <Phone className="w-3 h-3" /> {contact.phone}
                         </span>
                     )}
+                    {contact.company && (
+                        <span className="flex items-center gap-1 text-slate-600 font-medium">
+                            <Building2 className="w-3 h-3" /> {contact.company}
+                        </span>
+                    )}
+                    {contact.position && (
+                        <span className="flex items-center gap-1 text-slate-500">
+                            <Briefcase className="w-3 h-3" /> {contact.position}
+                        </span>
+                    )}
+                    {contact.notes?.includes('Provee:') && (
+                        <span className="flex items-center gap-1 text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded text-[10px]">
+                            {contact.notes}
+                        </span>
+                    )}
                     {contact.interested_destination && (
                         <span className="flex items-center gap-1 text-blue-500">
                             <MapPin className="w-3 h-3" /> {contact.interested_destination}
@@ -194,8 +216,20 @@ function ContactRow({ contact, onClick }: { contact: Contact; onClick: () => voi
                 {timeAgo(contact.last_contact_at)}
             </div>
 
-            {/* Arrow */}
-            <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-blue-500 transition-colors flex-shrink-0" />
+            {/* Arrow and Delete */}
+            <div className="flex items-center gap-2 flex-shrink-0">
+                {isAdmin && (
+                    <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-8 w-8 text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+                        onClick={handleDelete}
+                    >
+                        <Trash2 className="w-4 h-4" />
+                    </Button>
+                )}
+                <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-blue-500 transition-colors" />
+            </div>
         </div>
     )
 }
@@ -206,7 +240,8 @@ function ContactRow({ contact, onClick }: { contact: Contact; onClick: () => voi
 
 export default function ContactsPage() {
     const router = useRouter()
-    const { isAuthenticated } = useAuth()
+    const { user, isAuthenticated } = useAuth()
+    const isAdmin = user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN'
     const { toast } = useToast()
 
     const [loading, setLoading] = useState(true)
@@ -265,6 +300,23 @@ export default function ContactsPage() {
         if (!isAuthenticated) { router.push('/login'); return }
         fetchContacts()
     }, [isAuthenticated, fetchContacts, router])
+
+    const handleDeleteContact = async (id: number) => {
+        try {
+            const res = await fetch(`/api/crm/contacts?id=${id}`, {
+                method: 'DELETE'
+            })
+            const data = await res.json()
+            if (data.success) {
+                toast({ title: 'Contacto eliminado', description: 'El contacto ha sido eliminado permanentemente.' })
+                fetchContacts()
+            } else {
+                toast({ title: 'Error', description: data.error, variant: 'destructive' })
+            }
+        } catch {
+            toast({ title: 'Error', description: 'Ocurrió un error al eliminar', variant: 'destructive' })
+        }
+    }
 
     // Debounced search
     const [searchTimeout, setSearchTimeout] = useState<NodeJS.Timeout | null>(null)
@@ -493,6 +545,8 @@ export default function ContactsPage() {
                                 <ContactRow
                                     key={contact.id}
                                     contact={contact}
+                                    isAdmin={isAdmin}
+                                    onDelete={handleDeleteContact}
                                     onClick={() => router.push(`/dashboard/crm/contacts/${contact.id}`)}
                                 />
                             ))}

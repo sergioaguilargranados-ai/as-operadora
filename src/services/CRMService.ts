@@ -359,6 +359,25 @@ export class CRMService {
   }
 
   /**
+   * Eliminar contacto físicamente (Solo Admins)
+   * Elimina interacciones, tareas y el propio contacto
+   */
+  async deleteContact(id: number): Promise<boolean> {
+    try {
+      // Por cascade, esto debería borrar interacciones y tareas si existen FKs con ON DELETE CASCADE,
+      // pero para estar seguros borraremos explícitamente primero.
+      await query(`DELETE FROM crm_interactions WHERE contact_id = $1`, [id])
+      await query(`DELETE FROM crm_tasks WHERE contact_id = $1`, [id])
+      await query(`DELETE FROM crm_automation_log WHERE contact_id = $1`, [id])
+      const res = await query(`DELETE FROM crm_contacts WHERE id = $1 RETURNING id`, [id])
+      return res.rowCount ? res.rowCount > 0 : false
+    } catch (error) {
+      console.error('Error deleting contact:', error)
+      return false
+    }
+  }
+
+  /**
    * Obtener contacto por ID
    */
   async getContactById(id: number): Promise<CRMContact | null> {
