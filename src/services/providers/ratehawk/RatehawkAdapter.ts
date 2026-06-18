@@ -47,9 +47,26 @@ export class RatehawkAdapter implements IProveedorHotel {
         // si no es numérico, idealmente se busca por lat/long (radius) o hotel_ids
       };
 
-      // Si el destino no es un número (ID de RateHawk), simulamos un error por ahora
+      // Si no hay API KEY de RateHawk configurada, simplemente retornamos vacío (graceful degradation)
+      if (!this.apiKey || !this.keyId) {
+        console.warn('[RatehawkAdapter] No hay credenciales configuradas. Saltando proveedor.');
+        return {
+          exito: true,
+          resultados: [],
+          proveedorInfo: this.nombreProveedor,
+          tiempoRespuestaMs: Date.now() - inicio
+        };
+      }
+
+      // Si el destino no es un número (ID de RateHawk), saltamos graciosamente
       if (!requestBody.region_id) {
-        throw new Error('RateHawk requiere un region_id numérico. Usa el endpoint de autocompletado antes de buscar.');
+        console.warn(`[RatehawkAdapter] Destino "${params.destino}" no es numérico. RateHawk ignorado.`);
+        return {
+          exito: true,
+          resultados: [],
+          proveedorInfo: this.nombreProveedor,
+          tiempoRespuestaMs: Date.now() - inicio
+        };
       }
 
       // 2. Llamada a la API de RateHawk (Búsqueda de Disponibilidad - Async o Sync)
