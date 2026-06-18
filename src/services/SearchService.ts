@@ -156,9 +156,6 @@ class SearchService {
     }
   }
 
-  /**
-   * Buscar hoteles - Amadeus principal + Booking.com complementario
-   */
   async searchHotels(params: {
     city: string
     cityCode?: string
@@ -175,57 +172,63 @@ class SearchService {
 
       // Obtener cityCode si no se proporciona
       const cityCode = params.cityCode || await this.getCityCode(params.city)
-
       console.log(`🏨 City: "${params.city}" → Code: "${cityCode}"`)
 
       if (!cityCode) {
-        console.error('❌ Could not determine city code for:', params.city)
-        console.error('❌ Available cities:', Object.keys({
-          'cancun': 'CUN', 'cancún': 'CUN', 'ciudad de mexico': 'MEX',
-          'cdmx': 'MEX', 'mexico city': 'MEX', 'guadalajara': 'GDL',
-          'monterrey': 'MTY', 'cabo': 'SJD', 'los cabos': 'SJD',
-          'puerto vallarta': 'PVR', 'vallarta': 'PVR'
-        }))
         return []
       }
 
-      const amadeusParams = {
-        cityCode,
-        checkInDate: params.checkInDate,
-        checkOutDate: params.checkOutDate,
-        adults: params.adults,
-        children: params.children || 0,
-        rooms: params.rooms || 1,
-        currency: params.currency || 'MXN'
-      }
+      // IMPORT DINÁMICO para no romper dependencias
+      const { HotelAggregator } = await import('./aggregators/HotelAggregator');
+      const aggregator = new HotelAggregator();
 
-      console.log('🏨 Calling AmadeusHotelAdapter with:', JSON.stringify(amadeusParams, null, 2))
+      const searchParams = {
+        destino: cityCode,
+        fechaEntrada: params.checkInDate,
+        fechaSalida: params.checkOutDate,
+        habitaciones: Array.from({ length: params.rooms || 1 }).map(() => ({
+          adultos: params.adults,
+          edadesNinos: Array.from({ length: params.children || 0 }).map(() => 5) // Dummy ages
+        }))
+      };
 
-      const amadeusResults = await this.amadeusHotels.search(amadeusParams)
+      console.log('🏨 Calling HotelAggregator with:', JSON.stringify(searchParams, null, 2))
 
-      console.log(`✅ Amadeus returned ${amadeusResults.length} hotels`)
+      const agResult = await aggregator.buscarHoteles(searchParams);
+      console.log(`✅ Aggregator returned ${agResult.resultados.length} hotels`)
 
-      if (amadeusResults.length > 0) {
-        console.log('🏨 Sample result:', JSON.stringify(amadeusResults[0], null, 2))
-      }
-
-      // Si hay menos de 10 resultados, complementar con Booking.com (futuro)
-      if (amadeusResults.length < 10) {
-        console.log('⚠️ Less than 10 results, consider adding Booking.com fallback')
-        // TODO: Implementar BookingAdapter y merge aquí
-      }
+      // Mapear HotelUnificado a SearchResult
+      const mappedResults: SearchResult[] = agResult.resultados.map(h => ({
+        id: h.id,
+        type: 'hotel',
+        provider: h.proveedor,
+        price: h.ofertasDisponibles.length > 0 ? h.ofertasDisponibles[0].precioTotal : 0,
+        currency: h.ofertasDisponibles.length > 0 ? h.ofertasDisponibles[0].moneda : 'MXN',
+        details: {
+          hotelName: h.nombre,
+          cityCode: cityCode,
+          location: h.ubicacion.direccion,
+          starRating: h.estrellas,
+          rating: h.estrellas,
+          reviewCount: 10,
+          description: h.descripcion,
+          amenities: h.amenidades,
+          images: h.imagenes,
+          room: h.ofertasDisponibles.length > 0 ? {
+            type: h.ofertasDisponibles[0].habitacion.nombre,
+            description: h.ofertasDisponibles[0].habitacion.nombre
+          } : null
+        }
+      }));
 
       console.log('🏨 ========== HOTEL SEARCH END ==========')
 
       // Ordenar por precio
-      return amadeusResults.sort((a, b) => a.price - b.price)
+      return mappedResults.sort((a, b) => a.price - b.price)
 
     } catch (error) {
       console.error('❌ ========== HOTEL SEARCH ERROR ==========')
       console.error('❌ Error searching hotels:', error)
-      console.error('❌ Error details:', error instanceof Error ? error.message : 'Unknown error')
-      console.error('❌ Stack:', error instanceof Error ? error.stack : 'No stack')
-      console.error('❌ ==========================================')
       return []
     }
   }

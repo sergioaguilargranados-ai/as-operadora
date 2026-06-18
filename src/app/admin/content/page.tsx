@@ -44,6 +44,12 @@ export default function AdminContentPage() {
   const [tourImgExpanded, setTourImgExpanded] = useState<string | null>(null)
   const [tourImgPreview, setTourImgPreview] = useState<string | null>(null)
 
+  // Hotels Catalog state
+  const [hotelsList, setHotelsList] = useState<any[]>([])
+  const [hotelsLoading, setHotelsLoading] = useState(false)
+  const [hotelsCount, setHotelsCount] = useState(0)
+  const [hotelsSearch, setHotelsSearch] = useState('')
+
   useEffect(() => {
     if (!isAuthenticated || !user?.role || !['SUPER_ADMIN', 'ADMIN', 'MANAGER'].includes(user.role)) {
       router.push('/')
@@ -94,6 +100,26 @@ export default function AdminContentPage() {
       showToast('Error al cargar tours', 'error')
     } finally {
       setTourImagesLoading(false)
+    }
+  }
+
+  const loadHotels = async (searchQuery = '') => {
+    try {
+      setHotelsLoading(true)
+      const token = localStorage.getItem('as_token')
+      const res = await fetch(`/api/admin/hotels?search=${searchQuery}&limit=50`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+      const data = await res.json()
+      if (data.success) {
+        setHotelsList(data.data)
+        setHotelsCount(data.total)
+      }
+    } catch (error) {
+      console.error('Error loading hotels:', error)
+      showToast('Error al cargar hoteles', 'error')
+    } finally {
+      setHotelsLoading(false)
     }
   }
 
@@ -441,6 +467,12 @@ export default function AdminContentPage() {
               <Package className="w-4 h-4" />
               Paquetes
             </TabsTrigger>
+            <TabsTrigger value="hotels-catalog" className="flex items-center gap-2" onClick={() => {
+              if (hotelsList.length === 0) loadHotels()
+            }}>
+              <Hotel className="w-4 h-4" />
+              Catálogo Hoteles
+            </TabsTrigger>
             <TabsTrigger value="videos" className="flex items-center gap-2">
               <Globe className="w-4 h-4" />
               Videos/URLs
@@ -703,6 +735,70 @@ export default function AdminContentPage() {
                 <div className="text-center py-12">
                   <p className="text-muted-foreground">No hay paquetes configurados</p>
                 </div>
+              )}
+            </Card>
+          </TabsContent>
+
+          {/* HOTELS CATALOG TAB */}
+          <TabsContent value="hotels-catalog">
+            <Card className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold">Catálogo de Hoteles</h2>
+                <Button className="bg-[#0066FF] hover:bg-[#0052CC]" onClick={() => showToast('Iniciando sincronización...', 'success')}>
+                  <RefreshCw className="w-4 h-4 mr-2" />
+                  Sincronizar Fotos (Content API)
+                </Button>
+              </div>
+
+              <div className="flex mb-6 gap-4">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input 
+                    placeholder="Buscar por nombre o ciudad..." 
+                    value={hotelsSearch}
+                    onChange={(e) => setHotelsSearch(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && loadHotels(hotelsSearch)}
+                    className="pl-9"
+                  />
+                </div>
+                <Button onClick={() => loadHotels(hotelsSearch)}>Buscar</Button>
+              </div>
+
+              {hotelsLoading ? (
+                <div className="py-12 text-center">
+                  <Loader2 className="w-8 h-8 animate-spin mx-auto text-[#0066FF]" />
+                  <p className="mt-4 text-muted-foreground">Cargando catálogo...</p>
+                </div>
+              ) : (
+                <>
+                  <p className="mb-4 text-sm text-muted-foreground">Mostrando {hotelsList.length} de {hotelsCount} hoteles en base de datos.</p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {hotelsList.map((hotel) => (
+                      <Card key={hotel.id} className="overflow-hidden flex flex-col">
+                        <div className="relative h-40 bg-gray-100 flex items-center justify-center">
+                          {hotel.image_url ? (
+                            <img src={hotel.image_url} alt={hotel.name} className="w-full h-full object-cover" />
+                          ) : (
+                            <Hotel className="w-12 h-12 text-gray-300" />
+                          )}
+                        </div>
+                        <div className="p-4 flex flex-col flex-1">
+                          <h3 className="font-bold line-clamp-1" title={hotel.name}>{hotel.name}</h3>
+                          <div className="flex items-center gap-1 text-sm text-muted-foreground mt-1 mb-2">
+                            <MapPin className="w-3 h-3" />
+                            {hotel.city}, {hotel.country}
+                          </div>
+                          <div className="flex items-center gap-1 mb-2">
+                            {Array.from({ length: hotel.star_rating || 0 }).map((_, i) => (
+                              <Star key={i} className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+                            ))}
+                          </div>
+                          <p className="text-xs text-muted-foreground mt-auto">ID: {hotel.id} | {hotel.provider_id ? 'API' : 'Manual'}</p>
+                        </div>
+                      </Card>
+                    ))}
+                  </div>
+                </>
               )}
             </Card>
           </TabsContent>
