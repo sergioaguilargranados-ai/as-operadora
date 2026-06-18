@@ -30,7 +30,7 @@ export default function HotelSearchForm() {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          destino: destino, // Hotelbeds: PMI, RateHawk: RegionID
+          destino: destino.toUpperCase(), // Hotelbeds: PMI, RateHawk: RegionID
           fechaEntrada: fechaEntrada,
           fechaSalida: fechaSalida,
           habitaciones: [{ adultos: adultos, edadesNinos: [] }]
