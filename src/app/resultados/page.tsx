@@ -617,6 +617,11 @@ function ResultadosContent() {
                               <span className="text-sm text-muted-foreground">
                                 • {result.details?.airline}
                               </span>
+                              {result.provider && (
+                                <span className="ml-auto text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-slate-100 text-slate-400 border border-slate-200">
+                                  {result.provider}
+                                </span>
+                              )}
                             </div>
                             <div className="flex items-center justify-between">
                               <div>
@@ -787,6 +792,11 @@ function ResultadosContent() {
                           />
                           {/* Badges sobre la imagen */}
                           <div className="absolute top-2 left-2 flex flex-col gap-1">
+                            {result.provider && (
+                              <span className="bg-white/80 backdrop-blur-sm text-slate-500 border border-white/50 shadow-sm text-[10px] uppercase tracking-wider px-2 py-0.5 rounded font-medium w-fit mb-1">
+                                {result.provider}
+                              </span>
+                            )}
                             {result.details?.allInclusive && (
                               <span className="bg-pink-500 text-white text-xs px-2 py-1 rounded font-medium">
                                 Todo incluido

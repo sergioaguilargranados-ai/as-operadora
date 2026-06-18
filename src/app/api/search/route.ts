@@ -389,11 +389,11 @@ function generateMockFlights(params: {
   currency: string
 }) {
   const airlines = [
-    { code: 'AM', name: 'Aeroméxico', logo: 'https://logos.skyscnr.com/images/airlines/AM.png' },
-    { code: 'VB', name: 'VivaAerobus', logo: 'https://logos.skyscnr.com/images/airlines/VB.png' },
-    { code: 'Y4', name: 'Volaris', logo: 'https://logos.skyscnr.com/images/airlines/Y4.png' },
-    { code: 'AA', name: 'American Airlines', logo: 'https://logos.skyscnr.com/images/airlines/AA.png' },
-    { code: 'UA', name: 'United Airlines', logo: 'https://logos.skyscnr.com/images/airlines/UA.png' },
+    { code: 'AM', name: 'Aeroméxico', logo: 'https://pics.avs.io/200/200/AM.png' },
+    { code: 'VB', name: 'VivaAerobus', logo: 'https://pics.avs.io/200/200/VB.png' },
+    { code: 'Y4', name: 'Volaris', logo: 'https://pics.avs.io/200/200/Y4.png' },
+    { code: 'AA', name: 'American Airlines', logo: 'https://pics.avs.io/200/200/AA.png' },
+    { code: 'UA', name: 'United Airlines', logo: 'https://pics.avs.io/200/200/UA.png' },
   ]
 
   const basePrice = params.cabinClass === 'business' ? 8500 : 2500

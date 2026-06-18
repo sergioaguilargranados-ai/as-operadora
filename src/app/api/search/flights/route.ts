@@ -20,7 +20,7 @@ function mapToFrontendFlight(vuelo: VueloUnificado, adults: number) {
   return {
     id: vuelo.id,
     airline: primerSegmento.aerolinea.nombre || primerSegmento.aerolinea.iataCode,
-    logo: primerSegmento.aerolinea.logoUrl || `https://airhex.com/images/airline-logos/alt/${primerSegmento.aerolinea.iataCode.toLowerCase()}.png`,
+    logo: primerSegmento.aerolinea.logoUrl || `https://pics.avs.io/200/200/${primerSegmento.aerolinea.iataCode}.png`,
     flightNumber: primerSegmento.numeroVuelo,
     origin: primerSegmento.origen.iataCode,
     destination: ultimoSegmento.destino.iataCode,

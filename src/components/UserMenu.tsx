@@ -14,10 +14,10 @@ import {
     Shield,
     LogOut,
     Bell,
-    HelpCircle,
     Target,
     Users,
-    BookUser
+    BookUser,
+    Settings
 } from 'lucide-react'
 import Link from 'next/link'
 
@@ -153,8 +153,14 @@ export function UserMenu() {
 
                                 {/* Opciones de Admin/SuperAdmin */}
                                 {user.role && ['SUPER_ADMIN', 'ADMIN', 'MANAGER'].includes(user.role) && (
-                                    <>
                                         <div className="border-t my-2"></div>
+                                        <button
+                                            onClick={() => router.push('/admin/features')}
+                                            className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center gap-3"
+                                        >
+                                            <Settings className="w-4 h-4" />
+                                            Administración de Funciones
+                                        </button>
                                         <button
                                             onClick={() => router.push('/admin/content')}
                                             className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center gap-3"

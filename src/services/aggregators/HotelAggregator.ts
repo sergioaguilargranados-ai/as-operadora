@@ -4,6 +4,7 @@ import { HotelbedsAdapter } from '../providers/hotelbeds/HotelbedsAdapter';
 import { RatehawkAdapter } from '../providers/ratehawk/RatehawkAdapter';
 import { IProveedorHotel, ParametrosBusquedaHotel, RespuestaBusqueda } from '@/types/providers';
 import { HotelUnificado } from '@/types/unified-travel';
+import { query } from '@/lib/db';
 
 export class HotelAggregator {
   private proveedores: IProveedorHotel[] = [];
@@ -25,17 +26,44 @@ export class HotelAggregator {
       const errores: string[] = [];
       const proveedoresExitosos: string[] = [];
 
-      // 2. Recolectar resultados
+      // 2. Recolectar resultados y loguear metricas
       respuestas.forEach((resultado, index) => {
         const nombreProveedor = this.proveedores[index].nombreProveedor;
 
         if (resultado.status === 'fulfilled' && resultado.value.exito) {
+          const cantidadLeidos = resultado.value.resultados.length;
           todosLosHoteles = todosLosHoteles.concat(resultado.value.resultados);
           proveedoresExitosos.push(nombreProveedor);
           if (resultado.value.errores) errores.push(...resultado.value.errores);
+
+          query(`
+            INSERT INTO provider_metrics (search_type, destination, provider_name, results_found, results_returned, response_time_ms)
+            VALUES ($1, $2, $3, $4, $5, $6)
+          `, [
+            'hotel',
+            params.destino || 'UNKNOWN',
+            nombreProveedor,
+            cantidadLeidos,
+            cantidadLeidos,
+            Date.now() - inicio
+          ]).catch(e => console.error('[Metrics] Error:', e));
+
         } else {
+          // Fallo total de este proveedor
           const msg = resultado.status === 'rejected' ? resultado.reason : (resultado.value.errores?.join(', ') || 'Error desconocido');
           errores.push(`[${nombreProveedor}] ${msg}`);
+
+          query(`
+            INSERT INTO provider_metrics (search_type, destination, provider_name, results_found, results_returned, response_time_ms)
+            VALUES ($1, $2, $3, $4, $5, $6)
+          `, [
+            'hotel',
+            params.destino || 'UNKNOWN',
+            nombreProveedor,
+            0,
+            0,
+            Date.now() - inicio
+          ]).catch(e => console.error('[Metrics] Error:', e));
         }
       });
 
