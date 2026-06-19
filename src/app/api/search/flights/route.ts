@@ -123,17 +123,7 @@ export async function GET(request: NextRequest) {
       } catch(e) {}
     }
 
-    // Insertar métricas en provider_metrics
-    try {
-      await db.query(`CREATE TABLE IF NOT EXISTS provider_metrics (id SERIAL PRIMARY KEY, provider_name VARCHAR(100) NOT NULL, service_type VARCHAR(50) NOT NULL, response_time_ms INTEGER NOT NULL, results_count INTEGER NOT NULL, success BOOLEAN NOT NULL DEFAULT true, error_message TEXT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)`);
-      const providerName = outboundResult.proveedorInfo?.nombre || 'Amadeus (Mock)';
-      // Asumiremos un tiempo de respuesta de red de ~300ms a 600ms si no tenemos el dato real del agregador
-      const dummyResponseTime = Math.floor(Math.random() * 300) + 300; 
-      await db.query(
-        `INSERT INTO provider_metrics (provider_name, service_type, response_time_ms, results_count, success) VALUES ($1, 'vuelos', $2, $3, true)`, 
-        [providerName, dummyResponseTime, outboundFlights.length]
-      );
-    } catch(e) {}
+
 
     return NextResponse.json({
       success: true,
@@ -154,10 +144,7 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error: any) {
-    console.error('Error searching flights via Aggregator:', error);
-    return NextResponse.json({
-      success: false,
-      error: error.message || 'Error al buscar vuelos'
-    }, { status: 500 });
+    console.error('Error in flight search API:', error);
+    return NextResponse.json({ success: false, error: error.message || 'Internal server error' }, { status: 500 });
   }
 }

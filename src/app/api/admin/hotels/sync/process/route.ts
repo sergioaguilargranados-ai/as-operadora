@@ -88,8 +88,8 @@ export async function POST(req: Request) {
         `[${new Date().toLocaleTimeString('es-MX', { timeZone: 'America/Mexico_City' })}] 📸 Descargando recursos multimedia... Completado.`
       ]
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error procesando lote de hoteles:', error);
-    return NextResponse.json({ success: false, error: 'Error interno en el procesamiento' }, { status: 500 });
+    return NextResponse.json({ success: false, error: 'Error interno en el procesamiento: ' + error.message }, { status: 500 });
   }
 }

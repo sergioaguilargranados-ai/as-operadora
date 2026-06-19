@@ -42,15 +42,13 @@ export class FlightAggregator {
 
           // Log metrics en BD de forma asíncrona sin bloquear la respuesta
           query(`
-            INSERT INTO provider_metrics (search_type, destination, provider_name, results_found, results_returned, response_time_ms)
-            VALUES ($1, $2, $3, $4, $5, $6)
+            INSERT INTO provider_metrics (provider_name, service_type, response_time_ms, results_count, success)
+            VALUES ($1, $2, $3, $4, true)
           `, [
-            'flight',
-            params.destinos[0]?.codigo || 'UNKNOWN',
             nombreProveedor,
-            cantidadLeidos, // results_found
-            cantidadLeidos, // results_returned (se asume igual por ahora)
-            Date.now() - inicio
+            'vuelos',
+            Date.now() - inicio,
+            cantidadLeidos
           ]).catch(e => console.error('[Metrics] Error:', e));
 
         } else {
@@ -59,15 +57,14 @@ export class FlightAggregator {
           errores.push(`[${nombreProveedor}] ${msg}`);
           
           query(`
-            INSERT INTO provider_metrics (search_type, destination, provider_name, results_found, results_returned, response_time_ms)
-            VALUES ($1, $2, $3, $4, $5, $6)
+            INSERT INTO provider_metrics (provider_name, service_type, response_time_ms, results_count, success, error_message)
+            VALUES ($1, $2, $3, $4, false, $5)
           `, [
-            'flight',
-            params.destinos[0]?.codigo || 'UNKNOWN',
             nombreProveedor,
+            'vuelos',
+            Date.now() - inicio,
             0,
-            0,
-            Date.now() - inicio
+            msg.substring(0, 500)
           ]).catch(e => console.error('[Metrics] Error:', e));
         }
       });
