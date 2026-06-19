@@ -37,6 +37,8 @@ export async function POST(req: Request) {
       );
     `);
     try { await db.query(`ALTER TABLE hotels ADD COLUMN IF NOT EXISTS provider_id VARCHAR(100);`); } catch(e){}
+    try { await db.query(`ALTER TABLE hotels ADD COLUMN IF NOT EXISTS name VARCHAR(255);`); } catch(e){}
+    try { await db.query(`ALTER TABLE hotels ADD COLUMN IF NOT EXISTS city VARCHAR(100);`); } catch(e){}
     try { await db.query(`ALTER TABLE hotels ADD COLUMN IF NOT EXISTS country VARCHAR(100);`); } catch(e){}
     try { await db.query(`ALTER TABLE hotels ADD COLUMN IF NOT EXISTS star_rating INTEGER;`); } catch(e){}
     try { await db.query(`ALTER TABLE hotels ADD COLUMN IF NOT EXISTS image_url TEXT;`); } catch(e){}
@@ -70,10 +72,14 @@ export async function POST(req: Request) {
     });
 
     for (const h of newHotels) {
-      await db.query(
-        `INSERT INTO hotels (provider_id, name, city, country, star_rating, image_url) VALUES ($1, $2, $3, $4, $5, $6)`,
-        h
-      );
+      try {
+        await db.query(
+          `INSERT INTO hotels (provider_id, name, city, country, star_rating, image_url) VALUES ($1, $2, $3, $4, $5, $6)`,
+          h
+        );
+      } catch (insertError) {
+        console.error('Error insertando hotel individual', h[0], insertError);
+      }
     }
 
     // Pequeño retardo para simular latencia de red y descarga de imágenes

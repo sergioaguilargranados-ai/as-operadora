@@ -45,16 +45,64 @@ export class DuffelAdapter implements IProveedorVuelo {
       for (let i = 0; i < params.pasajeros.bebes; i++) passengers.push({ type: 'infant_without_seat' });
 
       // 2. Hacer petición a Duffel API
-      const response = await this.client.offerRequests.create({
-        slices,
-        passengers,
-        cabin_class: (params.clase || 'economy') as any,
-        return_offers: true,
-      } as any);
+      let vuelosUnificados: VueloUnificado[] = [];
+      if (!process.env.DUFFEL_ACCESS_TOKEN) {
+        // MOCK DATA SI NO HAY TOKEN (Para Pruebas)
+        vuelosUnificados = [
+          {
+            id: 'mock-duffel-1',
+            proveedor: this.nombreProveedor,
+            referenciaProveedor: 'mock-1',
+            precioTotal: 4500,
+            moneda: 'MXN',
+            itinerarios: [{
+              duracionMinutos: 120,
+              segmentos: [{
+                origen: { iataCode: params.origenIata },
+                destino: { iataCode: params.destinoIata },
+                fechaSalida: params.fechaSalida + 'T08:00:00Z',
+                fechaLlegada: params.fechaSalida + 'T10:00:00Z',
+                aerolinea: { iataCode: 'AM', nombre: 'Aeroméxico', logoUrl: 'https://pics.avs.io/200/200/AM.png' },
+                numeroVuelo: 'AM100',
+                duracionMinutos: 120,
+                claseCabina: 'economy' as any
+              }]
+            }],
+            pasajeros: [{ tipo: 'adult', cantidad: params.pasajeros.adultos }]
+          },
+          {
+            id: 'mock-duffel-2',
+            proveedor: this.nombreProveedor,
+            referenciaProveedor: 'mock-2',
+            precioTotal: 3800,
+            moneda: 'MXN',
+            itinerarios: [{
+              duracionMinutos: 135,
+              segmentos: [{
+                origen: { iataCode: params.origenIata },
+                destino: { iataCode: params.destinoIata },
+                fechaSalida: params.fechaSalida + 'T14:00:00Z',
+                fechaLlegada: params.fechaSalida + 'T16:15:00Z',
+                aerolinea: { iataCode: 'VB', nombre: 'VivaAerobus', logoUrl: 'https://pics.avs.io/200/200/VB.png' },
+                numeroVuelo: 'VB200',
+                duracionMinutos: 135,
+                claseCabina: 'economy' as any
+              }]
+            }],
+            pasajeros: [{ tipo: 'adult', cantidad: params.pasajeros.adultos }]
+          }
+        ];
+      } else {
+        const response = await this.client.offerRequests.create({
+          slices,
+          passengers,
+          cabin_class: (params.clase || 'economy') as any,
+          return_offers: true,
+        } as any);
 
-      // 3. Mapear respuestas de Duffel al formato unificado de AS Operadora
-      const vuelosUnificados: VueloUnificado[] = response.data.offers.map((offer: any) => {
-        return {
+        // 3. Mapear respuestas de Duffel al formato unificado de AS Operadora
+        vuelosUnificados = response.data.offers.map((offer: any) => {
+          return {
           id: offer.id,
           proveedor: this.nombreProveedor,
           referenciaProveedor: offer.id,
@@ -87,6 +135,7 @@ export class DuffelAdapter implements IProveedorVuelo {
           ].filter(p => p.cantidad > 0)
         };
       });
+    }
 
       return {
         exito: true,

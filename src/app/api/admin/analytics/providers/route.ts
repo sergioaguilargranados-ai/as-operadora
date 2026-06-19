@@ -22,6 +22,12 @@ export async function GET(request: NextRequest) {
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `);
+    
+    // Auto-migration for old schema
+    try { await query(`ALTER TABLE provider_metrics ADD COLUMN IF NOT EXISTS service_type VARCHAR(50) DEFAULT 'vuelos'`); } catch(e){}
+    try { await query(`ALTER TABLE provider_metrics ADD COLUMN IF NOT EXISTS results_count INTEGER DEFAULT 0`); } catch(e){}
+    try { await query(`ALTER TABLE provider_metrics ADD COLUMN IF NOT EXISTS success BOOLEAN DEFAULT true`); } catch(e){}
+    try { await query(`ALTER TABLE provider_metrics ADD COLUMN IF NOT EXISTS error_message TEXT`); } catch(e){}
 
     // Fetch aggregate metrics per provider
     const sql = `
