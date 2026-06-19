@@ -23,7 +23,7 @@ export async function POST(req: Request) {
     const body = await req.json();
     const { batch } = body;
 
-    // Asegurar que la tabla existe
+    // Asegurar que la tabla y columnas existen
     await db.query(`
       CREATE TABLE IF NOT EXISTS hotels (
         id SERIAL PRIMARY KEY,
@@ -36,6 +36,10 @@ export async function POST(req: Request) {
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `);
+    try { await db.query(`ALTER TABLE hotels ADD COLUMN IF NOT EXISTS provider_id VARCHAR(100);`); } catch(e){}
+    try { await db.query(`ALTER TABLE hotels ADD COLUMN IF NOT EXISTS country VARCHAR(100);`); } catch(e){}
+    try { await db.query(`ALTER TABLE hotels ADD COLUMN IF NOT EXISTS star_rating INTEGER;`); } catch(e){}
+    try { await db.query(`ALTER TABLE hotels ADD COLUMN IF NOT EXISTS image_url TEXT;`); } catch(e){}
 
     // Insertamos 50 hoteles simulados por cada lote
     const startIndex = (batch - 1) * 50;

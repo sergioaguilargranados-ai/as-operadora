@@ -1140,11 +1140,6 @@ export default function VuelosDestinoPage() {
                     {vuelo.precioIda === precioMasBarato && (
                       <Badge className="bg-green-600 mb-2">Mejor precio</Badge>
                     )}
-                    {vuelo.provider && (
-                      <span className="absolute top-4 right-4 text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-slate-100 text-slate-400 border border-slate-200">
-                        {vuelo.provider}
-                      </span>
-                    )}
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-4">
                         <div className="w-14 h-10 bg-white rounded border border-gray-100 p-1 flex items-center justify-center flex-shrink-0">
@@ -1182,11 +1177,16 @@ export default function VuelosDestinoPage() {
                         </div>
                       </div>
 
-                      <div className="text-right">
+                      <div className="text-right flex flex-col items-end">
+                        {vuelo.provider && (
+                          <span className="text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-slate-100 text-slate-400 border border-slate-200 mb-1">
+                            {vuelo.provider}
+                          </span>
+                        )}
                         <p className="text-2xl font-bold text-blue-600">
                           ${vuelo.precioIda.toLocaleString()}
                         </p>
-                        <p className="text-sm text-muted-foreground">por persona</p>
+                        <p className="text-sm text-muted-foreground mb-2">por persona</p>
                         <Button
                           className="mt-2"
                           onClick={() => pasoActual === 1
