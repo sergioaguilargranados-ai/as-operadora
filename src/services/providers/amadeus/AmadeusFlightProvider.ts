@@ -19,9 +19,16 @@ export class AmadeusFlightProvider implements IProveedorVuelo {
   async buscarVuelos(params: ParametrosBusquedaVuelo): Promise<RespuestaBusqueda<VueloUnificado>> {
     const inicio = Date.now();
     try {
+      const FeatureService = (await import('@/services/FeatureService')).default;
+      const isMockEnabled = await FeatureService.isFeatureEnabled('mock_data', 'ADMIN');
+
       if (!process.env.AMADEUS_API_KEY) {
-        // MOCK DATA SI NO HAY LLAVE
-        return this.getMockData(params, inicio);
+        if (isMockEnabled) {
+          // MOCK DATA SI ESTA ACTIVO EL FLAG
+          return this.getMockData(params, inicio);
+        } else {
+          throw new Error('Amadeus API Key no configurada y Mock Data deshabilitado.');
+        }
       }
 
       const searchParams: any = {

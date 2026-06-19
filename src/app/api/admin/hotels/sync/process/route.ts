@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { verifyToken } from '@/services/AuthService';
 import { db } from '@/lib/db';
+import { put } from '@vercel/blob';
 
 export async function POST(req: Request) {
   try {
@@ -58,41 +59,57 @@ export async function POST(req: Request) {
       { city: 'Roma', country: 'Italia' }
     ];
 
-    const newHotels = Array.from({ length: 50 }).map((_, i) => {
+    const logs: string[] = [
+      `[${new Date().toLocaleTimeString('es-MX', { timeZone: 'America/Mexico_City' })}] 🔍 Iniciando descarga de API para el lote ${batch}...`
+    ];
+
+    for (let i = 0; i < 50; i++) {
       const num = startIndex + i + 1;
       const loc = cities[Math.floor(Math.random() * cities.length)];
-      return [
-        `HTL-${num}`,
-        `Hotel Grand ${num} Resort & Spa`,
-        loc.city,
-        loc.country,
-        Math.floor(Math.random() * 3) + 3, // 3 to 5 stars
-        `https://picsum.photos/seed/${num + 500}/400/300`
-      ];
-    });
+      const provider_id = `HTL-${num}`;
+      const name = `Hotel Grand ${num} Resort & Spa`;
+      const star_rating = Math.floor(Math.random() * 3) + 3;
+      
+      let blobUrl = '';
+      
+      try {
+        // En un caso real, esto sería fetch a la API del proveedor
+        const sourceImageUrl = `https://picsum.photos/seed/${num + 500}/400/300`;
+        
+        if (process.env.BLOB_READ_WRITE_TOKEN) {
+          const imageResponse = await fetch(sourceImageUrl);
+          if (imageResponse.ok) {
+            const blobFile = await put(`hotels/${provider_id}.jpg`, await imageResponse.blob(), {
+              access: 'public',
+              contentType: 'image/jpeg'
+            });
+            blobUrl = blobFile.url;
+          }
+        } else {
+          blobUrl = sourceImageUrl; // Fallback si Vercel Blob no está configurado
+        }
+      } catch (imgError) {
+        console.error('Error subiendo imagen a Vercel Blob:', imgError);
+        logs.push(`[⚠️] Error descargando imagen para hotel ${provider_id}`);
+      }
 
-    for (const h of newHotels) {
       try {
         await db.query(
           `INSERT INTO hotels (provider_id, name, city, country, star_rating, image_url) VALUES ($1, $2, $3, $4, $5, $6)`,
-          h
+          [provider_id, name, loc.city, loc.country, star_rating, blobUrl]
         );
       } catch (insertError) {
-        console.error('Error insertando hotel individual', h[0], insertError);
+        console.error('Error insertando hotel individual', provider_id, insertError);
       }
     }
 
-    // Pequeño retardo para simular latencia de red y descarga de imágenes
-    await new Promise(resolve => setTimeout(resolve, 800));
+    logs.push(`[${new Date().toLocaleTimeString('es-MX', { timeZone: 'America/Mexico_City' })}] ✅ 50 hoteles procesados e insertados en la base de datos local.`);
+    logs.push(`[${new Date().toLocaleTimeString('es-MX', { timeZone: 'America/Mexico_City' })}] 📸 Descargando recursos multimedia... Completado.`);
 
     return NextResponse.json({ 
       success: true, 
       message: `Procesado lote ${batch}. Insertados 50 hoteles.`,
-      logs: [
-        `[${new Date().toLocaleTimeString('es-MX', { timeZone: 'America/Mexico_City' })}] 🔍 Iniciando descarga de API para el lote ${batch}...`,
-        `[${new Date().toLocaleTimeString('es-MX', { timeZone: 'America/Mexico_City' })}] ✅ 50 hoteles procesados e insertados en la base de datos local.`,
-        `[${new Date().toLocaleTimeString('es-MX', { timeZone: 'America/Mexico_City' })}] 📸 Descargando recursos multimedia... Completado.`
-      ]
+      logs
     });
   } catch (error: any) {
     console.error('Error procesando lote de hoteles:', error);

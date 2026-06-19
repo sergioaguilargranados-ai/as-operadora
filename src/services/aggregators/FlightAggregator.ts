@@ -23,17 +23,44 @@ export class FlightAggregator {
     const inicio = Date.now();
 
     try {
-      // 1. Lanzar peticiones en paralelo a todos los proveedores
-      const promesas = this.proveedores.map(proveedor => proveedor.buscarVuelos(params));
+      const FeatureService = (await import('@/services/FeatureService')).default;
+
+      // 1. Validar qué proveedores están activos según la BD
+      const proveedoresActivos = [];
+      for (const prov of this.proveedores) {
+        // Asume feature_code = 'flights_amadeus' o 'flights_duffel'
+        const featureCode = `flights_${prov.nombreProveedor.toLowerCase()}`;
+        const isEnabled = await FeatureService.isFeatureEnabled(featureCode, 'USER');
+        
+        // Default to true in case the feature flag doesn't exist yet, 
+        // to not break backwards compatibility until they are fully set up
+        if (isEnabled !== false) { 
+          proveedoresActivos.push(prov);
+        }
+      }
+
+      if (proveedoresActivos.length === 0) {
+         return {
+           exito: false,
+           resultados: [],
+           proveedorInfo: 'agregador',
+           errores: ['No hay proveedores de vuelos activos.'],
+           tiempoRespuestaMs: Date.now() - inicio
+         };
+      }
+
+      // 2. Lanzar peticiones en paralelo a todos los proveedores activos
+      const promesas = proveedoresActivos.map(proveedor => proveedor.buscarVuelos(params));
       const respuestas = await Promise.allSettled(promesas);
 
       let todosLosVuelos: VueloUnificado[] = [];
       const errores: string[] = [];
       const proveedoresExitosos: string[] = [];
+      const metricasPromesas: Promise<any>[] = [];
 
-      // 2. Recolectar resultados y loguear metricas
+      // 3. Recolectar resultados y loguear metricas
       respuestas.forEach((resultado, index) => {
-        const nombreProveedor = this.proveedores[index].nombreProveedor;
+        const nombreProveedor = proveedoresActivos[index].nombreProveedor;
 
         if (resultado.status === 'fulfilled' && resultado.value.exito) {
           const cantidadLeidos = resultado.value.resultados.length;
@@ -41,8 +68,8 @@ export class FlightAggregator {
           proveedoresExitosos.push(nombreProveedor);
           if (resultado.value.errores) errores.push(...resultado.value.errores);
 
-          // Log metrics en BD de forma asíncrona sin bloquear la respuesta
-          query(`
+          // Log metrics en BD
+          metricasPromesas.push(query(`
             INSERT INTO provider_metrics (provider_name, service_type, response_time_ms, results_count, success)
             VALUES ($1, $2, $3, $4, true)
           `, [
@@ -50,14 +77,14 @@ export class FlightAggregator {
             'vuelos',
             Date.now() - inicio,
             cantidadLeidos
-          ]).catch(e => console.error('[Metrics] Error:', e));
+          ]).catch(e => console.error('[Metrics] Error:', e)));
 
         } else {
           // Si falló a nivel de promesa o la API retornó exito=false
-          const msg = resultado.status === 'rejected' ? resultado.reason : (resultado.value.errores?.join(', ') || 'Error desconocido');
+          const msg = resultado.status === 'rejected' ? String(resultado.reason) : (resultado.value.errores?.join(', ') || 'Error desconocido');
           errores.push(`[${nombreProveedor}] ${msg}`);
           
-          query(`
+          metricasPromesas.push(query(`
             INSERT INTO provider_metrics (provider_name, service_type, response_time_ms, results_count, success, error_message)
             VALUES ($1, $2, $3, $4, false, $5)
           `, [
@@ -66,11 +93,14 @@ export class FlightAggregator {
             Date.now() - inicio,
             0,
             msg.substring(0, 500)
-          ]).catch(e => console.error('[Metrics] Error:', e));
+          ]).catch(e => console.error('[Metrics] Error:', e)));
         }
       });
 
-      // 3. Ordenar resultados por precio (de menor a mayor)
+      // Esperar a que se inserten las métricas antes de retornar
+      await Promise.allSettled(metricasPromesas);
+
+      // 4. Ordenar resultados por precio (de menor a mayor)
       todosLosVuelos.sort((a, b) => a.precioTotal - b.precioTotal);
 
       return {

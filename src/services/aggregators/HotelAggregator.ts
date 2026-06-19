@@ -18,17 +18,41 @@ export class HotelAggregator {
     const inicio = Date.now();
 
     try {
-      // 1. Peticiones en paralelo
-      const promesas = this.proveedores.map(proveedor => proveedor.buscarHoteles(params));
+      const FeatureService = (await import('@/services/FeatureService')).default;
+
+      // 1. Validar qué proveedores están activos según la BD
+      const proveedoresActivos = [];
+      for (const prov of this.proveedores) {
+        const featureCode = `hoteles_${prov.nombreProveedor.toLowerCase()}`;
+        const isEnabled = await FeatureService.isFeatureEnabled(featureCode, 'USER');
+        
+        if (isEnabled !== false) { 
+          proveedoresActivos.push(prov);
+        }
+      }
+
+      if (proveedoresActivos.length === 0) {
+         return {
+           exito: false,
+           resultados: [],
+           proveedorInfo: 'agregador',
+           errores: ['No hay proveedores de hoteles activos.'],
+           tiempoRespuestaMs: Date.now() - inicio
+         };
+      }
+
+      // 2. Peticiones en paralelo
+      const promesas = proveedoresActivos.map(proveedor => proveedor.buscarHoteles(params));
       const respuestas = await Promise.allSettled(promesas);
 
       let todosLosHoteles: HotelUnificado[] = [];
       const errores: string[] = [];
       const proveedoresExitosos: string[] = [];
+      const metricasPromesas: Promise<any>[] = [];
 
-      // 2. Recolectar resultados y loguear metricas
+      // 3. Recolectar resultados y loguear metricas
       respuestas.forEach((resultado, index) => {
-        const nombreProveedor = this.proveedores[index].nombreProveedor;
+        const nombreProveedor = proveedoresActivos[index].nombreProveedor;
 
         if (resultado.status === 'fulfilled' && resultado.value.exito) {
           const cantidadLeidos = resultado.value.resultados.length;
@@ -36,7 +60,7 @@ export class HotelAggregator {
           proveedoresExitosos.push(nombreProveedor);
           if (resultado.value.errores) errores.push(...resultado.value.errores);
 
-          query(`
+          metricasPromesas.push(query(`
             INSERT INTO provider_metrics (provider_name, service_type, response_time_ms, results_count, success)
             VALUES ($1, $2, $3, $4, $5)
           `, [
@@ -45,14 +69,14 @@ export class HotelAggregator {
             Date.now() - inicio,
             cantidadLeidos,
             true
-          ]).catch(e => console.error('[Metrics] Error:', e));
+          ]).catch(e => console.error('[Metrics] Error:', e)));
 
         } else {
           // Fallo total de este proveedor
-          const msg = resultado.status === 'rejected' ? resultado.reason : (resultado.value.errores?.join(', ') || 'Error desconocido');
+          const msg = resultado.status === 'rejected' ? String(resultado.reason) : (resultado.value.errores?.join(', ') || 'Error desconocido');
           errores.push(`[${nombreProveedor}] ${msg}`);
 
-          query(`
+          metricasPromesas.push(query(`
             INSERT INTO provider_metrics (provider_name, service_type, response_time_ms, results_count, success, error_message)
             VALUES ($1, $2, $3, $4, $5, $6)
           `, [
@@ -62,9 +86,12 @@ export class HotelAggregator {
             0,
             false,
             msg
-          ]).catch(e => console.error('[Metrics] Error:', e));
+          ]).catch(e => console.error('[Metrics] Error:', e)));
         }
       });
+
+      // Esperar a que se inserten las métricas
+      await Promise.allSettled(metricasPromesas);
 
       // 3. Deduplicación (Unificar hoteles de distintos proveedores)
       // Mapeo (normalmente se usa un sistema de mapeo de IDs como GIATA, por simplicidad combinamos por nombre o ID estático)
