@@ -100,18 +100,21 @@ export async function GET(request: NextRequest) {
       returnFlights = returnResult.resultados.map(v => mapToFrontendFlight(v, adults, airlinesMap));
     }
 
-    // Identificar y guardar aerolíneas nuevas asincrónicamente
-    const allFlights = [...outboundResult.resultados, ...(returnDate ? returnFlights : [])];
+    // Identificar y guardar aerolíneas nuevas asincrónicamente usando el modelo unificado
+    const allFlightsUnified = [...outboundResult.resultados, ...(returnDate && returnResult ? returnResult.resultados : [])];
     const missingAirlines = new Map<string, {name: string, logo: string}>();
-    allFlights.forEach((v: any) => {
-      const seg = v.itinerarios?.[0]?.segmentos?.[0] || v;
-      const iata = seg.aerolinea?.iataCode || seg.airline;
-      if (iata && !airlinesMap[iata]) {
-        missingAirlines.set(iata, {
-          name: seg.aerolinea?.nombre || seg.airline || iata,
-          logo: seg.aerolinea?.logoUrl || seg.logo || `https://pics.avs.io/200/200/${iata}.png`
+    allFlightsUnified.forEach((v: VueloUnificado) => {
+      v.itinerarios.forEach(iti => {
+        iti.segmentos.forEach(seg => {
+          const iata = seg.aerolinea?.iataCode;
+          if (iata && !airlinesMap[iata]) {
+            missingAirlines.set(iata, {
+              name: seg.aerolinea?.nombre || iata,
+              logo: seg.aerolinea?.logoUrl || `https://pics.avs.io/200/200/${iata}.png`
+            });
+          }
         });
-      }
+      });
     });
 
     if (missingAirlines.size > 0) {
@@ -120,7 +123,9 @@ export async function GET(request: NextRequest) {
         for (const [iata, data] of missingAirlines.entries()) {
           await db.query(`INSERT INTO airlines_catalog (iata_code, name, logo_url) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING`, [iata, data.name, data.logo]);
         }
-      } catch(e) {}
+      } catch(e) {
+        console.error('[Flights API] Error guardando aerolíneas:', e);
+      }
     }
 
 

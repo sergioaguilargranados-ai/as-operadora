@@ -4,7 +4,7 @@ import jwt from 'jsonwebtoken'
 import { v4 as uuidv4 } from 'uuid'
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production'
-const JWT_EXPIRES_IN = '15m' // 15 minutos
+const JWT_EXPIRES_IN = '24h' // 24 horas para evitar vencimiento en procesos largos
 const REFRESH_TOKEN_EXPIRES_IN = '7d' // 7 días
 
 export interface RegisterData {
