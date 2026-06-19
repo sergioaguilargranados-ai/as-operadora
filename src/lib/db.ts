@@ -161,7 +161,7 @@ export async function queryPaginated<T extends QueryResultRow = any>(
   const dataQuery = `
     ${baseQuery}
     ORDER BY ${orderBy} ${orderDirection}
-    LIMIT ${params.length + 1} OFFSET ${params.length + 2}
+    LIMIT $${params.length + 1} OFFSET $${params.length + 2}
   `
 
   // Query para total
