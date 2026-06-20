@@ -996,7 +996,7 @@ export default function AdminContentPage() {
                   {airlinesList.map((airline) => (
                     <Card key={airline.iata_code} className="p-4 flex flex-col items-center justify-between hover:shadow-md transition-shadow relative">
                       {airline.is_custom && <div className="absolute top-2 right-2 w-2 h-2 rounded-full bg-blue-500" title="Logo Personalizado" />}
-                      <div className="w-16 h-12 flex items-center justify-center bg-white rounded border mb-3 overflow-hidden p-1">
+                      <div className="w-24 h-20 flex items-center justify-center bg-white rounded border mb-3 overflow-hidden p-2">
                         {airline.logo_url ? (
                           <img src={airline.logo_url} alt={airline.name} className="max-w-full max-h-full object-contain" />
                         ) : (

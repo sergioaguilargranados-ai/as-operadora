@@ -76,8 +76,8 @@ export async function GET(request: NextRequest) {
     // Invocar al Agregador
     const aggregator = new FlightAggregator();
     
-    // Vuelos de Ida
-    const outboundResult = await aggregator.buscarVuelos({
+    // Invocar al Agregador en paralelo para Ida y Regreso
+    const outboundPromise = aggregator.buscarVuelos({
       origenIata: cleanOrigin,
       destinoIata: cleanDestination,
       fechaSalida: date,
@@ -85,21 +85,18 @@ export async function GET(request: NextRequest) {
       clase: cabinClass as any
     });
 
-    const outboundFlights = outboundResult.resultados.map(v => mapToFrontendFlight(v, adults, airlinesMap));
+    const returnPromise = returnDate ? aggregator.buscarVuelos({
+      origenIata: cleanDestination,
+      destinoIata: cleanOrigin,
+      fechaSalida: returnDate,
+      pasajeros: { adultos: adults, ninos: 0, bebes: 0 },
+      clase: cabinClass as any
+    }) : Promise.resolve(null);
 
-    // Vuelos de Regreso
-    let returnFlights: any[] = [];
-    let returnResult: any = null;
-    if (returnDate) {
-      returnResult = await aggregator.buscarVuelos({
-        origenIata: cleanDestination,
-        destinoIata: cleanOrigin,
-        fechaSalida: returnDate,
-        pasajeros: { adultos: adults, ninos: 0, bebes: 0 },
-        clase: cabinClass as any
-      });
-      returnFlights = returnResult.resultados.map((v: any) => mapToFrontendFlight(v, adults, airlinesMap));
-    }
+    const [outboundResult, returnResult] = await Promise.all([outboundPromise, returnPromise]);
+
+    const outboundFlights = outboundResult.resultados.map(v => mapToFrontendFlight(v, adults, airlinesMap));
+    const returnFlights = returnResult ? returnResult.resultados.map((v: any) => mapToFrontendFlight(v, adults, airlinesMap)) : [];
 
     // Identificar y guardar aerolíneas nuevas asincrónicamente usando el modelo unificado
     const allFlightsUnified = [...outboundResult.resultados, ...(returnResult ? returnResult.resultados : [])];
@@ -121,9 +118,12 @@ export async function GET(request: NextRequest) {
     if (missingAirlines.size > 0) {
       try {
         await db.query(`CREATE TABLE IF NOT EXISTS airlines_catalog (iata_code VARCHAR(10) PRIMARY KEY, name VARCHAR(255), logo_url TEXT, is_custom BOOLEAN DEFAULT false, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)`);
-        for (const [iata, data] of missingAirlines.entries()) {
-          await db.query(`INSERT INTO airlines_catalog (iata_code, name, logo_url) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING`, [iata, data.name, data.logo]);
-        }
+        
+        const insertPromises = Array.from(missingAirlines.entries()).map(([iata, data]) => 
+          db.query(`INSERT INTO airlines_catalog (iata_code, name, logo_url) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING`, [iata, data.name, data.logo])
+        );
+        
+        await Promise.all(insertPromises);
       } catch(e) {
         console.error('[Flights API] Error guardando aerolíneas:', e);
       }

@@ -1144,8 +1144,8 @@ export default function VuelosDestinoPage() {
                       <Badge className="bg-green-600 mb-2">Mejor precio</Badge>
                     )}
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                        <div className="w-14 h-10 bg-white rounded border border-gray-100 p-1 flex items-center justify-center flex-shrink-0">
+                      <div className="flex flex-col items-start gap-1 w-32">
+                        <div className="w-20 h-14 bg-white rounded border border-gray-100 p-1 flex items-center justify-center flex-shrink-0">
                           <img
                             src={vuelo.logo}
                             alt={vuelo.aerolinea}
@@ -1153,8 +1153,8 @@ export default function VuelosDestinoPage() {
                           />
                         </div>
                         <div>
-                          <p className="font-semibold">{vuelo.aerolinea}</p>
-                          <p className="text-sm text-muted-foreground">{vuelo.codigoVuelo}</p>
+                          <p className="font-semibold leading-tight text-sm">{vuelo.aerolinea}</p>
+                          <p className="text-xs text-muted-foreground">{vuelo.codigoVuelo}</p>
                         </div>
                       </div>
 
