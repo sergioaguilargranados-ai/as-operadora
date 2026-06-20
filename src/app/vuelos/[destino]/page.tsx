@@ -442,7 +442,7 @@ async function buscarVuelos(origen: string, destino: string, fecha: string, pasa
         return data.data.outbound.map((vuelo: any, index: number) => ({
           id: index + 1,
           aerolinea: vuelo.airline || 'Aerolínea',
-          logo: AIRLINE_LOGOS[vuelo.airline] || 'https://airhex.com/images/airline-logos/alt/aeromexico.png',
+          logo: vuelo.logo || AIRLINE_LOGOS[vuelo.airline] || 'https://airhex.com/images/airline-logos/alt/aeromexico.png',
           codigoVuelo: vuelo.flightNumber || `FL${index + 100}`,
           origen: vuelo.origin || origen,
           destino: vuelo.destination || destino,
@@ -451,12 +451,12 @@ async function buscarVuelos(origen: string, destino: string, fecha: string, pasa
           duracion: vuelo.duration || '2h 30m',
           escalas: vuelo.stops || 0,
           precio: vuelo.price || 5000,
-          precioIda: vuelo.price ? vuelo.price / 2 : 2500,
+          precioIda: vuelo.pricePerPerson || (vuelo.price ? vuelo.price / 2 : 2500),
           clase: vuelo.cabinClass || 'Economy',
-          equipaje: vuelo.baggage || '1 maleta incluida',
+          equipaje: typeof vuelo.baggage === 'object' ? `${vuelo.baggage.carryOn} / ${vuelo.baggage.checked}` : (vuelo.baggage || '1 maleta incluida'),
           cambios: vuelo.flexibility || 'Cambios permitidos',
           amenidades: vuelo.amenities || ['Wifi'],
-          tarifa: vuelo.fareType || 'Standard',
+          tarifa: vuelo.fareType || vuelo.tarifa || 'Standard',
           provider: vuelo.provider || 'AMADEUS'
         }))
       }
