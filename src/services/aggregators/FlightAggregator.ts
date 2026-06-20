@@ -28,8 +28,8 @@ export class FlightAggregator {
       // 1. Validar qué proveedores están activos según la BD
       const proveedoresActivos = [];
       for (const prov of this.proveedores) {
-        // Asume feature_code = 'flights_amadeus' o 'flights_duffel'
-        const featureCode = `flights_${prov.nombreProveedor.toLowerCase()}`;
+        // Asume feature_code = 'API_AMADEUS' o 'API_DUFFEL'
+        const featureCode = `API_${prov.nombreProveedor.toUpperCase()}`;
         const isEnabled = await FeatureService.isFeatureEnabled(featureCode, 'USER');
         
         // Default to true in case the feature flag doesn't exist yet, 

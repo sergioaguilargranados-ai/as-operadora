@@ -6,7 +6,7 @@ export async function GET() {
     const code = 'mock_data';
     const name = 'Mock Data (Datos de Prueba)';
     const desc = 'Habilita o deshabilita los datos de prueba (mocks) cuando un proveedor falla o no tiene credenciales válidas.';
-    const cat = 'Development';
+    const cat = 'sistema';
     
     await db.query(`
       INSERT INTO features (code, name, description, category, is_global_enabled, web_enabled, mobile_enabled, sort_order)

@@ -23,7 +23,7 @@ export class HotelAggregator {
       // 1. Validar qué proveedores están activos según la BD
       const proveedoresActivos = [];
       for (const prov of this.proveedores) {
-        const featureCode = `hoteles_${prov.nombreProveedor.toLowerCase()}`;
+        const featureCode = `API_${prov.nombreProveedor.toUpperCase()}`;
         const isEnabled = await FeatureService.isFeatureEnabled(featureCode, 'USER');
         
         if (isEnabled !== false) { 
