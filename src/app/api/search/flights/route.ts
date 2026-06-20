@@ -78,11 +78,11 @@ export async function GET(request: NextRequest) {
     
     // Vuelos de Ida
     const outboundResult = await aggregator.buscarVuelos({
-      origen: cleanOrigin,
-      destino: cleanDestination,
+      origenIata: cleanOrigin,
+      destinoIata: cleanDestination,
       fechaSalida: date,
-      pasajeros: [{ tipo: 'adult', cantidad: adults }],
-      claseCabina: cabinClass as any
+      pasajeros: { adultos: adults, ninos: 0, bebes: 0 },
+      clase: cabinClass as any
     });
 
     const outboundFlights = outboundResult.resultados.map(v => mapToFrontendFlight(v, adults, airlinesMap));
@@ -92,11 +92,11 @@ export async function GET(request: NextRequest) {
     let returnResult: any = null;
     if (returnDate) {
       returnResult = await aggregator.buscarVuelos({
-        origen: cleanDestination,
-        destino: cleanOrigin,
+        origenIata: cleanDestination,
+        destinoIata: cleanOrigin,
         fechaSalida: returnDate,
-        pasajeros: [{ tipo: 'adult', cantidad: adults }],
-        claseCabina: cabinClass as any
+        pasajeros: { adultos: adults, ninos: 0, bebes: 0 },
+        clase: cabinClass as any
       });
       returnFlights = returnResult.resultados.map((v: any) => mapToFrontendFlight(v, adults, airlinesMap));
     }
