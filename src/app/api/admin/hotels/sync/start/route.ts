@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { verifyToken } from '@/services/AuthService';
+import { db } from '@/lib/db';
 
 export async function POST(req: Request) {
   try {
@@ -19,10 +20,13 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: false, error: 'Acceso denegado' }, { status: 403 });
     }
 
-    // Simulamos el descubrimiento de propiedades desde un API externo (ej. Hotelbeds)
-    const totalHotels = 5000;
+    // Consultamos cuántos hoteles reales faltan de imagen
+    const countRes = await db.query(`SELECT COUNT(*) as total FROM hotels WHERE image_url IS NULL`);
+    const totalHotels = parseInt(countRes.rows[0].total) || 0;
+    
     const batchSize = 50;
-    const totalBatches = Math.ceil(totalHotels / batchSize);
+    // Si no hay hoteles por actualizar, devolvemos 0 lotes. Minimo 1 si hay algo.
+    const totalBatches = totalHotels === 0 ? 0 : Math.ceil(totalHotels / batchSize);
 
     return NextResponse.json({ 
       success: true, 
