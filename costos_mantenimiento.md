@@ -38,9 +38,10 @@
 - **OpenAI (Inteligencia Artificial)**:
   - Suponiendo que el 10% de los usuarios usa interacciones con el bot/AI (8,225 sesiones) y utilizan 5 prompts de 1k tokens. Total = ~41 Millones de tokens usando el modelo eficiente `gpt-4o-mini`.
   - **Costo estimado**: **$15.00 USD**
-- **SendGrid (Correos Transaccionales)**:
-  - Se supera la cuota gratuita de 100 correos diarios. Con registro, confirmación de reservas y marketing automatizado, el volumen será de entre 15,000 a 20,000 correos al mes.
-  - **Plan Essentials 50k**: **$19.95 USD**
+- **Resend y SMTP (Correos Transaccionales)**:
+  - Dejamos de usar SendGrid y ahora usamos SMTP directo de tu servidor (`mail.asoperadora.com`) como principal, que no tiene costo adicional. Como respaldo o alternativa (si hay bloqueos) integramos **Resend**.
+  - **Resend** ofrece 3,000 correos gratis al mes. Si pasamos ese volumen (ej. a 15,000-20,000 por alta conversión), el plan pro cuesta **$20.00 USD/mes** por 50k correos.
+  - **Costo estimado (Plan Pro)**: **$20.00 USD**
 - **Facturama (Facturación Electrónica CFDI México)**:
   - Para ~822 reservas, se estima un consumo de 800 a 1,000 timbres.
   - **Paquete de 1,000 folios**: ~$1,500 MXN.
@@ -55,11 +56,11 @@
 | :--- | :--- | :--- |
 | **Hosting y Almacenamiento** | Vercel | $20.00 |
 | **Base de Datos** | Neon PostgreSQL | $50.00 |
-| **Email Transaccional** | SendGrid | $19.95 |
+| **Email Transaccional** | Resend / SMTP | $20.00 |
 | **Facturación Electrónica** | Facturama | $90.00 |
 | **Geolocalización** | Google Places | $140.00 |
 | **Inteligencia Artificial**| OpenAI (`gpt-4o-mini`) | $15.00 |
 | **API de Viajes** | Amadeus | $1,100.00* |
-| **TOTAL ESTIMADO MANTENIMIENTO BASE** | | **$1,434.95** |
+| **TOTAL ESTIMADO MANTENIMIENTO BASE** | | **$1,435.00** |
 
 *(Nota de riesgo: El 76% del costo fijo proyectado se iría únicamente en las tarifas Self-Service de Amadeus. Se sugiere implementar una caché estricta para rutas populares o concretar un acuerdo Enterprise antes del lanzamiento masivo).*

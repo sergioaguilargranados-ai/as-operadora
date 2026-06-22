@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card } from "@/components/ui/card"
 import { X, Save } from "lucide-react"
+import { ImageUploadInput } from "@/components/admin/ImageUploadInput"
 
 interface Field {
   name: string
@@ -104,54 +105,13 @@ export function ContentModal({
                   required={field.required}
                 />
               ) : field.type === 'url' ? (
-                <div className="flex gap-2">
-                  <Input
-                    type="text"
-                    value={formData[field.name] || ''}
-                    onChange={(e) => handleChange(field.name, e.target.value)}
-                    placeholder={field.placeholder || "https://..."}
-                    required={field.required}
-                    className="h-12 flex-1"
-                  />
-                  <input
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    id={`file-upload-${field.name}`}
-                    onChange={async (e) => {
-                      const file = e.target.files?.[0];
-                      if (!file) return;
-                      setSaving(true);
-                      try {
-                        const formDataData = new FormData();
-                        formDataData.append('file', file);
-                        const res = await fetch('/api/admin/upload-image', {
-                          method: 'POST',
-                          body: formDataData
-                        });
-                        const data = await res.json();
-                        if (data.success) {
-                          handleChange(field.name, data.url);
-                        } else {
-                          alert(`Error: ${data.error}`);
-                        }
-                      } catch (err) {
-                        alert('Error de conexión al subir imagen');
-                      }
-                      setSaving(false);
-                    }}
-                  />
-                  <Button 
-                    type="button"
-                    variant="outline" 
-                    className="h-12 px-4 whitespace-nowrap"
-                    onClick={() => {
-                      document.getElementById(`file-upload-${field.name}`)?.click();
-                    }}
-                  >
-                    Subir foto
-                  </Button>
-                </div>
+                <ImageUploadInput
+                  value={formData[field.name] || ''}
+                  onChange={(val) => handleChange(field.name, val)}
+                  placeholder={field.placeholder || "https://..."}
+                  required={field.required}
+                  className="h-12 flex-1"
+                />
               ) : (
                 <Input
                   type={field.type}

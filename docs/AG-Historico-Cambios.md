@@ -9,8 +9,14 @@
 
 ## 📅 HISTORIAL DE CAMBIOS
 
-### v2.353 - 18 de Junio de 2026 - 11:25 CST
+### v2.354 - 22 de Junio de 2026 - 11:25 CST
 
+**🖼️ Módulo de Gestión de Contenido: Estandarización de Subida de Imágenes**
+- Se reemplazaron los inputs de imágenes tradicionales y el sistema de subida en línea por el componente `ImageUploadInput` en el archivo `ContentModal.tsx`.
+- Ahora, las secciones de **Banner**, **Promociones**, **Vuelos** y **Paquetes** soportan directamente la subida de archivos al Vercel Blob Storage de manera estándar y mejorada, siguiendo el mismo comportamiento que se había desarrollado para la **Landing Principal**.
+- Se agregó soporte para el atributo `required` en el componente `ImageUploadInput` para mantener la validación de formularios.
+
+### v2.353 - 18 de Junio de 2026 - 11:25 CST
 **✈️🏨 Arquitectura Multi-Proveedor (Duffel, Hotelbeds, RateHawk)**
 - **Modelos Unificados**: Se implementó una capa Core de modelos e interfaces comunes en `src/types/unified-travel.ts` y `src/types/providers.ts`.
 - **Patrón Adaptador**: Se crearon `DuffelAdapter`, `HotelbedsAdapter` y `RatehawkAdapter` para encapsular la lógica propietaria de cada API.

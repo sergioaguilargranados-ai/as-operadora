@@ -9,9 +9,10 @@ interface ImageUploadInputProps {
   onChange: (val: string) => void;
   placeholder?: string;
   className?: string;
+  required?: boolean;
 }
 
-export function ImageUploadInput({ value, onChange, placeholder, className }: ImageUploadInputProps) {
+export function ImageUploadInput({ value, onChange, placeholder, className, required }: ImageUploadInputProps) {
   const [saving, setSaving] = useState(false);
   const id = useId();
 
@@ -23,6 +24,7 @@ export function ImageUploadInput({ value, onChange, placeholder, className }: Im
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder || "https://..."}
         className={className}
+        required={required}
       />
       <input
         type="file"
