@@ -1,7 +1,7 @@
 # 📋 AG-Histórico de Cambios - AS Operadora
 
-**Última actualización:** 25 de Junio de 2026 - 19:05 CST  
-**Versión actual:** v2.356  
+**Última actualización:** 26 de Junio de 2026 - 00:45 CST  
+**Versión actual:** v2.357  
 **Actualizado por:** AntiGravity AI Assistant  
 **Propósito:** Documento maestro del proyecto para trabajo con agentes AntiGravity
 
@@ -9,6 +9,15 @@
 
 ## 📅 HISTORIAL DE CAMBIOS
 
+### v2.357 - 26 de Junio de 2026 - 00:45 CST
+**🚀 Soporte Offline y Rediseño Completo de Interfaz PWA & Admin**
+- **Soporte Offline:** Se configuró PWA con `sw.ts` para habilitar caché de red (Service Worker) y se añadió el componente `OfflineBanner.tsx` en el layout móvil.
+- **Rediseño Móvil Premium:** Se renovaron las vistas principales de la PWA (Login, Perfil, Rewards, Ayuda) implementando un diseño premium y limpio.
+- **Dashboard Móvil (Hero Plane):** Se reemplazó el menú de navegación en `/mobile`, integrando un fondo tipo hero con un ícono de avión vectorizado y tarjetas modernas.
+- **Tienda y Detalle de Producto:** Se implementó `/mobile/tienda/[id]` con un estilo "Mercado Libre", carrusel de imágenes, descripción y botón adhesivo de añadir al carrito.
+- **Itinerario Dinámico:** Mega-vista de `/mobile/itinerario/[id]` con sliders horizontales para gastronomía, turismo y souvenirs, además de información utilitaria (traductor, números de emergencia, frases).
+- **Importación Masiva (Excel/CSV):** Se añadieron botones de "Descargar Plantilla" e "Importar Archivo" (con explorador nativo y simulación frontend) en las vistas de "Mis Reservas" y el "CRM de Clientes".
+- **Panel Administrativo de Usuarios:** Se creó la ruta `/dashboard/admin/users` con tabla interactiva, badges por rol y módulo de importación masiva de usuarios, referenciada en el menú del perfil.
 ### v2.356 - 25 de Junio de 2026 - 19:05 CST
 **🎨 Marca Blanca Completa, Logo Móvil, Slogan y Secciones Parametrizadas PWA**
 - **Persistencia de Marca Blanca**: Se modificó la interfaz de administración de inquilinos (`src/app/admin/tenants/page.tsx`) para guardar de manera efectiva los campos visuales (`logo_url`, `logo_mobile_url`, `primary_color`, `secondary_color`, `accent_color`, `custom_domain` y `slogan`) enviándolos correctamente al backend.
