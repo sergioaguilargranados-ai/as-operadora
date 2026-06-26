@@ -1,39 +1,66 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { ChevronLeft, Bookmark, MapPin, Info, Volume2, ArrowRightLeft, Mic, Copy, Volume1, Calendar as CalendarIcon, Heart } from "lucide-react"
+import { ChevronLeft, Bookmark, MapPin, Info, Volume2, ArrowRightLeft, Mic, Copy, Volume1, Calendar as CalendarIcon, Heart, Loader2 } from "lucide-react"
 
 export default function MobileItineraryDayDetail({ params }: { params: { id: string } }) {
   const router = useRouter()
+  const [loading, setLoading] = useState(true)
+  const [itinerary, setItinerary] = useState<any>(null)
+  
+  // Data del día actual (asumimos el día 1 por ahora para la demo)
+  const [dayData, setDayData] = useState<any>(null)
 
-  const foods = [
+  useEffect(() => {
+    const fetchItinerary = async () => {
+      try {
+        const res = await fetch(`/api/itineraries/${params.id}`)
+        const data = await res.json()
+        if (data.success && data.data) {
+          setItinerary(data.data)
+          // Tomar el primer día o un día por defecto si existe la estructura nueva
+          const days = data.data.days || []
+          if (days.length > 0) {
+            setDayData(days[0])
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching itinerary:", error)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchItinerary()
+  }, [params.id])
+
+  // Fallbacks si no hay datos en la BD aún para no romper el diseño original en pruebas
+  const foods = dayData?.foods || [
     { name: "Moussaka", desc: "Pastel tradicional de berenjena y carne.", img: "https://images.unsplash.com/photo-1598514982205-f36b96d1e8d4?auto=format&fit=crop&w=200&q=80" },
-    { name: "Gyros", desc: "Carne asada servida en pan pita con verduras y salsa.", img: "https://images.unsplash.com/photo-1593504049359-715569420580?auto=format&fit=crop&w=200&q=80" },
-    { name: "Souvlaki", desc: "Brochetas de carne a la parrilla, tradicionales.", img: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=200&q=80" },
-    { name: "Baklava", desc: "Postre tradicional con miel y nueces.", img: "https://images.unsplash.com/photo-1519671282429-b44660ead0a7?auto=format&fit=crop&w=200&q=80" }
+    { name: "Gyros", desc: "Carne asada servida en pan pita con verduras y salsa.", img: "https://images.unsplash.com/photo-1593504049359-715569420580?auto=format&fit=crop&w=200&q=80" }
   ]
 
-  const places = [
+  const places = dayData?.places || [
     { name: "Oia", desc: "Pueblo famoso por sus casas blancas y atardeceres.", img: "https://images.unsplash.com/photo-1613395877344-13d4a8e0d49e?auto=format&fit=crop&w=200&q=80" },
-    { name: "Fira", desc: "La vibrante capital de Santorini.", img: "https://images.unsplash.com/photo-1570077188670-e3a8d69ac542?auto=format&fit=crop&w=200&q=80" },
-    { name: "Akrotiri", desc: "Antigua ciudad minoica conservada por la ceniza.", img: "https://images.unsplash.com/photo-1533104816931-20fa691ff6ca?auto=format&fit=crop&w=200&q=80" },
-    { name: "Playa de Kamari", desc: "Playa de arena negra con aguas cristalinas.", img: "https://images.unsplash.com/photo-1520682522774-8b68832a875a?auto=format&fit=crop&w=200&q=80" }
+    { name: "Fira", desc: "La vibrante capital de Santorini.", img: "https://images.unsplash.com/photo-1570077188670-e3a8d69ac542?auto=format&fit=crop&w=200&q=80" }
   ]
 
-  const souvenirs = [
-    { name: "Ojo Turco", desc: "Protección y buena suerte.", img: "https://images.unsplash.com/photo-1607521798319-74d32049e491?auto=format&fit=crop&w=200&q=80" },
-    { name: "Cerámica Griega", desc: "Hecha a mano con diseños tradicionales.", img: "https://images.unsplash.com/photo-1610701596007-11502861dcfa?auto=format&fit=crop&w=200&q=80" },
-    { name: "Vino Assyrtiko", desc: "Vino blanco seco único de la isla.", img: "https://images.unsplash.com/photo-1585553616435-2dc0a54e271d?auto=format&fit=crop&w=200&q=80" }
+  const souvenirs = dayData?.souvenirs || [
+    { name: "Ojo Turco", desc: "Protección y buena suerte.", img: "https://images.unsplash.com/photo-1607521798319-74d32049e491?auto=format&fit=crop&w=200&q=80" }
   ]
 
-  const phrases = [
+  const phrases = dayData?.phrases || [
     { es: "Hola", local: "Yassas" },
-    { es: "Gracias", local: "Efcharistó" },
-    { es: "Por favor", local: "Parakaló" },
-    { es: "¿Dónde está el baño?", local: "Pou íne i toualéta?" },
-    { es: "¿Cuánto cuesta?", local: "Poso káni?" },
-    { es: "No entiendo", local: "Den katalava" }
+    { es: "Gracias", local: "Efcharistó" }
   ]
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#FDFDFD] flex items-center justify-center">
+        <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-[#FDFDFD] font-sans pb-28">
@@ -58,18 +85,22 @@ export default function MobileItineraryDayDetail({ params }: { params: { id: str
       <div className="px-4 pt-4 mb-4">
         <div className="relative w-full h-[240px] rounded-3xl overflow-hidden shadow-sm">
           <img 
-            src="https://images.unsplash.com/photo-1613395877344-13d4a8e0d49e?auto=format&fit=crop&w=800&q=80" 
-            alt="Santorini" 
+            src={dayData?.hero_image || "https://images.unsplash.com/photo-1613395877344-13d4a8e0d49e?auto=format&fit=crop&w=800&q=80"} 
+            alt={dayData?.title || "Destino"} 
             className="w-full h-full object-cover"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
           
           <div className="absolute bottom-4 left-4 right-4 text-white">
-            <p className="text-xs font-bold uppercase tracking-wider mb-1">Día 1</p>
-            <h1 className="text-4xl font-serif font-bold mb-2 text-white">Santorini</h1>
+            <p className="text-xs font-bold uppercase tracking-wider mb-1">
+              Día {dayData?.day || 1} {dayData?.date ? `- ${dayData.date}` : ''}
+            </p>
+            <h1 className="text-4xl font-serif font-bold mb-2 text-white">
+              {dayData?.title || itinerary?.title || "Destino"}
+            </h1>
             <div className="flex items-center gap-1">
               <MapPin className="w-4 h-4" />
-              <span className="text-sm font-medium">Grecia</span>
+              <span className="text-sm font-medium">{itinerary?.destination || "Internacional"}</span>
             </div>
           </div>
         </div>
@@ -83,11 +114,8 @@ export default function MobileItineraryDayDetail({ params }: { params: { id: str
           </div>
           <div>
             <h3 className="font-bold text-gray-900 mb-2">Descripción general</h3>
-            <p className="text-sm text-gray-600 leading-relaxed mb-3">
-              Santorini es una isla volcánica en el mar Egeo, famosa por sus casas blancas con cúpulas azules, atardeceres inolvidables y vistas espectaculares.
-            </p>
             <p className="text-sm text-gray-600 leading-relaxed">
-              Ideal para quienes buscan paisajes únicos, buena gastronomía y cultura griega auténtica. Sus calles son estrechas y muchas zonas tienen escaleras, por lo que se recomienda usar calzado cómodo.
+              {dayData?.description || itinerary?.description || "Tu destino te espera con increíbles experiencias. Disfruta de la gastronomía, cultura y paisajes únicos que hemos preparado para ti."}
             </p>
           </div>
         </div>

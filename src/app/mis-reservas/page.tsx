@@ -87,6 +87,10 @@ export default function MisReservasPage() {
       if (filter !== 'all') {
         params.append('status', filter)
       }
+      
+      if (user?.id) {
+        params.append('userId', user.id.toString())
+      }
 
       const response = await fetch(`/api/bookings?${params}`, {
         headers: { 'Authorization': `Bearer ${token}` }
@@ -326,6 +330,18 @@ export default function MisReservasPage() {
                         </div>
 
                         <div className="flex gap-1.5 flex-wrap justify-end">
+                          {/* Ver Itinerario Interactivo */}
+                          {safeParseJSON(booking.booking_details || booking.special_requests).tour_id && (
+                            <Button
+                              size="sm"
+                              className="h-8 px-2.5 gap-1 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white border-0 shadow-sm"
+                              onClick={() => router.push(`/mobile/itinerario/${safeParseJSON(booking.booking_details || booking.special_requests).tour_id}`)}
+                            >
+                              <MapPin className="w-3.5 h-3.5" />
+                              <span className="hidden sm:inline">Ver Itinerario</span>
+                            </Button>
+                          )}
+
                           {/* Ver detalles */}
                           <Button
                             size="sm"

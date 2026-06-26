@@ -170,11 +170,20 @@ export async function middleware(request: NextRequest) {
     )
 
     if (!hasAccess) {
-      // Sin permisos → redirigir a dashboard base con mensaje
-      const dashUrl = new URL('/dashboard', request.url)
-      dashUrl.searchParams.set('access_denied', '1')
-      dashUrl.searchParams.set('required_role', matchedRoute.roles.join(','))
-      return NextResponse.redirect(dashUrl)
+      // Sin permisos
+      // Si la ruta original NO es dashboard, mandar a dashboard base
+      if (pathname !== '/dashboard') {
+        const dashUrl = new URL('/dashboard', request.url)
+        dashUrl.searchParams.set('access_denied', '1')
+        dashUrl.searchParams.set('required_role', matchedRoute.roles.join(','))
+        return NextResponse.redirect(dashUrl)
+      } else {
+        // Si ya estamos intentando acceder al dashboard y no tenemos permiso ni para eso,
+        // forzamos al usuario al portal público o login para evitar ciclo infinito.
+        const portalUrl = new URL('/', request.url)
+        portalUrl.searchParams.set('access_denied', '1')
+        return NextResponse.redirect(portalUrl)
+      }
     }
 
     // Pasar info de usuario a la respuesta

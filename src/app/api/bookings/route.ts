@@ -17,6 +17,7 @@ export async function GET(request: NextRequest) {
     const sql = `
       SELECT
         id,
+        booking_type,
         booking_type as type,
         destination as service_name,
         booking_reference,
@@ -26,6 +27,7 @@ export async function GET(request: NextRequest) {
         payment_status,
         lead_traveler_name,
         lead_traveler_email,
+        special_requests,
         created_at
       FROM bookings
       WHERE user_id = $1

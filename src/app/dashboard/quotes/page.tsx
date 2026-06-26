@@ -259,6 +259,29 @@ export default function QuotesPage() {
     })
   }
 
+  const handleDelete = (quoteId: number, quoteNumber: string) => {
+    showConfirm({
+      title: 'Eliminar Cotización',
+      message: `¿Estás seguro de eliminar permanentemente la cotización ${quoteNumber}? Esta acción no se puede deshacer.`,
+      type: 'warning',
+      onConfirm: async () => {
+        setConfirmDialog(null)
+        try {
+          const res = await fetch(`/api/quotes/${quoteId}`, { method: 'DELETE' })
+          const data = await res.json()
+          if (data.success) {
+            toast({ title: '✅ Eliminada', description: `La cotización ${quoteNumber} ha sido eliminada.` })
+            loadQuotes()
+          } else {
+            toast({ title: 'Error', description: data.error || 'No se pudo eliminar', variant: 'destructive' })
+          }
+        } catch (error) {
+          toast({ title: 'Error', description: 'Error al intentar eliminar', variant: 'destructive' })
+        }
+      }
+    })
+  }
+
   const handleExportToExcel = () => {
     if (quotes.length === 0) { toast({ variant: "destructive", title: "Sin datos", description: "No hay cotizaciones para exportar" }); return }
     const data = quotes.map(quote => ({
@@ -532,6 +555,11 @@ export default function QuotesPage() {
                               >
                                 <Eye className="w-3.5 h-3.5" />
                               </Button>
+                              {(user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN') && (
+                                <Button size="sm" variant="outline" onClick={() => handleDelete(quote.id, quote.quote_number)} className="h-8 px-2 text-red-600 border-red-200 hover:bg-red-50" title="Eliminar cotización">
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </Button>
+                              )}
                             </>
                           )}
                           {/* ACCIONES PARA GENERAL */}
@@ -546,6 +574,11 @@ export default function QuotesPage() {
                               <Button size="sm" variant="outline" onClick={() => handleSendEmail(quote.id)} className="h-8 px-2 text-blue-600 border-blue-600 hover:bg-blue-50">
                                 <Send className="w-3.5 h-3.5 mr-1" />Enviar
                               </Button>
+                              {(user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN') && (
+                                <Button size="sm" variant="outline" onClick={() => handleDelete(quote.id, quote.quote_number)} className="h-8 px-2 text-red-600 border-red-200 hover:bg-red-50" title="Eliminar cotización">
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </Button>
+                              )}
                             </>
                           )}
                         </div>

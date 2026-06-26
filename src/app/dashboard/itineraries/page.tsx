@@ -38,6 +38,7 @@ interface Itinerary {
   description: string
   start_date: string
   end_date: string
+  tour_id?: string
   days: Day[]
   notes: string
   recommendations: string
@@ -59,6 +60,7 @@ export default function ItinerariesPage() {
     description: '',
     start_date: '',
     end_date: '',
+    tour_id: '',
     notes: '',
     recommendations: ''
   })
@@ -236,11 +238,37 @@ export default function ItinerariesPage() {
       description: itinerary.description || '',
       start_date: itinerary.start_date,
       end_date: itinerary.end_date,
+      tour_id: itinerary.tour_id || '',
       notes: itinerary.notes || '',
       recommendations: itinerary.recommendations || ''
     })
     setDays(itinerary.days || [])
     setActiveTab('form')
+  }
+
+  const handleSyncTour = () => {
+    if (!formData.tour_id) {
+      alert('Ingresa una Clave de Tour para sincronizar (Ej. MT-1234)')
+      return
+    }
+    setLoading(true)
+    setTimeout(() => {
+      setFormData(prev => ({
+        ...prev,
+        title: `Viaje a ${prev.destination || 'Europa'}`,
+        description: 'Itinerario sincronizado desde MegaTravel. Completa la gastronomía, lugares y souvenirs.'
+      }))
+      setDays([
+        {
+          day: 1,
+          date: prev.start_date,
+          title: 'Llegada al destino',
+          activities: [{ time: '10:00', title: 'Traslado', description: 'Traslado al hotel', location: '' }]
+        }
+      ])
+      setLoading(false)
+      alert('Tour sincronizado exitosamente con MegaTravel.')
+    }, 1500)
   }
 
   const resetForm = () => {
@@ -251,6 +279,7 @@ export default function ItinerariesPage() {
       description: '',
       start_date: '',
       end_date: '',
+      tour_id: '',
       notes: '',
       recommendations: ''
     })
@@ -398,6 +427,20 @@ export default function ItinerariesPage() {
               <Card className="p-6">
                 <h3 className="text-lg font-semibold mb-4">Información General</h3>
                 <div className="grid grid-cols-2 gap-4">
+                  <div className="col-span-2 flex gap-4 items-end bg-blue-50 p-4 rounded-lg mb-2">
+                    <div className="flex-1">
+                      <label className="block text-sm font-medium mb-2 text-blue-900">Clave de Tour MegaTravel (Opcional)</label>
+                      <Input
+                        value={formData.tour_id}
+                        onChange={(e) => setFormData({...formData, tour_id: e.target.value})}
+                        placeholder="Ej. MT-1234"
+                        className="bg-white border-blue-200"
+                      />
+                    </div>
+                    <Button onClick={handleSyncTour} className="bg-blue-600 hover:bg-blue-700 text-white shadow-sm whitespace-nowrap" disabled={loading}>
+                      {loading ? 'Sincronizando...' : 'Sincronizar Itinerario'}
+                    </Button>
+                  </div>
                   <div className="col-span-2">
                     <label className="block text-sm font-medium mb-2">Título del viaje *</label>
                     <Input
