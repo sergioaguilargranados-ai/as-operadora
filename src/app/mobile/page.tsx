@@ -6,7 +6,7 @@ import { useWhiteLabel } from "@/contexts/WhiteLabelContext"
 import { useRouter } from "next/navigation"
 import { 
   User, Briefcase, CreditCard, Users, ShoppingBag, 
-  HelpCircle, ChevronRight, Bell, Menu, Loader2, Headphones, Footprints 
+  HelpCircle, ChevronRight, Bell, Menu, Loader2, Headphones, Footprints, Plane
 } from "lucide-react"
 
 export default function MobileHomePage() {
@@ -58,10 +58,13 @@ export default function MobileHomePage() {
         </div>
 
         {/* Hero Text */}
-        <div className="absolute bottom-16 left-6 right-6 z-20 text-white">
-          <h1 className="text-3xl font-serif font-bold mb-2 drop-shadow-md">
-            Hola, {name} ✈️
+        <div className="absolute bottom-16 left-6 right-6 z-20 text-white flex items-center">
+          <h1 className="text-3xl font-serif font-bold drop-shadow-md">
+            Hola, {name}
           </h1>
+          <Plane className="w-6 h-6 ml-3 fill-black stroke-white drop-shadow-md" strokeWidth={1.5} />
+        </div>
+        <div className="absolute bottom-10 left-6 right-6 z-20 text-white">
           <p className="text-sm text-gray-200 max-w-[200px] leading-relaxed drop-shadow-md">
             ¿Listo para tu próxima experiencia?
           </p>

@@ -131,7 +131,11 @@ export default function MobileStorePage() {
         {/* Product Grid */}
         <div className="grid grid-cols-2 gap-4">
           {products.map((product) => (
-            <div key={product.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col cursor-pointer active:scale-95 transition-transform">
+            <div 
+              key={product.id} 
+              onClick={() => router.push(`/mobile/tienda/${product.id}`)}
+              className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col cursor-pointer active:scale-95 transition-transform"
+            >
               
               {/* Image & Heart */}
               <div className="relative bg-[#f6f5f3] p-4 h-40 flex items-center justify-center">
