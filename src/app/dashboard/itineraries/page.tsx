@@ -95,7 +95,9 @@ export default function ItinerariesPage() {
 
   const loadItineraries = async () => {
     try {
-      const res = await fetch(`/api/itineraries?userId=${user?.id}`)
+      const isAdmin = ['SUPER_ADMIN', 'ADMIN', 'MANAGER'].includes(user?.role || '')
+      const url = isAdmin ? '/api/itineraries' : `/api/itineraries?userId=${user?.id}`
+      const res = await fetch(url)
       const data = await res.json()
       if (data.success) {
         setItineraries(data.data)

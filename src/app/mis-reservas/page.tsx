@@ -24,7 +24,8 @@ import {
   CreditCard,
   FileText,
   Loader2,
-  Upload
+  Upload,
+  Trash2
 } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useToast } from '@/hooks/use-toast'
@@ -60,15 +61,16 @@ function safeParseJSON(value: any, fallback: any = {}) {
 
 export default function MisReservasPage() {
   const router = useRouter()
-  const { isAuthenticated, user } = useAuth()
+  const { user, isAuthenticated } = useAuth()
   const { toast } = useToast()
+  const isStaff = user?.role && ['SUPER_ADMIN', 'ADMIN', 'MANAGER'].includes(user.role)
+
   const [loading, setLoading] = useState(true)
+  const [deletingId, setDeletingId] = useState<number | null>(null)
   const [bookings, setBookings] = useState<Booking[]>([])
   const [filter, setFilter] = useState<string>('all')
   const [generatingPDFId, setGeneratingPDFId] = useState<number | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
-
-  const isStaff = user?.role && ['SUPER_ADMIN', 'ADMIN', 'MANAGER'].includes(user.role)
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -88,7 +90,9 @@ export default function MisReservasPage() {
         params.append('status', filter)
       }
       
-      if (user?.id) {
+      if (isStaff) {
+        params.append('userId', 'all')
+      } else if (user?.id) {
         params.append('userId', user.id.toString())
       }
 
@@ -104,6 +108,47 @@ export default function MisReservasPage() {
       console.error('Error loading bookings:', error)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const deleteBooking = async (id: number) => {
+    if (!confirm('¿Estás seguro de que deseas eliminar permanentemente esta reserva? Esta acción no se puede deshacer.')) return
+    
+    try {
+      setDeletingId(id)
+      const token = localStorage.getItem('token')
+      const response = await fetch(`/api/bookings/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ forceDelete: true })
+      })
+
+      if (response.ok) {
+        toast({
+          title: "Éxito",
+          description: "Reserva eliminada correctamente."
+        })
+        loadBookings()
+      } else {
+        const data = await response.json()
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: data.error || "No se pudo eliminar la reserva"
+        })
+      }
+    } catch (error) {
+      console.error('Error deleting booking:', error)
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Error de conexión al eliminar"
+      })
+    } finally {
+      setDeletingId(null)
     }
   }
 
@@ -413,6 +458,20 @@ export default function MisReservasPage() {
                             >
                               <FileText className="w-3.5 h-3.5" />
                               Facturar
+                            </Button>
+                          )}
+
+                          {/* Eliminar (Solo Admin) */}
+                          {isStaff && (
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              disabled={deletingId === booking.id}
+                              onClick={() => deleteBooking(booking.id)}
+                              className="h-8 px-2.5 gap-1 bg-red-500 hover:bg-red-600 text-white"
+                            >
+                              {deletingId === booking.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+                              Eliminar
                             </Button>
                           )}
                         </div>

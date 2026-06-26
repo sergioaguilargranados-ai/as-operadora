@@ -191,11 +191,24 @@ export async function DELETE(
 
     const { id } = await params
 
-    // Verificar que la reserva pertenece al usuario
+    const body = await request.json().catch(() => ({}))
+    const forceDelete = body.forceDelete === true
+    const userRole = request.headers.get('x-user-role') || ''
+    const isAdmin = ['SUPER_ADMIN', 'ADMIN', 'MANAGER'].includes(userRole.toUpperCase())
+
+    if (forceDelete && isAdmin) {
+      await queryOne('DELETE FROM bookings WHERE id = $1', [id])
+      return NextResponse.json({
+        success: true,
+        message: 'Reserva eliminada permanentemente'
+      })
+    }
+
+    // Verificar que la reserva pertenece al usuario si no es admin (o si no es forceDelete)
     const booking = await queryOne(`
       SELECT * FROM bookings
-      WHERE id = $1 AND user_id = $2 AND is_active = true
-    `, [id, userId])
+      WHERE id = $1 ${isAdmin ? '' : 'AND user_id = $2'} AND is_active = true
+    `, isAdmin ? [id] : [id, userId])
 
     if (!booking) {
       return NextResponse.json({

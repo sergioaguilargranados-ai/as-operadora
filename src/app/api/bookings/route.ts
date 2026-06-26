@@ -13,8 +13,9 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '20', 10)
     const offset = parseInt(searchParams.get('offset') || '0', 10)
     const view = (searchParams.get('view') || '').toLowerCase()
+    const status = searchParams.get('status')
 
-    const sql = `
+    let sql = `
       SELECT
         id,
         booking_type,
@@ -30,12 +31,27 @@ export async function GET(request: NextRequest) {
         special_requests,
         created_at
       FROM bookings
-      WHERE user_id = $1
-      ORDER BY created_at DESC
-      LIMIT $2 OFFSET $3
+      WHERE 1=1
     `
+    const params: any[] = []
+    let paramIndex = 1
 
-    const result = await query(sql, [userId, limit, offset])
+    if (userId !== 'all') {
+      sql += ` AND user_id = $${paramIndex}`
+      params.push(userId)
+      paramIndex++
+    }
+
+    if (status && status !== 'all') {
+      sql += ` AND booking_status = $${paramIndex}`
+      params.push(status)
+      paramIndex++
+    }
+
+    sql += ` ORDER BY created_at DESC LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`
+    params.push(limit, offset)
+
+    const result = await query(sql, params)
     let bookings = result.rows || []
 
     if (view === 'compact') {
