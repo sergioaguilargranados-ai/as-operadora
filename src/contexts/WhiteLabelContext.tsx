@@ -14,6 +14,7 @@ export interface WhiteLabelTenant {
     tenant_type: 'corporate' | 'agency'
     company_name: string
     logo_url: string | null
+    logo_mobile_url: string | null
     primary_color: string | null
     secondary_color: string | null
     accent_color: string | null
@@ -48,6 +49,7 @@ export interface WhiteLabelState {
 
     // Visual branding
     logoUrl: string | null
+    logoMobileUrl: string | null
     faviconUrl: string | null
     primaryColor: string
     secondaryColor: string
@@ -97,6 +99,7 @@ const AS_OPERADORA_DEFAULTS: WhiteLabelState = {
     slogan: 'AS Viajando',
 
     logoUrl: null,
+    logoMobileUrl: null,
     faviconUrl: null,
     primaryColor: '#0066FF',
     secondaryColor: '#0052CC',
@@ -217,6 +220,7 @@ export function WhiteLabelProvider({ children }: { children: ReactNode }) {
             slogan: (tenant as any).slogan || '', // Slogan personalizado del tenant
 
             logoUrl: tenant.logo_url,
+            logoMobileUrl: (tenant as any).logo_mobile_url || null,
             faviconUrl: wlConfig?.favicon_url || null,
             primaryColor: tenant.primary_color || '#0066FF',
             secondaryColor: tenant.secondary_color || '#0052CC',

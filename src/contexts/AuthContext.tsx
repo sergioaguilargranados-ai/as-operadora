@@ -9,6 +9,7 @@ interface User {
   phone?: string
   memberSince?: string
   role?: string
+  tenant_id?: number
 }
 
 interface AuthContextType {
@@ -17,6 +18,7 @@ interface AuthContextType {
   register: (name: string, email: string, password: string, phone?: string) => Promise<boolean>
   logout: () => void
   isAuthenticated: boolean
+  loading: boolean
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -184,7 +186,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       login,
       register,
       logout,
-      isAuthenticated: !!user
+      isAuthenticated: !!user,
+      loading: !mounted
     }}>
       {children}
     </AuthContext.Provider>

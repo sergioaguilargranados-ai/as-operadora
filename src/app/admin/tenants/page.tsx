@@ -36,6 +36,7 @@ import {
 } from 'lucide-react';
 import { Logo } from '@/components/Logo';
 import { UserMenu } from '@/components/UserMenu';
+import { ImageUploadInput } from '@/components/admin/ImageUploadInput';
 
 // ─────────────────────────────────────────────
 // Types
@@ -53,6 +54,8 @@ interface TenantData {
     city: string | null;
     country: string | null;
     logo_url: string | null;
+    logo_mobile_url: string | null;
+    slogan: string | null;
     primary_color: string | null;
     secondary_color: string | null;
     accent_color: string | null;
@@ -89,6 +92,7 @@ interface TenantFormData {
     city: string;
     country: string;
     logo_url: string;
+    logo_mobile_url: string;
     primary_color: string;
     secondary_color: string;
     accent_color: string;
@@ -114,6 +118,7 @@ const EMPTY_FORM: TenantFormData = {
     city: '',
     country: 'México',
     logo_url: '',
+    logo_mobile_url: '',
     primary_color: '#FF6B00',
     secondary_color: '#0066FF',
     accent_color: '#FF6B00',
@@ -268,6 +273,13 @@ export default function AdminTenantsPage() {
                 email: formData.email || null,
                 phone: formData.phone || null,
                 subscription_plan: formData.subscription_plan,
+                logo_url: formData.logo_url || null,
+                logo_mobile_url: formData.logo_mobile_url || null,
+                primary_color: formData.primary_color || null,
+                secondary_color: formData.secondary_color || null,
+                accent_color: formData.accent_color || null,
+                custom_domain: formData.custom_domain || null,
+                slogan: formData.wl_slogan || null,
             };
 
             // Si es agencia, incluir configuración white-label
@@ -479,6 +491,7 @@ export default function AdminTenantsPage() {
             city: tenant.city || '',
             country: tenant.country || 'México',
             logo_url: tenant.logo_url || '',
+            logo_mobile_url: tenant.logo_mobile_url || '',
             primary_color: tenant.primary_color || '#FF6B00',
             secondary_color: tenant.secondary_color || '#0066FF',
             accent_color: tenant.accent_color || '#FF6B00',
@@ -489,7 +502,7 @@ export default function AdminTenantsPage() {
             wl_support_phone: tenant.white_label?.support_phone || '',
             wl_meta_title: tenant.white_label?.meta_title || '',
             wl_meta_description: tenant.white_label?.meta_description || '',
-            wl_slogan: '',
+            wl_slogan: tenant.slogan || '',
         });
         setActiveTab('general');
         setShowModal(true);
@@ -932,26 +945,38 @@ export default function AdminTenantsPage() {
                                 <>
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 mb-1">
-                                            URL del Logo
+                                            Logo Principal (Landing / Web)
+                                        </label>
+                                        <ImageUploadInput
+                                            value={formData.logo_url}
+                                            onChange={val => setFormData(prev => ({ ...prev, logo_url: val }))}
+                                            placeholder="Subir logotipo principal..."
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            Logo Secundario (App Móvil PWA)
+                                        </label>
+                                        <ImageUploadInput
+                                            value={formData.logo_mobile_url}
+                                            onChange={val => setFormData(prev => ({ ...prev, logo_mobile_url: val }))}
+                                            placeholder="Subir logotipo para app móvil..."
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            Frase / Slogan de Marca Blanca
                                         </label>
                                         <Input
-                                            value={formData.logo_url}
-                                            onChange={e => setFormData(prev => ({ ...prev, logo_url: e.target.value }))}
-                                            placeholder="https://ejemplo.com/logo.png"
+                                            value={formData.wl_slogan}
+                                            onChange={e => setFormData(prev => ({ ...prev, wl_slogan: e.target.value }))}
+                                            placeholder="Haz el viaje de tus sueños / El mejor servicio..."
                                         />
-                                        {formData.logo_url && (
-                                            <div className="mt-2 p-4 bg-gray-50 rounded-lg text-center">
-                                                {/* eslint-disable-next-line @next/next/no-img-element */}
-                                                <img
-                                                    src={formData.logo_url}
-                                                    alt="Preview"
-                                                    className="h-12 mx-auto object-contain"
-                                                    onError={(e) => {
-                                                        (e.target as HTMLImageElement).style.display = 'none'
-                                                    }}
-                                                />
-                                            </div>
-                                        )}
+                                        <p className="text-xs text-gray-400 mt-1">
+                                            Frase de marca que se mostrará en la landing y app móvil
+                                        </p>
                                     </div>
 
                                     <div className="grid grid-cols-3 gap-4">

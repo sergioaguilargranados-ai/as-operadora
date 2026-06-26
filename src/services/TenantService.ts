@@ -14,6 +14,7 @@ export interface Tenant {
   country?: string
   postal_code?: string
   logo_url?: string
+  logo_mobile_url?: string
   primary_color?: string
   secondary_color?: string
   accent_color?: string

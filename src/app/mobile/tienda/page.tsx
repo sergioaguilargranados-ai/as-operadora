@@ -1,9 +1,10 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Input } from "@/components/ui/input"
-import { Search, SlidersHorizontal, Heart, ShoppingCart, ArrowLeft } from "lucide-react"
+import { Search, SlidersHorizontal, Heart, ShoppingCart, ArrowLeft, Percent } from "lucide-react"
 import { useRouter } from "next/navigation"
+import { useAuth } from "@/contexts/AuthContext"
 
 interface Product {
   id: number
@@ -16,9 +17,31 @@ interface Product {
 
 export default function MobileStorePage() {
   const router = useRouter()
+  const { user } = useAuth()
   const [activeCategory, setActiveCategory] = useState("Todos")
   const [searchQuery, setSearchQuery] = useState("")
   const [favorites, setFavorites] = useState<number[]>([])
+  const [mobileContent, setMobileContent] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const tenantId = user?.tenant_id || 1
+    fetchMobileContent(tenantId)
+  }, [user])
+
+  const fetchMobileContent = async (tenantId: number) => {
+    try {
+      const res = await fetch(`/api/mobile/content?tenant_id=${tenantId}`)
+      const data = await res.json()
+      if (data.success) {
+        setMobileContent(data.data)
+      }
+    } catch (error) {
+      console.error("Error loading store content:", error)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const categories = ["Todos", "Equipaje", "Accesorios", "Viaje", "Tecnología"]
 
@@ -72,12 +95,18 @@ export default function MobileStorePage() {
     return matchesCategory && matchesSearch
   })
 
+  const storeBanner = mobileContent?.store_banner_url || "/banner-store.jpg"
+  const promoInfo = mobileContent?.sections_json?.promo_banner
+
   return (
     <div className="flex flex-col min-h-full bg-gray-50 pb-8">
       {/* Header Banner */}
-      <div className="bg-black text-white p-6 relative">
-        <div className="flex items-center justify-between mb-4">
-          <button onClick={() => router.push("/mobile")} className="p-1 hover:bg-gray-800 rounded-lg">
+      <div 
+        className="text-white p-6 relative bg-cover bg-center min-h-[140px] flex flex-col justify-between"
+        style={{ backgroundImage: `linear-gradient(to bottom, rgba(0,0,0,0.8), rgba(0,0,0,0.4)), url(${storeBanner})` }}
+      >
+        <div className="flex items-center justify-between">
+          <button onClick={() => router.push("/mobile")} className="p-1 hover:bg-black/30 rounded-lg">
             <ArrowLeft className="w-6 h-6" />
           </button>
           <h2 className="text-lg font-bold">Tienda de Viaje</h2>
@@ -86,7 +115,7 @@ export default function MobileStorePage() {
             <span className="absolute -top-2 -right-2 bg-primary text-white text-[9px] w-4 h-4 rounded-full flex items-center justify-center font-bold">0</span>
           </div>
         </div>
-        <p className="text-xs text-gray-400">Descubre productos y servicios pensados para tu viaje.</p>
+        <p className="text-xs text-gray-200 mt-4">Descubre productos y servicios pensados para tu viaje.</p>
       </div>
 
       {/* Search & Filters */}
@@ -104,6 +133,22 @@ export default function MobileStorePage() {
           <SlidersHorizontal className="w-5 h-5 text-gray-600" />
         </button>
       </div>
+
+      {/* Promo Banner Section (Configurable via admin) */}
+      {promoInfo && (
+        <div className="px-4 mb-4">
+          <div 
+            className="rounded-2xl overflow-hidden p-6 text-white bg-cover bg-center shadow-lg relative min-h-[140px] flex flex-col justify-center"
+            style={{ backgroundImage: `linear-gradient(to right, rgba(0,0,0,0.85), rgba(0,0,0,0.15)), url(${promoInfo.image_url || '/banner-store.jpg'})` }}
+          >
+            <div className="absolute top-4 right-4 bg-red-600 text-white rounded-full p-2 animate-pulse">
+              <Percent className="w-5 h-5" />
+            </div>
+            <h3 className="text-lg font-bold mb-1 leading-tight">{promoInfo.title || "¡Promociones Especiales!"}</h3>
+            <p className="text-xs text-gray-200 max-w-[70%]">{promoInfo.subtitle || "Aprovecha nuestras ofertas exclusivas"}</p>
+          </div>
+        </div>
+      )}
 
       {/* Categories Horizontal Scroll */}
       <div className="px-4 overflow-x-auto flex gap-2 pb-3 scrollbar-none">

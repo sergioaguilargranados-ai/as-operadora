@@ -1,13 +1,21 @@
 # 📋 AG-Histórico de Cambios - AS Operadora
 
-**Última actualización:** 25 de Junio de 2026 - 10:10 CST  
-**Versión actual:** v2.355  
+**Última actualización:** 25 de Junio de 2026 - 19:05 CST  
+**Versión actual:** v2.356  
 **Actualizado por:** AntiGravity AI Assistant  
 **Propósito:** Documento maestro del proyecto para trabajo con agentes AntiGravity
 
 ---
 
 ## 📅 HISTORIAL DE CAMBIOS
+
+### v2.356 - 25 de Junio de 2026 - 19:05 CST
+**🎨 Marca Blanca Completa, Logo Móvil, Slogan y Secciones Parametrizadas PWA**
+- **Persistencia de Marca Blanca**: Se modificó la interfaz de administración de inquilinos (`src/app/admin/tenants/page.tsx`) para guardar de manera efectiva los campos visuales (`logo_url`, `logo_mobile_url`, `primary_color`, `secondary_color`, `accent_color`, `custom_domain` y `slogan`) enviándolos correctamente al backend.
+- **Logotipos Duales**: Se implementaron selectores `ImageUploadInput` (Vercel Blob) para cargar y configurar por separado el logotipo de la Landing Web y el de la App Móvil PWA.
+- **Secciones Dinámicas de la PWA**: Se ejecutó la migración `047_add_sections_json_to_mobile_content.sql` para añadir la columna `sections_json`. Se agregaron los paneles editores para la sección "Banner Promocional" y la sección de "Catálogos de Viaje" (imágenes de vuelos, hoteles y paquetes).
+- **Home & Tienda Móvil**: Se modificaron las páginas `/mobile` y `/mobile/tienda` para inyectar y pintar dinámicamente los banners, promociones y catálogos en base a lo guardado en el administrador de contenidos.
+- **Corrección de Redirección CRM**: Se reparó la redirección rota del dashboard general al catálogo de clientes (apuntaba a `/dashboard/clientes` en lugar del path real del CRM `/dashboard/crm/clientes`).
 
 ### v2.355 - 25 de Junio de 2026 - 10:10 CST
 **📱 Aplicación Móvil en formato PWA & Panel Administrador**

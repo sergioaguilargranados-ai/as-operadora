@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ImageUploadInput } from "@/components/admin/ImageUploadInput";
 import { useAuth } from "@/contexts/AuthContext";
-import { Save, Layout, Phone, Mail, FileText, Smartphone } from "lucide-react";
+import { Save, Layout, Phone, Mail, FileText, Smartphone, List } from "lucide-react";
 
 export function MobileAppContentManager({ showToast }: { showToast: (msg: string, type: 'success' | 'error') => void }) {
   const { user } = useAuth();
@@ -20,7 +20,8 @@ export function MobileAppContentManager({ showToast }: { showToast: (msg: string
     home_banner_url: '',
     store_banner_url: '',
     help_phone: '',
-    help_email: ''
+    help_email: '',
+    sections_json: {} as any
   });
 
   const isSuperAdmin = user?.role === 'SUPER_ADMIN';
@@ -69,7 +70,8 @@ export function MobileAppContentManager({ showToast }: { showToast: (msg: string
           home_banner_url: data.data.home_banner_url || '',
           store_banner_url: data.data.store_banner_url || '',
           help_phone: data.data.help_phone || '',
-          help_email: data.data.help_email || ''
+          help_email: data.data.help_email || '',
+          sections_json: data.data.sections_json || {}
         });
       }
     } catch (err) {
@@ -103,6 +105,19 @@ export function MobileAppContentManager({ showToast }: { showToast: (msg: string
     } finally {
       setSaving(false);
     }
+  };
+
+  const updateSection = (sectionKey: string, field: string, value: any) => {
+    setContent(prev => ({
+      ...prev,
+      sections_json: {
+        ...prev.sections_json,
+        [sectionKey]: {
+          ...(prev.sections_json[sectionKey] || {}),
+          [field]: value
+        }
+      }
+    }));
   };
 
   if (loading && tenantsList.length === 0) return <div className="p-6 text-center">Cargando datos...</div>;
@@ -216,6 +231,89 @@ export function MobileAppContentManager({ showToast }: { showToast: (msg: string
               onChange={val => setContent({...content, store_banner_url: val})}
               placeholder="Imagen representativa de la tienda..."
             />
+          </div>
+        </Card>
+      </div>
+
+      {/* SECCIONES COMPLEMENTARIAS PWA */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+        <Card className="p-6 border-gray-200 space-y-4">
+          <h3 className="text-lg font-bold mb-4 flex items-center gap-2 border-b pb-2">
+            <Layout className="w-5 h-5 text-gray-500" />
+            Sección: Banner Promocional (Tienda)
+          </h3>
+          <div>
+            <label className="text-sm font-medium mb-1 block">Título de la Promoción</label>
+            <Input 
+              value={content.sections_json?.promo_banner?.title || ''} 
+              onChange={e => updateSection('promo_banner', 'title', e.target.value)}
+              placeholder="¡Promociones del Mes!"
+            />
+          </div>
+          <div>
+            <label className="text-sm font-medium mb-1 block">Subtítulo / Descripción</label>
+            <Input 
+              value={content.sections_json?.promo_banner?.subtitle || ''} 
+              onChange={e => updateSection('promo_banner', 'subtitle', e.target.value)}
+              placeholder="Aprovecha nuestras ofertas exclusivas para miembros"
+            />
+          </div>
+          <div>
+            <label className="text-sm font-medium mb-1 block">Imagen del Banner Promocional</label>
+            <ImageUploadInput 
+              value={content.sections_json?.promo_banner?.image_url || ''} 
+              onChange={val => updateSection('promo_banner', 'image_url', val)}
+              placeholder="Subir imagen de banner..."
+            />
+          </div>
+        </Card>
+
+        <Card className="p-6 border-gray-200 space-y-4">
+          <h3 className="text-lg font-bold mb-4 flex items-center gap-2 border-b pb-2">
+            <List className="w-5 h-5 text-gray-500" />
+            Sección: Imágenes de Catálogos (Tienda)
+          </h3>
+          <div>
+            <label className="text-sm font-medium mb-1 block">Título de Catálogos</label>
+            <Input 
+              value={content.sections_json?.catalogs?.title || ''} 
+              onChange={e => updateSection('catalogs', 'title', e.target.value)}
+              placeholder="Nuestros Catálogos"
+            />
+          </div>
+          <div>
+            <label className="text-sm font-medium mb-1 block">Subtítulo de Catálogos</label>
+            <Input 
+              value={content.sections_json?.catalogs?.subtitle || ''} 
+              onChange={e => updateSection('catalogs', 'subtitle', e.target.value)}
+              placeholder="Explora vuelos, hoteles y paquetes de viaje"
+            />
+          </div>
+          <div className="grid grid-cols-1 gap-3 pt-2">
+            <div>
+              <label className="text-xs font-semibold text-gray-500 block mb-1">Imagen Catálogo Vuelos</label>
+              <ImageUploadInput 
+                value={content.sections_json?.catalogs?.vuelos_img || ''} 
+                onChange={val => updateSection('catalogs', 'vuelos_img', val)}
+                placeholder="Imagen de vuelos..."
+              />
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-gray-500 block mb-1">Imagen Catálogo Hoteles</label>
+              <ImageUploadInput 
+                value={content.sections_json?.catalogs?.hoteles_img || ''} 
+                onChange={val => updateSection('catalogs', 'hoteles_img', val)}
+                placeholder="Imagen de hoteles..."
+              />
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-gray-500 block mb-1">Imagen Catálogo Paquetes</label>
+              <ImageUploadInput 
+                value={content.sections_json?.catalogs?.paquetes_img || ''} 
+                onChange={val => updateSection('catalogs', 'paquetes_img', val)}
+                placeholder="Imagen de paquetes..."
+              />
+            </div>
           </div>
         </Card>
       </div>

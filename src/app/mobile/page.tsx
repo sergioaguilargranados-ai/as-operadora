@@ -171,6 +171,56 @@ export default function MobileHomePage() {
             </div>
           </div>
         </div>
+
+        {/* Catálogos Section (Configurable via admin) */}
+        <div className="pt-4 space-y-3">
+          <div className="flex items-center justify-between">
+            <h3 className="font-bold text-gray-900 text-sm">
+              {mobileContent?.sections_json?.catalogs?.title || "Nuestros Catálogos"}
+            </h3>
+            <span className="text-[10px] text-gray-400 font-medium">
+              {mobileContent?.sections_json?.catalogs?.subtitle || "Explora las mejores opciones"}
+            </span>
+          </div>
+
+          <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-none">
+            {/* Vuelos Card */}
+            <div 
+              onClick={() => router.push('/mobile/tienda')}
+              className="flex-shrink-0 w-32 h-44 rounded-2xl relative overflow-hidden bg-cover bg-center cursor-pointer shadow-sm active:scale-95 transition-all bg-gray-200"
+              style={{ backgroundImage: `linear-gradient(to bottom, rgba(0,0,0,0.1), rgba(0,0,0,0.85)), url(${mobileContent?.sections_json?.catalogs?.vuelos_img || 'https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=300&fit=crop'})` }}
+            >
+              <div className="absolute bottom-3 left-3 right-3 text-white">
+                <p className="font-extrabold text-xs">Vuelos</p>
+                <p className="text-[9px] text-gray-300">Las mejores tarifas</p>
+              </div>
+            </div>
+
+            {/* Hoteles Card */}
+            <div 
+              onClick={() => router.push('/mobile/tienda')}
+              className="flex-shrink-0 w-32 h-44 rounded-2xl relative overflow-hidden bg-cover bg-center cursor-pointer shadow-sm active:scale-95 transition-all bg-gray-200"
+              style={{ backgroundImage: `linear-gradient(to bottom, rgba(0,0,0,0.1), rgba(0,0,0,0.85)), url(${mobileContent?.sections_json?.catalogs?.hoteles_img || 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=300&fit=crop'})` }}
+            >
+              <div className="absolute bottom-3 left-3 right-3 text-white">
+                <p className="font-extrabold text-xs">Hoteles</p>
+                <p className="text-[9px] text-gray-300">Habitaciones premium</p>
+              </div>
+            </div>
+
+            {/* Paquetes Card */}
+            <div 
+              onClick={() => router.push('/mobile/tienda')}
+              className="flex-shrink-0 w-32 h-44 rounded-2xl relative overflow-hidden bg-cover bg-center cursor-pointer shadow-sm active:scale-95 transition-all bg-gray-200"
+              style={{ backgroundImage: `linear-gradient(to bottom, rgba(0,0,0,0.1), rgba(0,0,0,0.85)), url(${mobileContent?.sections_json?.catalogs?.paquetes_img || 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=300&fit=crop'})` }}
+            >
+              <div className="absolute bottom-3 left-3 right-3 text-white">
+                <p className="font-extrabold text-xs">Paquetes</p>
+                <p className="text-[9px] text-gray-300">Todo incluido</p>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Help Modal Overlay */}
