@@ -23,7 +23,8 @@ import {
   ArrowUpRight,
   ArrowDownRight,
   Loader2,
-  Shield
+  Shield,
+  ShoppingBag
 } from 'lucide-react'
 
 interface DashboardStats {
@@ -202,6 +203,14 @@ function DashboardContent() {
               >
                 <Users className="w-4 h-4 mr-2" />
                 👥 RRHH — Recursos Humanos
+              </Button>
+              <Button
+                variant="outline"
+                className="w-full justify-start bg-indigo-600 text-white hover:bg-indigo-700 hover:text-white"
+                onClick={() => router.push('/dashboard/store')}
+              >
+                <ShoppingBag className="w-4 h-4 mr-2" />
+                🛍️ Tienda Online (PWA)
               </Button>
               <Button
                 variant="outline"

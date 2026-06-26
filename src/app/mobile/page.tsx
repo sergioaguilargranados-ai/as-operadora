@@ -47,28 +47,28 @@ export default function MobileHomePage() {
       title: "Perfil",
       desc: "Consulta el detalle de tu viaje, vuelos, hospedaje y actividades.",
       icon: User,
-      route: "/portal/perfil"
+      route: "/mobile/perfil"
     },
     {
       id: "itinerary",
       title: "Itinerario",
       desc: "Revisa tus itinerarios, vuelos y detalles de tu viaje.",
       icon: Calendar,
-      route: "/portal/itinerary"
+      route: "/mobile/itinerario"
     },
     {
       id: "payments",
       title: "Pagos",
       desc: "Revisa tus pagos, saldos y métodos de pago.",
       icon: CreditCard,
-      route: "/portal/payment"
+      route: "/mobile/pagos"
     },
     {
       id: "group",
       title: "Crea tu grupo",
       desc: "Invita amigos, acumula beneficios y gana descuentos.",
       icon: Users,
-      route: "/portal/viajes-grupales"
+      route: "/mobile/viajes-grupales"
     },
     {
       id: "store",
@@ -141,35 +141,37 @@ export default function MobileHomePage() {
           )
         })}
 
-        {/* Lower Double Grid */}
-        <div className="grid grid-cols-2 gap-4 pt-2">
-          {/* Help Button */}
-          <div
-            onClick={() => setShowHelp(true)}
-            className="flex items-center gap-3 p-4 rounded-2xl border border-gray-100 bg-white hover:bg-gray-50 active:bg-gray-100 cursor-pointer shadow-sm"
-          >
-            <div className="w-10 h-10 bg-gray-100 text-gray-700 rounded-xl flex items-center justify-center flex-shrink-0">
-              <HelpCircle className="w-5 h-5" />
-            </div>
-            <div>
-              <h4 className="font-bold text-sm text-gray-900">¿Ayuda?</h4>
-              <p className="text-[10px] text-gray-400">Soporte 24/7</p>
-            </div>
+        {/* Reto 10,000 pasos Card */}
+        <div 
+          onClick={() => router.push('/mobile/rewards')}
+          className="flex items-center gap-4 p-4 rounded-2xl border border-gray-100 bg-white hover:bg-gray-50 active:bg-gray-100 transition-all cursor-pointer shadow-sm mt-4"
+        >
+          <div className="w-12 h-12 rounded-full border-4 border-gray-100 border-l-green-500 flex items-center justify-center flex-shrink-0 relative">
+            <span className="text-green-500 font-black italic text-lg text-center" style={{transform: "skewX(-10deg)"}}>👟</span>
           </div>
+          <div className="flex-1 min-w-0">
+            <h3 className="font-bold text-gray-900 text-base">Reto 10,000 pasos</h3>
+            <p className="text-xs text-gray-500 mt-0.5">¡Sigue acumulando pasos y alcanza tu meta diaria!</p>
+          </div>
+          <div className="text-right flex-shrink-0">
+            <p className="font-bold text-green-600 text-sm">1,000 / 10,000</p>
+            <p className="text-[10px] text-gray-400">10% completado</p>
+          </div>
+        </div>
 
-          {/* Map Button */}
-          <div
-            onClick={() => router.push("/mobile/mapa")}
-            className="flex items-center gap-3 p-4 rounded-2xl border border-gray-100 bg-white hover:bg-gray-50 active:bg-gray-100 cursor-pointer shadow-sm"
-          >
-            <div className="w-10 h-10 bg-gray-100 text-gray-700 rounded-xl flex items-center justify-center flex-shrink-0">
-              <Map className="w-5 h-5" />
-            </div>
-            <div>
-              <h4 className="font-bold text-sm text-gray-900">Mapa</h4>
-              <p className="text-[10px] text-gray-400">Ver destinos</p>
-            </div>
+        {/* Ayuda Card */}
+        <div 
+          onClick={() => setShowHelp(true)}
+          className="flex items-center gap-4 p-4 rounded-2xl border border-gray-100 bg-white hover:bg-gray-50 active:bg-gray-100 transition-all cursor-pointer shadow-sm mt-4"
+        >
+          <div className="w-12 h-12 bg-gray-100 text-gray-700 rounded-xl flex items-center justify-center flex-shrink-0">
+            <HelpCircle className="w-6 h-6" />
           </div>
+          <div className="flex-1 min-w-0">
+            <h3 className="font-bold text-gray-900 text-base">¿Necesitas ayuda?</h3>
+            <p className="text-xs text-gray-500 mt-0.5">Nuestro equipo está listo para asesorarte en todo momento.</p>
+          </div>
+          <ChevronRight className="w-5 h-5 text-gray-400" />
         </div>
 
         {/* Catálogos Section (Configurable via admin) */}
@@ -241,28 +243,68 @@ export default function MobileHomePage() {
 
             <div className="space-y-3 pt-2">
               <a 
-                href={`tel:${mobileContent?.help_phone || "+527208156804"}`} 
+                onClick={() => { setShowHelp(false); router.push('/mobile/mapa'); }}
+                className="flex items-center gap-3 p-3 border rounded-xl hover:bg-gray-50 cursor-pointer"
+              >
+                <div className="w-10 h-10 bg-red-50 text-red-600 rounded-lg flex items-center justify-center">
+                  <Map className="w-5 h-5" />
+                </div>
+                <div>
+                  <p className="font-bold text-sm text-gray-900">Estoy perdido</p>
+                  <p className="text-xs text-gray-400">Ver mapa y mi ubicación actual</p>
+                </div>
+              </a>
+
+              <a 
+                onClick={() => { setShowHelp(false); router.push('/mobile/actividades'); }}
+                className="flex items-center gap-3 p-3 border rounded-xl hover:bg-gray-50 cursor-pointer"
+              >
+                <div className="w-10 h-10 bg-orange-50 text-orange-600 rounded-lg flex items-center justify-center">
+                  <span className="font-bold">✨</span>
+                </div>
+                <div>
+                  <p className="font-bold text-sm text-gray-900">¿Qué hacer aquí?</p>
+                  <p className="text-xs text-gray-400">Sugerencias y actividades</p>
+                </div>
+              </a>
+
+              <a 
+                onClick={() => { setShowHelp(false); router.push('/mobile/itinerario'); }}
+                className="flex items-center gap-3 p-3 border rounded-xl hover:bg-gray-50 cursor-pointer"
+              >
+                <div className="w-10 h-10 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center">
+                  <Calendar className="w-5 h-5" />
+                </div>
+                <div>
+                  <p className="font-bold text-sm text-gray-900">Mi itinerario</p>
+                  <p className="text-xs text-gray-400">Revisar detalles del viaje</p>
+                </div>
+              </a>
+
+              <a 
+                href={`https://wa.me/${mobileContent?.help_phone?.replace(/\D/g, '') || "527208156804"}`} 
+                target="_blank"
                 className="flex items-center gap-3 p-3 border rounded-xl hover:bg-gray-50 cursor-pointer"
               >
                 <div className="w-10 h-10 bg-green-50 text-green-600 rounded-lg flex items-center justify-center">
                   <HelpCircle className="w-5 h-5" />
                 </div>
                 <div>
-                  <p className="text-xs text-gray-400">Llamar a Soporte</p>
-                  <p className="font-bold text-sm text-gray-900">{mobileContent?.help_phone || "+52 720 815 6804"}</p>
+                  <p className="font-bold text-sm text-gray-900">Contactar Call Center</p>
+                  <p className="text-xs text-gray-400">Chat de soporte en WhatsApp</p>
                 </div>
               </a>
 
               <a 
-                href={`mailto:${mobileContent?.help_email || "support@asoperadora.com"}`}
+                onClick={() => { setShowHelp(false); router.push('/mobile/faqs'); }}
                 className="flex items-center gap-3 p-3 border rounded-xl hover:bg-gray-50 cursor-pointer"
               >
-                <div className="w-10 h-10 bg-blue-50 text-[#0066FF] rounded-lg flex items-center justify-center">
+                <div className="w-10 h-10 bg-gray-100 text-gray-600 rounded-lg flex items-center justify-center">
                   <HelpCircle className="w-5 h-5" />
                 </div>
                 <div>
-                  <p className="text-xs text-gray-400">Enviar un Correo</p>
-                  <p className="font-bold text-sm text-gray-900">{mobileContent?.help_email || "support@asoperadora.com"}</p>
+                  <p className="font-bold text-sm text-gray-900">Preguntas Frecuentes</p>
+                  <p className="text-xs text-gray-400">Encuentra respuestas rápidas</p>
                 </div>
               </a>
             </div>

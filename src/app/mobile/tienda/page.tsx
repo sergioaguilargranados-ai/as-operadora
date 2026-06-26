@@ -1,204 +1,143 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Input } from "@/components/ui/input"
-import { Search, SlidersHorizontal, Heart, ShoppingCart, ArrowLeft, Percent } from "lucide-react"
 import { useRouter } from "next/navigation"
-import { useAuth } from "@/contexts/AuthContext"
+import { Search, ShoppingCart, ChevronLeft, Loader2, Star } from "lucide-react"
+import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
 
 interface Product {
   id: number
   name: string
-  desc: string
+  description: string
   price: number
+  offer_price: number | null
+  image_url: string
   category: string
-  image: string
 }
 
 export default function MobileStorePage() {
   const router = useRouter()
-  const { user } = useAuth()
-  const [activeCategory, setActiveCategory] = useState("Todos")
-  const [searchQuery, setSearchQuery] = useState("")
-  const [favorites, setFavorites] = useState<number[]>([])
-  const [mobileContent, setMobileContent] = useState<any>(null)
+  const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
+  const [search, setSearch] = useState("")
 
   useEffect(() => {
-    const tenantId = user?.tenant_id || 1
-    fetchMobileContent(tenantId)
-  }, [user])
+    fetchProducts()
+  }, [])
 
-  const fetchMobileContent = async (tenantId: number) => {
+  const fetchProducts = async () => {
     try {
-      const res = await fetch(`/api/mobile/content?tenant_id=${tenantId}`)
-      const data = await res.json()
-      if (data.success) {
-        setMobileContent(data.data)
+      // Simulate API call for now. In real app, fetch from /api/store
+      const res = await fetch("/api/store/products?tenantId=1")
+      if (res.ok) {
+        const data = await res.json()
+        setProducts(data.data || [])
+      } else {
+        // Fallback mock data
+        setProducts([
+          {
+            id: 1,
+            name: "Kit de Viaje Premium",
+            description: "Almohada cervical, antifaz, tapones y manta.",
+            price: 499,
+            offer_price: 399,
+            image_url: "https://images.unsplash.com/photo-1550993077-0a427b235e16?auto=format&fit=crop&w=300&q=80",
+            category: "Accesorios"
+          },
+          {
+            id: 2,
+            name: "Maleta de Cabina Rígida",
+            description: "Maleta resistente con 4 ruedas 360°",
+            price: 1299,
+            offer_price: null,
+            image_url: "https://images.unsplash.com/photo-1553531384-cc64ac80f931?auto=format&fit=crop&w=300&q=80",
+            category: "Equipaje"
+          }
+        ])
       }
-    } catch (error) {
-      console.error("Error loading store content:", error)
+    } catch (e) {
+      console.error(e)
     } finally {
       setLoading(false)
     }
   }
 
-  const categories = ["Todos", "Equipaje", "Accesorios", "Viaje", "Tecnología"]
-
-  const products: Product[] = [
-    {
-      id: 1,
-      name: "Maleta de cabina",
-      desc: "Ligera, resistente y perfecta para cualquier destino.",
-      price: 2199,
-      category: "Equipaje",
-      image: "https://images.unsplash.com/photo-1565026057447-bc90a3dceb87?w=500&fit=crop"
-    },
-    {
-      id: 2,
-      name: "Almohada de viaje",
-      desc: "Ergonómica y cómoda para descansar mejor.",
-      price: 599,
-      category: "Accesorios",
-      image: "https://images.unsplash.com/photo-1520038410233-7141be7e6f97?w=500&fit=crop"
-    },
-    {
-      id: 3,
-      name: "Organizador de viaje",
-      desc: "Mantén todo en su lugar durante tu viaje.",
-      price: 499,
-      category: "Viaje",
-      image: "https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?w=500&fit=crop"
-    },
-    {
-      id: 4,
-      name: "Batería portátil",
-      desc: "Carga tus dispositivos en cualquier lugar.",
-      price: 799,
-      category: "Tecnología",
-      image: "https://images.unsplash.com/photo-1609592424109-dd7734f01ee7?w=500&fit=crop"
-    }
-  ]
-
-  const toggleFavorite = (id: number) => {
-    if (favorites.includes(id)) {
-      setFavorites(favorites.filter(favId => favId !== id))
-    } else {
-      setFavorites([...favorites, id])
-    }
-  }
-
-  const filteredProducts = products.filter(product => {
-    const matchesCategory = activeCategory === "Todos" || product.category === activeCategory
-    const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                          product.desc.toLowerCase().includes(searchQuery.toLowerCase())
-    return matchesCategory && matchesSearch
-  })
-
-  const storeBanner = mobileContent?.store_banner_url || "/banner-store.jpg"
-  const promoInfo = mobileContent?.sections_json?.promo_banner
+  const filteredProducts = products.filter(p => p.name.toLowerCase().includes(search.toLowerCase()))
 
   return (
-    <div className="flex flex-col min-h-full bg-gray-50 pb-8">
-      {/* Header Banner */}
-      <div 
-        className="text-white p-6 relative bg-cover bg-center min-h-[140px] flex flex-col justify-between"
-        style={{ backgroundImage: `linear-gradient(to bottom, rgba(0,0,0,0.8), rgba(0,0,0,0.4)), url(${storeBanner})` }}
-      >
-        <div className="flex items-center justify-between">
-          <button onClick={() => router.push("/mobile")} className="p-1 hover:bg-black/30 rounded-lg">
-            <ArrowLeft className="w-6 h-6" />
-          </button>
-          <h2 className="text-lg font-bold">Tienda de Viaje</h2>
-          <div className="relative">
-            <ShoppingCart className="w-6 h-6 cursor-pointer" />
-            <span className="absolute -top-2 -right-2 bg-primary text-white text-[9px] w-4 h-4 rounded-full flex items-center justify-center font-bold">0</span>
-          </div>
+    <div className="min-h-screen bg-gray-50 pb-20">
+      {/* Header */}
+      <div className="bg-white px-4 py-4 flex items-center justify-between sticky top-0 z-20 shadow-sm">
+        <div className="flex items-center gap-3">
+          <Button variant="ghost" size="icon" onClick={() => router.push("/mobile")} className="-ml-2 text-gray-500">
+            <ChevronLeft className="w-6 h-6" />
+          </Button>
+          <h1 className="text-xl font-bold text-gray-900">Tienda del Viajero</h1>
         </div>
-        <p className="text-xs text-gray-200 mt-4">Descubre productos y servicios pensados para tu viaje.</p>
+        <div className="relative">
+          <Button variant="ghost" size="icon" className="text-gray-500 relative">
+            <ShoppingCart className="w-6 h-6" />
+            <span className="absolute top-0 right-0 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">2</span>
+          </Button>
+        </div>
       </div>
 
       {/* Search & Filters */}
-      <div className="p-4 flex gap-3 items-center">
-        <div className="relative flex-1">
+      <div className="px-4 py-3 bg-white border-b">
+        <div className="relative">
+          <Search className="absolute left-3 top-2.5 w-5 h-5 text-gray-400" />
           <Input 
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Buscar productos..."
-            className="pl-10 h-11 bg-white border-gray-200"
+            placeholder="Buscar productos..." 
+            className="pl-10 bg-gray-100 border-transparent rounded-xl h-10 focus-visible:ring-[#0066FF]"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
           />
-          <Search className="w-5 h-5 text-gray-400 absolute left-3 top-3" />
         </div>
-        <button className="w-11 h-11 border border-gray-200 bg-white rounded-lg flex items-center justify-center hover:bg-gray-50 active:bg-gray-100">
-          <SlidersHorizontal className="w-5 h-5 text-gray-600" />
-        </button>
       </div>
 
-      {/* Promo Banner Section (Configurable via admin) */}
-      {promoInfo && (
-        <div className="px-4 mb-4">
-          <div 
-            className="rounded-2xl overflow-hidden p-6 text-white bg-cover bg-center shadow-lg relative min-h-[140px] flex flex-col justify-center"
-            style={{ backgroundImage: `linear-gradient(to right, rgba(0,0,0,0.85), rgba(0,0,0,0.15)), url(${promoInfo.image_url || '/banner-store.jpg'})` }}
-          >
-            <div className="absolute top-4 right-4 bg-red-600 text-white rounded-full p-2 animate-pulse">
-              <Percent className="w-5 h-5" />
+      {/* Product Grid */}
+      {loading ? (
+        <div className="flex justify-center p-12">
+          <Loader2 className="w-8 h-8 animate-spin text-[#0066FF]" />
+        </div>
+      ) : (
+        <div className="p-4 grid grid-cols-2 gap-4">
+          {filteredProducts.map(product => (
+            <div 
+              key={product.id} 
+              className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 active:scale-95 transition-transform cursor-pointer"
+              onClick={() => router.push(`/mobile/tienda/${product.id}`)}
+            >
+              <div className="aspect-square bg-gray-100 relative">
+                {product.offer_price && (
+                  <div className="absolute top-2 left-2 bg-red-500 text-white text-[10px] font-bold px-2 py-1 rounded-md z-10">
+                    OFERTA
+                  </div>
+                )}
+                <img src={product.image_url} alt={product.name} className="w-full h-full object-cover" />
+              </div>
+              <div className="p-3">
+                <h3 className="font-bold text-gray-900 text-sm line-clamp-2 leading-tight min-h-[40px]">{product.name}</h3>
+                <div className="flex items-center gap-1 mt-1 mb-2">
+                  <Star className="w-3 h-3 text-yellow-400 fill-yellow-400" />
+                  <span className="text-[10px] text-gray-500">4.8</span>
+                </div>
+                <div className="flex flex-col">
+                  {product.offer_price ? (
+                    <>
+                      <span className="text-[10px] text-gray-400 line-through">${product.price.toLocaleString('es-MX')}</span>
+                      <span className="font-extrabold text-[#0066FF] text-base">${product.offer_price.toLocaleString('es-MX')}</span>
+                    </>
+                  ) : (
+                    <span className="font-extrabold text-[#0066FF] text-base">${product.price.toLocaleString('es-MX')}</span>
+                  )}
+                </div>
+              </div>
             </div>
-            <h3 className="text-lg font-bold mb-1 leading-tight">{promoInfo.title || "¡Promociones Especiales!"}</h3>
-            <p className="text-xs text-gray-200 max-w-[70%]">{promoInfo.subtitle || "Aprovecha nuestras ofertas exclusivas"}</p>
-          </div>
+          ))}
         </div>
       )}
-
-      {/* Categories Horizontal Scroll */}
-      <div className="px-4 overflow-x-auto flex gap-2 pb-3 scrollbar-none">
-        {categories.map((cat) => (
-          <button
-            key={cat}
-            onClick={() => setActiveCategory(cat)}
-            className={`px-4 py-2 rounded-full text-xs font-bold transition-all flex-shrink-0 ${
-              activeCategory === cat 
-                ? "bg-black text-white" 
-                : "bg-white text-gray-600 border border-gray-200"
-            }`}
-          >
-            {cat}
-          </button>
-        ))}
-      </div>
-
-      {/* Products Grid */}
-      <div className="p-4 grid grid-cols-2 gap-4">
-        {filteredProducts.map((product) => (
-          <div key={product.id} className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm flex flex-col justify-between">
-            <div className="relative h-36 bg-gray-100">
-              <img
-                src={product.image}
-                alt={product.name}
-                className="w-full h-full object-cover"
-              />
-              <button 
-                onClick={() => toggleFavorite(product.id)}
-                className="absolute top-3 right-3 w-8 h-8 bg-white/80 hover:bg-white backdrop-blur-sm rounded-full flex items-center justify-center transition-all shadow-sm"
-              >
-                <Heart className={`w-4 h-4 ${favorites.includes(product.id) ? "fill-red-500 text-red-500" : "text-gray-600"}`} />
-              </button>
-            </div>
-            
-            <div className="p-4 flex-1 flex flex-col justify-between">
-              <div>
-                <h3 className="font-bold text-gray-900 text-sm line-clamp-1">{product.name}</h3>
-                <p className="text-[10px] text-gray-400 mt-1 line-clamp-2 leading-relaxed">{product.desc}</p>
-              </div>
-              <div className="mt-3 flex items-center justify-between border-t pt-3">
-                <span className="font-extrabold text-sm text-gray-900">
-                  ${product.price.toLocaleString("es-MX")} <span className="text-[10px] text-gray-500 font-normal">MXN</span>
-                </span>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
     </div>
   )
 }

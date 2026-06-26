@@ -17,9 +17,14 @@ export default function MobileLoginPage() {
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
+  const [termsAccepted, setTermsAccepted] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!termsAccepted) {
+      setError("Debes aceptar los términos y condiciones para continuar.")
+      return
+    }
     setError("")
     setLoading(true)
 
@@ -99,6 +104,19 @@ export default function MobileLoginPage() {
                 />
                 <Lock className="w-5 h-5 text-gray-400 absolute left-3 top-3" />
               </div>
+            </div>
+
+            <div className="flex items-start gap-2 mt-4 pt-2">
+              <input 
+                type="checkbox" 
+                id="terms" 
+                checked={termsAccepted}
+                onChange={(e) => setTermsAccepted(e.target.checked)}
+                className="mt-1 h-4 w-4 rounded border-gray-300 text-[#0066FF] focus:ring-[#0066FF]"
+              />
+              <label htmlFor="terms" className="text-sm text-gray-600">
+                Acepto los <a href="#" className="text-[#0066FF] hover:underline">términos y condiciones</a> y las políticas de privacidad.
+              </label>
             </div>
 
             <Button

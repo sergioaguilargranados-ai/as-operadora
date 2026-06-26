@@ -63,6 +63,15 @@ const nextConfig = {
       },
     ]
   },
+  async redirects() {
+    return [
+      {
+        source: '/mobil',
+        destination: '/mobile',
+        permanent: true,
+      },
+    ]
+  },
 };
 
 module.exports = withSerwist(nextConfig);

@@ -12,6 +12,8 @@ import { PageHeader } from '@/components/PageHeader'
 import { ArrowLeft } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import { exportToExcel } from '@/utils/exportHelpers'
+import { ExcelUploader } from '@/components/ui/ExcelUploader'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 
 interface PaymentTransaction {
   id: number
@@ -65,6 +67,26 @@ export default function PaymentsDashboardPage() {
   const [currentPage, setCurrentPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const itemsPerPage = 20
+
+  const [showUploader, setShowUploader] = useState(false)
+
+  const handleImportBookings = async (data: any[]) => {
+    try {
+      setLoading(true)
+      const res = await fetch('/api/payments/import', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ bookings: data, tenantId: '1' })
+      })
+      if (!res.ok) throw new Error('Error en importación')
+      toast({ title: 'Éxito', description: `${data.length} reservas importadas.` })
+      setShowUploader(false)
+      fetchPayments()
+    } catch (err: any) {
+      toast({ title: 'Error', description: err.message, variant: 'destructive' })
+      setLoading(false)
+    }
+  }
 
   useEffect(() => {
     fetchPayments()
@@ -247,10 +269,29 @@ export default function PaymentsDashboardPage() {
       <PageHeader showBackButton={true} backButtonHref="/dashboard" />
 
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">Transacciones de Pago</h1>
-        <p className="text-gray-600">Gestiona y monitorea todos los pagos del sistema</p>
+      <div className="mb-8 flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold mb-2">Transacciones de Pago</h1>
+          <p className="text-gray-600">Gestiona y monitorea todos los pagos del sistema</p>
+        </div>
+        <Button onClick={() => setShowUploader(true)} className="bg-green-600 hover:bg-green-700 text-white">
+          Importar Reservas (Excel)
+        </Button>
       </div>
+
+      <Dialog open={showUploader} onOpenChange={setShowUploader}>
+        <DialogContent className="sm:max-w-[600px] bg-white">
+          <DialogHeader>
+            <DialogTitle>Importar Reservas y Pagos</DialogTitle>
+          </DialogHeader>
+          <ExcelUploader 
+            onUpload={handleImportBookings} 
+            expectedColumns={['booking_id', 'user_name', 'user_email', 'amount', 'currency', 'payment_method', 'status', 'megatravel_id']} 
+            templateName="Plantilla_Reservas" 
+            buttonText="Importar Reservas"
+          />
+        </DialogContent>
+      </Dialog>
 
       {/* Estadísticas */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
