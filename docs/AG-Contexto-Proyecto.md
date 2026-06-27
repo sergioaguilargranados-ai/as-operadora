@@ -1,10 +1,9 @@
 # 🎯 AG-Contexto-Proyecto - AS Operadora
 
-**Última actualización:** 26 de Junio de 2026 - 00:45 CST  
-**Versión actual:** v2.357  
+**Última actualización:** 27 de Junio de 2026 - 08:40 CST  
+**Versión actual:** v2.358  
 **Actualizado por:** AntiGravity AI Assistant  
 **Propósito:** Documento maestro del proyecto para trabajo con agentes AntiGravity, trabajar de esta manera es para tener un mejor control de los cambios que se hacen en el proyecto y asegurar que todo funcione correctamente. 
-
 
 ## 📌 INFORMACIÓN DEL PROYECTO
 
@@ -23,7 +22,7 @@ Sergio Aguilar Granados
 Sistema completo de gestión de viajes corporativos con búsqueda, reservas, aprobaciones, pagos, reportes y dashboard ejecutivo. Competir con plataformas como Expedia con funcionalidades superiores.
 
 ### AL VERSIONAR CONSERVAR V0.000 CON FECHA Y HORA
-- **Versión:** V2.342 2026-03-21 13:07:00 CST 
+- **Versión:** V2.358 2026-06-27 08:40:00 CST 
 La fecha y hora tiempo del CDMX
 
 
@@ -773,6 +772,12 @@ Antes de finalizar cualquier sesión:
 - **PDF Comprobante de Pago:** Diseño premium con sello verde "PAGO COMPLETADO", datos de transacción, tarjeta, reserva asociada
 - **Auto-crear reserva:** Al confirmar cotización de tour, se crea reserva automáticamente en `bookings`
 - **Lección:** Los detalles del servicio se guardan como JSON en `special_requests` para flexibilidad
+
+### Motor Multi-Proveedor Actividades y Restaurantes (v2.358)
+- **Funcionalidad:** Desarrollo de la Arquitectura de Agregadores Multi-proveedor para Restaurantes (`RestaurantAggregator`) y Actividades (`ActivityAggregator`), replicando el de Vuelos.
+- **Implementación:** `Promise.allSettled` con captura individual, desduplicación de items y registro de métricas exactas (en ms) a PostgreSQL en la tabla `provider_metrics`.
+- **Adaptadores:** `OpenTableAdapter`, `CivitatisAdapter` y la estructura `ViatorAdapter` listos y probados.
+- **Lección:** Toda la app ahora sigue un patrón Aggregator-Adapter unificado para todos sus servicios principales (Vuelos, Hoteles, Restaurantes, Actividades).
 
 ---
 
