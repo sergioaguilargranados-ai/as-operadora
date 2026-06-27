@@ -128,33 +128,89 @@ export async function POST(request: NextRequest) {
         const html = await response.text();
         const $ = cheerio.load(html);
 
-        // Buscar links a tours individuales: /viaje/nombre-tour-12345.html
-        const tourLinks = new Set<string>();
+        const discoveredTours = new Map<string, { mt_code: string; mt_url: string; name: string }>();
+
+        // 1. Método clásico: Buscar links a tours individuales en tags <a>
         $('a[href*="/viaje/"]').each((i, elem) => {
             const href = $(elem).attr('href');
             if (href && href.includes('.html')) {
-                const fullUrl = href.startsWith('http')
-                    ? href
-                    : `https://www.megatravel.com.mx${href}`;
-                tourLinks.add(fullUrl);
+                const url = href.startsWith('http') ? href : `https://www.megatravel.com.mx${href}`;
+                const codeMatch = url.match(/\/viaje\/.*-(\d+)\.html/);
+                const mtCodeStr = codeMatch ? codeMatch[1] : null;
+                if (mtCodeStr) {
+                    const nameMatch = url.match(/\/viaje\/(.+)-\d+\.html/);
+                    const name = nameMatch
+                        ? nameMatch[1].split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
+                        : 'Tour sin nombre';
+                    discoveredTours.set(mtCodeStr, {
+                        mt_code: `MT-${mtCodeStr}`,
+                        mt_url: url,
+                        name
+                    });
+                }
             }
         });
+
+        // 2. Método moderno: Buscar tours en el payload serializado de Next.js
+        const searchStrings = ['\\"mt\\":\\"', '"mt":"'];
+        for (const searchStr of searchStrings) {
+            let pos = html.indexOf(searchStr);
+            while (pos !== -1) {
+                const startBrace = html.lastIndexOf('{', pos);
+                const endBrace = html.indexOf('}', pos);
+                
+                if (startBrace !== -1 && endBrace !== -1 && startBrace < endBrace) {
+                    const rawObj = html.substring(startBrace, endBrace + 1);
+                    let parsedMt = null;
+                    let parsedSlug = null;
+                    let parsedName = null;
+
+                    try {
+                        const cleanJson = rawObj
+                            .replace(/\\"/g, '"')
+                            .replace(/\\\//g, '/')
+                            .replace(/\\n/g, ' ')
+                            .replace(/\\t/g, ' ');
+                        
+                        const parsed = JSON.parse(cleanJson);
+                        if (parsed.mt && parsed.slug) {
+                            parsedMt = parsed.mt.toString();
+                            parsedSlug = parsed.slug;
+                            parsedName = parsed.name ? parsed.name.replace(/\.$/, '') : null;
+                        }
+                    } catch (e) {
+                        const mtMatch = rawObj.match(/(?:\\"mt\\":\\"|"mt":")(\d+)/);
+                        const slugMatch = rawObj.match(/(?:\\"slug\\":\\"|"slug":")([a-zA-Z0-9-]+)/);
+                        const nameMatch = rawObj.match(/(?:\\"name\\":\\"|"name\\":\s*\\"|\\"name\\":\s*\\"|"name":")([^\\"]+)/);
+                        if (mtMatch && slugMatch) {
+                            parsedMt = mtMatch[1];
+                            parsedSlug = slugMatch[1];
+                            if (nameMatch) parsedName = nameMatch[1].replace(/\.$/, '');
+                        }
+                    }
+
+                    if (parsedMt && parsedSlug) {
+                        const url = `https://www.megatravel.com.mx/viaje/${parsedSlug}-${parsedMt}.html`;
+                        const name = parsedName || parsedSlug.split('-').map((w: string) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+                        discoveredTours.set(parsedMt, {
+                            mt_code: `MT-${parsedMt}`,
+                            mt_url: url,
+                            name
+                        });
+                    }
+                }
+                pos = html.indexOf(searchStr, pos + 1);
+            }
+        }
 
         const tours: Array<{ mt_code: string; mt_url: string; name: string; category: string }> = [];
         const insertedCodes: string[] = [];
         const updatedCodes: string[] = [];
 
-        for (const url of tourLinks) {
-            // Extraer código MT desde la URL
-            const codeMatch = url.match(/\/viaje\/.*-(\d+)\.html/);
-            const mtCode = codeMatch ? `MT-${codeMatch[1]}` : null;
-            if (!mtCode) continue;
-
-            // Extraer nombre desde URL
-            const nameMatch = url.match(/\/viaje\/(.+)-\d+\.html/);
-            const name = nameMatch
-                ? nameMatch[1].split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
-                : 'Tour sin nombre';
+        for (const [mtId, tourData] of discoveredTours.entries()) {
+            const mtCode = tourData.mt_code;
+            const url = tourData.mt_url;
+            const name = tourData.name;
 
             tours.push({ mt_code: mtCode, mt_url: url, name, category: categoryInfo.category });
 
