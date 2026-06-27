@@ -14,7 +14,7 @@ import { Logo } from '@/components/Logo'
 import { useAuth } from '@/contexts/AuthContext'
 import {
   Plus, Calendar, MapPin, Edit, ArrowLeft, Check, X, Trash2,
-  Clock, Navigation, FileText, Share2, Download, Copy, Link as LinkIcon
+  Clock, Navigation, FileText, Share2, Download, Copy, Link as LinkIcon, Globe
 } from 'lucide-react'
 
 interface Activity {
